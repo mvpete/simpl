@@ -140,9 +140,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="Readme.md" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="evaluate.h" />
     <ClInclude Include="expression.h" />
     <ClInclude Include="parser.h" />
@@ -150,6 +147,7 @@
     <ClInclude Include="tokenizer.h" />
     <ClInclude Include="value.h" />
     <ClInclude Include="vm.h" />
+    <ClInclude Include="vm_execution_context.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

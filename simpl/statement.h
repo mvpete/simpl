@@ -2,7 +2,6 @@
 #define __simpl_statement_h__
 
 #include "expression.h"
-#include "vm.h"
 #include "value.h"
 
 #include <memory>
@@ -16,11 +15,23 @@
 namespace simpl
 {
 	
+	class call_statement;
+	class let_statement;
+	class if_statement;
+
+	class statement_visitor
+	{
+	public:
+		virtual ~statement_visitor() = default;
+		virtual void visit(call_statement &cs) = 0;
+		virtual void visit(let_statement &cs) = 0;
+		virtual void visit(if_statement &is) = 0;
+	};
 
 	struct statement
 	{
 		virtual ~statement() {};
-		virtual void evaluate(vm &vm) = 0;
+		virtual void evaluate(statement_visitor &v) = 0;
 	};
 	using statement_ptr = std::unique_ptr<statement>;
 
@@ -34,11 +45,18 @@ namespace simpl
 		{
 		}
 
-		virtual void evaluate(vm &vm) override
+		virtual void evaluate(statement_visitor &v) override
 		{
-			if (expr_)
-				expr_->evaluate(vm);
-			vm.call(function_);
+			v.visit(*this);
+		}
+
+		const std::string &function() const
+		{
+			return function_;
+		}
+		const expression_ptr &expr() const
+		{
+			return expr_;
 		}
 	};
 	/// <summary>
@@ -54,16 +72,17 @@ namespace simpl
 		{
 		}
 
-		virtual void evaluate(vm &vm) override
+		virtual void evaluate(statement_visitor &v) override
 		{
-			value_t v;
-			if (expr_)
-			{
-				expr_->evaluate(vm);
-				v = vm.pop_stack();
-			}
-
-			vm.create_var(name_, v);
+			v.visit(*this);
+		}
+		const std::string &name() const
+		{
+			return name_;
+		}
+		const expression_ptr &expr() const
+		{
+			return expr_;
 		}
 	};
 
@@ -77,33 +96,22 @@ namespace simpl
 		{
 		}
 
-		virtual void evaluate(vm &vm) override
+		virtual void evaluate(statement_visitor &v) override
 		{
-			if (cond_)
-				cond_->evaluate(vm);
-			
-			const auto val = vm.pop_stack();
-			if (is_true(val))
-			{
-				doif_->evaluate(vm);
-			}
+			v.visit(*this);
+		}
+
+		const statement_ptr &statement() const
+		{
+			return doif_;
+		}
+		const expression_ptr &cond() const
+		{
+			return cond_;
 		}
 
 	private:
-		bool is_true(const value_t &v)
-		{
-			if (v.index() == 0)
-				return false;
-			if (v.index() == 1)
-			{
-				return std::get<int>(v) > 0;
-			}
-			else if (v.index() == 2)
-			{
-				const auto &strval = std::get<std::string>(v);
-				return strval == "true" || strval == "1" || strval == "t" || strval == "TRUE" || strval == "T";
-			}
-		}
+		
 	};
 
 	class block_statement : public statement
@@ -115,18 +123,16 @@ namespace simpl
 		{
 			statements_.emplace_back(std::move(stmt));
 		}
+		virtual void evaluate(statement_visitor &v) override
+		{
+			for (const auto &stmt : statements_)
+				stmt->evaluate(v);
+		}
+
 	};
 
 
-	class statement_visitor
-	{
-	public:
-		virtual ~statement_visitor() {};
-		virtual void visit(call_statement &cs) = 0;
-		virtual void visit(let_statement &cs) = 0;
-		virtual void visit(if_statement &is) = 0;
-		virtual void visit(block_statement &bs) = 0;
-	};
+
 }
 
 #endif // __simpl_statement_h__

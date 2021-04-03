@@ -2,14 +2,15 @@
 #define __simpl_evaluate_h__
 
 #include "vm.h"
-#include "statement.h"
+#include "vm_execution_context.h"
 
 namespace simpl
 {
 	void evaluate(statement_ptr statement, vm &vm)
 	{
+		vm_execution_context ctx(vm);
 		if(statement)
-			statement->evaluate(vm);
+			statement->evaluate(ctx);
 	}
 }
 

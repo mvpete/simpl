@@ -9,7 +9,7 @@ namespace simpl
 {
 	struct empty_t {};
 	struct identifier { std::string name;  };
-	enum class op_type { add, sub, mult, div, mod, eq, neq, exp};
+	enum class op_type { add, sub, mult, div, mod, eq, neq, exp, none};
 
 	int get_precendence(op_type op)
 	{
@@ -29,7 +29,7 @@ namespace simpl
 		}
 	}
 
-	int get_cardinality(op_type op)
+	size_t get_cardinality(op_type op)
 	{
 		switch (op)
 		{

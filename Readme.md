@@ -11,17 +11,14 @@ A basic ish, simple language, with not much functionality.
 Syntax
 ---
 
-def main()
+    def main()
 
-	let foo = "Hello world";
-	print(foo); 
+		# this is a line comment
+	    let foo = "Hello world";
+	    print(foo); 
 
-	if(foo == "Hello world") then
-
-		
-
+	    if(foo == "Hello world")
+			let k=0;
 	end
-end
-
 
 

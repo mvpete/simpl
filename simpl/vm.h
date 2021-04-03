@@ -12,18 +12,36 @@ namespace simpl
 {
 	class vm
 	{
+		class var_scope
+		{
+			vm &vm_;
+			std::vector<std::string> vars_;
+		public:
+			var_scope(vm &vm)
+				:vm_(vm)
+			{
+			}
+			~var_scope()
+			{
+				for (const auto &v : vars_)
+					vm_.clear_var(v);
+			}
+			void track(const std::string &name)
+			{
+				vars_.push_back(name);
+			}
+
+		};
+
 		std::map<std::string, value_t> variables_;
+		std::stack<var_scope> scope_;
 		std::map<std::string, std::function<void(vm&)>> functions_;
 		std::stack<value_t> stack_;
 	public:
 
 		vm()
 		{
-			functions_["print"] = [](vm &vm) 
-			{				
-				const auto top = vm.pop_stack();
-				std::cout << to_string(top);
-			};
+			scope_.push(var_scope{*this});
 		}
 
 		void call(const std::string &fn_s)
@@ -64,12 +82,20 @@ namespace simpl
 			if (variables_.find(name) != variables_.end())
 				throw std::runtime_error("already defined");
 			variables_[name] = value;
+			scope_.top().track(name);
 		}
 		void store_var(const std::string &name, value_t &value)
 		{
 			if (variables_.find(name) == variables_.end())
 				throw std::runtime_error("undefined variable");
 			variables_[name] = value;
+		}
+		void clear_var(const std::string &name)
+		{
+			auto v = variables_.find(name);
+			if (v == variables_.end())
+				throw std::runtime_error("undefined variable");
+			variables_.erase(v);
 		}
 		void load_var(const std::string &name)
 		{
@@ -82,38 +108,20 @@ namespace simpl
 			stack_.push(variables_[name]);
 		}
 
+		void enter_scope()
+		{
+			scope_.push(var_scope{ *this });
+		}
+
+		void exit_scope()
+		{
+			if(!scope_.empty())
+				scope_.pop();
+		}
+
 	};
 
-	/*class vm_statement_visitor : public statement_visitor
-	{
-	public:
-		vm_statement_visitor(vm &vm)
-			:vm_(vm)
-		{
-		}
 
-	public:
-		virtual void visit(call_statement &cs)
-		{
-
-		}
-
-		virtual void visit(let_statement &cs)
-		{
-		}
-
-		virtual void visit(if_statement &is)
-		{
-		}
-
-		virtual void visit(block_statement &bs)
-		{
-		}
-
-	public:
-		vm &vm_;
-
-	};*/
 
 }
 

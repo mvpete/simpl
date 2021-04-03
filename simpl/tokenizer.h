@@ -11,6 +11,10 @@ namespace simpl
 	{
 		return c == '+' || c == '-' || c == '*' || c == '/' || c == '=';
 	}
+	bool is_eol(char c)
+	{
+		return c == '\r' || c == '\n';
+	}
 
 
 	class token_error : public std::exception
@@ -46,14 +50,14 @@ namespace simpl
 		empty_token
 	};
 
-	template<typename IteratorT>
+	template<typename CharT>
 	struct token
 	{
-		IteratorT begin;
-		IteratorT end;
+		const CharT *begin;
+		const CharT *end;
 		token_types type;
-		token() :type(token_types::empty_token){}
-		token(token_types type, IteratorT begin, IteratorT end) : type(type), begin(begin), end(end) {}
+		token() :type(token_types::empty_token),begin(nullptr),end(nullptr){}
+		token(token_types type, const CharT *begin, const CharT *end) : type(type), begin(begin), end(end) {}
 
 		std::string to_string() const
 		{ 
@@ -61,14 +65,15 @@ namespace simpl
 		}
 	};
 
-	template <typename IteratorT>
+	template <typename CharT>
 	class tokenizer
 	{
 	public:
-		using token_t = token<IteratorT>;
+		using token_t = token<CharT>;
 
 	public:
-		tokenizer(IteratorT begin, IteratorT end)
+		template<typename IteratorT>
+		tokenizer(IteratorT begin,  IteratorT end)
 			:begin_(begin), end_(end), cur_(begin), line_(0)
 		{
 		}
@@ -97,13 +102,13 @@ namespace simpl
 				}
 				else if (c == '#' && scan_comment(next_))
 				{
-					return next_;
+					continue;
 				}
 				else if (c == '\"' && scan_literal(next_))
 				{
 					return next_;
 				}
-				else if (c == '\r' && scan_eol())
+				else if (is_eol(c) && scan_eol())
 				{
 					++line_;
 					continue;
@@ -212,7 +217,8 @@ namespace simpl
 
 		bool scan_comment(token_t &t)
 		{
-			return false;
+			while (!is_eol(*cur_) && cur_ != end_) ++cur_;
+			return true;
 		}
 
 		bool scan_literal(token_t &t)
@@ -245,7 +251,7 @@ namespace simpl
 
 
 	private:
-		IteratorT begin_, end_, cur_;
+		const CharT *begin_, *end_, *cur_;
 		int line_;
 		token_t next_;
 

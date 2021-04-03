@@ -70,17 +70,16 @@ namespace simpl
 
 	using parse_val = std::variant<empty_t, op_type, identifier, value_t>;
 
-	template <typename IteratorT>
 	class parser
 	{
 	public:
-		using tokenizer_t = tokenizer<IteratorT>;
+		using tokenizer_t = tokenizer<char>;
 		using token_t = typename tokenizer_t::token_t;
 		using statement_t = statement;
 
 	public:
-		parser(IteratorT begin, IteratorT end)
-			:tokenizer_(begin,end)
+		parser(const char *begin, const char *end)
+			:tokenizer_(begin, end)
 		{
 		}
 
@@ -93,6 +92,9 @@ namespace simpl
 	private:
 		statement_ptr parse_statement(token_t &t)
 		{
+			if (t.type == token_types::eof)
+				return nullptr;
+
 			// the first identifier, has to bea keyword
 			auto kw = to_keyword(t);
 			switch (kw)
@@ -105,7 +107,7 @@ namespace simpl
 			// peek the next token
 			auto nxt = tokenizer_.peek();
 			if (nxt.type == token_types::lparen)
-			{	
+			{
 				tokenizer_.next();
 				if (kw != unknown_keyword)
 				{
@@ -113,8 +115,9 @@ namespace simpl
 				}
 				return parse_function_call_statement(t);
 			}
-
-			return nullptr;
+			std::stringstream ss;
+			ss << "unexpected identifier - " << t.to_string() << std::endl;
+			throw parse_error(ss.str().c_str());
 		}
 
 		parse_val next_val()
@@ -140,7 +143,7 @@ namespace simpl
 				return to_op(tkn);
 			}
 			return parse_val{};
-		}		
+		}
 
 		expression_ptr parse_expression()
 		{
@@ -150,7 +153,7 @@ namespace simpl
 			auto val = next_val();
 
 			if (val.index() == 0)
-				return nullptr; 
+				return nullptr;
 
 			if (val.index() < 1)
 				throw parse_error("expected an value or identifier");
@@ -190,7 +193,7 @@ namespace simpl
 		{
 			const auto op = opstack.top();
 			opstack.pop();
-			int card = get_cardinality(std::get<op_type>(op));
+			size_t card = get_cardinality(std::get<op_type>(op));
 			if (card > ostack.size())
 				throw parse_error("not enough arguments");
 			std::vector<expression_ptr> exp;
@@ -211,6 +214,7 @@ namespace simpl
 			auto close = tokenizer_.next();
 			if (close.type != token_types::rparen)
 				throw parse_error("expected a ')'");
+			close_statement();
 			return std::make_unique<call_statement>(t.to_string(), std::move(expr));
 		}
 
@@ -228,6 +232,7 @@ namespace simpl
 					throw parse_error("expected an '='");
 				expr = parse_expression();
 			}
+			close_statement();
 			return std::make_unique<let_statement>(identifier.to_string(), std::move(expr));
 		}
 
@@ -236,6 +241,16 @@ namespace simpl
 			auto next = tokenizer_.next();
 			if (next.type != token_types::lbrack)
 				return parse_statement(next);
+			auto blk = std::make_unique<block_statement>();
+			while (tokenizer_.peek().type != token_types::rbrack)
+			{
+				auto tkn = tokenizer_.next();
+				auto stmt = parse_statement(tkn);
+				if (stmt)
+					blk->add(std::move(stmt));
+			}
+			tokenizer_.next(); // consume {
+			return blk;
 		}
 
 		// if(cond) { // list of statements } else
@@ -250,6 +265,12 @@ namespace simpl
 
 			return std::make_unique<if_statement>(std::move(cond), std::move(statement));
 
+		}
+
+		void close_statement()
+		{
+			if (tokenizer_.next().type != token_types::eos)
+				throw parse_error("expected a ';'");
 		}
 
 		keywords to_keyword(token_t &t)
@@ -273,6 +294,7 @@ namespace simpl
 				return op_type::div;
 			else if (builtins::compare(t.begin, t.end, "*"))
 				return op_type::mult;
+			return op_type::none;
 		}
 
 		
