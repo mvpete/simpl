@@ -19,6 +19,17 @@
 */
 namespace simpl
 {
+	enum keywords
+	{
+		if_keyword,
+		else_keyword,
+		let_keyword,
+		def_keyword,
+		end_keyword,
+		while_keyword,
+		unknown_keyword,
+	};
+
 
 	namespace builtins
 	{
@@ -57,7 +68,7 @@ namespace simpl
 		}
 	};
 
-	using parse_val = std::variant<empty_t, identifier, op_type, value_t>;
+	using parse_val = std::variant<empty_t, op_type, identifier, value_t>;
 
 	template <typename IteratorT>
 	class parser
@@ -75,19 +86,8 @@ namespace simpl
 
 		statement_ptr next()
 		{
-			while (true)
-			{
-				auto t = tokenizer_.next();
-				switch (t.type)
-				{
-				case token_types::comment:
-					continue;
-				case token_types::identifier_token:
-					return parse_statement(t);
-				default:
-					throw parse_error("invalid syntax");
-				}
-			}
+			auto t = tokenizer_.next();
+			return parse_statement(t);
 		}
 
 	private:
@@ -95,6 +95,13 @@ namespace simpl
 		{
 			// the first identifier, has to bea keyword
 			auto kw = to_keyword(t);
+			switch (kw)
+			{
+			case keywords::let_keyword:
+				return parse_let_statement(t);
+			case keywords::if_keyword:
+				return parse_if_statement(t);
+			}
 			// peek the next token
 			auto nxt = tokenizer_.peek();
 			if (nxt.type == token_types::lparen)
@@ -102,9 +109,9 @@ namespace simpl
 				tokenizer_.next();
 				if (kw != unknown_keyword)
 				{
-					// parse keyword
+					throw parse_error("not implemented");
 				}
-				return parse_function_call(t);
+				return parse_function_call_statement(t);
 			}
 
 			return nullptr;
@@ -133,7 +140,7 @@ namespace simpl
 				return to_op(tkn);
 			}
 			return parse_val{};
-		}
+		}		
 
 		expression_ptr parse_expression()
 		{
@@ -141,14 +148,27 @@ namespace simpl
 			std::stack<parse_val> opstack;
 
 			auto val = next_val();
-			if (val.index() < 2)
-				throw parse_error("expected an expression");
+
+			if (val.index() == 0)
+				return nullptr; 
+
+			if (val.index() < 1)
+				throw parse_error("expected an value or identifier");
 
 			while (val.index() != 0)
 			{
-				if (val.index() > 2)
-					ostack.push(std::make_unique<expression>(std::get<value_t>(val)));
-				else if (val.index() == 2)
+				if (val.index() > 1)
+				{
+					if (val.index() == 3)
+					{
+						ostack.push(std::make_unique<expression>(std::get<value_t>(val)));
+					}
+					else
+					{
+						ostack.push(std::make_unique<expression>(std::get<identifier>(val)));
+					}
+				}
+				else if (val.index() == 1)
 				{
 					auto pr = get_precendence(std::get<op_type>(val));
 					if (!opstack.empty() && pr <= get_precendence(std::get<op_type>(opstack.top())))
@@ -185,7 +205,7 @@ namespace simpl
 			ostack.push(std::move(nexp));
 		}
 
-		statement_ptr parse_function_call(token_t &t)
+		statement_ptr parse_function_call_statement(token_t &t)
 		{
 			auto expr = parse_expression();
 			auto close = tokenizer_.next();
@@ -194,12 +214,52 @@ namespace simpl
 			return std::make_unique<call_statement>(t.to_string(), std::move(expr));
 		}
 
+		// let {identifier} = {expression};
+		statement_ptr parse_let_statement(token_t &t)
+		{
+			auto identifier = tokenizer_.next();
+			if (identifier.type != token_types::identifier_token)
+				throw parse_error("expected an identifier");
+			auto eq = tokenizer_.next();
+			expression_ptr expr;
+			if (eq.type != token_types::empty_token && eq.type != token_types::eos && eq.type != token_types::eof)
+			{
+				if (eq.type != token_types::op || !builtins::compare(eq.begin, eq.end, "="))
+					throw parse_error("expected an '='");
+				expr = parse_expression();
+			}
+			return std::make_unique<let_statement>(identifier.to_string(), std::move(expr));
+		}
+
+		statement_ptr parse_block_statement()
+		{
+			auto next = tokenizer_.next();
+			if (next.type != token_types::lbrack)
+				return parse_statement(next);
+		}
+
+		// if(cond) { // list of statements } else
+		statement_ptr parse_if_statement(token_t &t)
+		{
+			expect(token_types::lparen);
+			auto cond = parse_expression();
+			if (cond == nullptr)
+				throw parse_error("expected an expression");
+			expect(token_types::rparen);
+			auto statement = parse_block_statement();
+
+			return std::make_unique<if_statement>(std::move(cond), std::move(statement));
+
+		}
+
 		keywords to_keyword(token_t &t)
 		{
-			if (builtins::compare(t.begin,t.end,"if"))
+			if (builtins::compare(t.begin, t.end, "if"))
 				return keywords::if_keyword;
-			else if (builtins::compare(t.begin, t.end,"def"))
-				return keywords::def_keyword;			
+			else if (builtins::compare(t.begin, t.end, "def"))
+				return keywords::def_keyword;
+			else if (builtins::compare(t.begin, t.end, "let"))
+				return keywords::let_keyword;
 			return keywords::unknown_keyword;
 		}
 
@@ -216,6 +276,15 @@ namespace simpl
 		}
 
 		
+	private:
+		token_t expect(token_types ttype)
+		{
+			auto tkn = tokenizer_.next();
+			if (tkn.type != ttype)
+				throw parse_error("expected a token");
+			return tkn;
+		}
+
 
 	private:
 		tokenizer_t tokenizer_;

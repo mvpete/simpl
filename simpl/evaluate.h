@@ -8,7 +8,8 @@ namespace simpl
 {
 	void evaluate(statement_ptr statement, vm &vm)
 	{
-		statement->evaluate(vm);
+		if(statement)
+			statement->evaluate(vm);
 	}
 }
 

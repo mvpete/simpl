@@ -144,6 +144,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="evaluate.h" />
+    <ClInclude Include="expression.h" />
     <ClInclude Include="parser.h" />
     <ClInclude Include="statement.h" />
     <ClInclude Include="tokenizer.h" />

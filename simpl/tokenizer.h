@@ -2,13 +2,14 @@
 #define __simple_tokenizer_h__
 
 #include <stdexcept>
+#include <sstream>
 
 namespace simpl
 {
 
 	bool is_op(char c)
 	{
-		return c == '+' || c == '-' || c == '*' || c == '/';
+		return c == '+' || c == '-' || c == '*' || c == '/' || c == '=';
 	}
 
 
@@ -18,6 +19,11 @@ namespace simpl
 		token_error(int line, const char *message)
 			:std::exception(message), line_(line)
 		{
+		}
+
+		int line() const
+		{
+			return line_;
 		}
 	private:
 		int line_;
@@ -30,6 +36,8 @@ namespace simpl
 		number,
 		lparen,
 		rparen,
+		lbrack,
+		rbrack,
 		comma,
 		op,
 		eof,
@@ -68,7 +76,7 @@ namespace simpl
 		token_t peek()
 		{
 			auto start = cur_;
-			for (;cur_ != end_; ++cur_)
+			for (; cur_ != end_; ++cur_)
 			{
 				char c = *cur_;
 				if (isspace(c))
@@ -115,13 +123,28 @@ namespace simpl
 					next_ = token_t(token_types::rparen, start, cur_++);
 					return next_;
 				}
+				else if (c == '{')
+				{
+					next_ = token_t(token_types::lbrack, start, cur_++);
+					return next_;
+				}
+				else if (c == '}')
+				{
+					next_ = token_t(token_types::rbrack, start, cur_++);
+					return next_;
+				}
 				else if (c == ',')
 				{
 					next_ = token_t(token_types::comma, start, cur_++);
 					return next_;
 				}
 				else
-					throw token_error(line_, "invalid token");
+				{
+					std::stringstream ss;
+					ss << "err: invalid token '" << c << "'";
+
+					throw token_error(line_, ss.str().c_str());
+				}
 			}
 			next_= token_t(token_types::eof, cur_, end_);
 			return next_;
@@ -132,7 +155,7 @@ namespace simpl
 			if (next_.type == empty_token)
 				peek();
 			auto tkn = next_;
-			next_.type == empty_token;
+			next_.type = empty_token;
 			return tkn;
 		}
 
@@ -173,9 +196,17 @@ namespace simpl
 
 		bool scan_op(token_t &t)
 		{
+			auto start = cur_;
+			for (; cur_ != end_; ++cur_)
+			{
+				char c = *cur_;
+				if (!is_op(c))
+					break;
+			}
+
 			t.type = token_types::op;
-			t.begin = cur_;
-			t.end = ++cur_;
+			t.begin = start;
+			t.end = cur_;
 			return true;
 		}
 
@@ -194,6 +225,9 @@ namespace simpl
 				if (c == '\"')
 					break;
 			}
+
+			if (cur_ == end_ || *cur_ != '\"')
+				throw token_error(line_,"missing closing quote");
 
 			t.type = token_types::literal;
 			t.begin = start;
