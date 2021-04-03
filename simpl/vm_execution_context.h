@@ -115,6 +115,10 @@ namespace simpl
 				do_mult(cs, vm_);
 				break;
 			}
+			case op_type::eqeq:
+			{
+				do_eqeq(cs, vm_);
+			}
 			}
 		}
 
@@ -179,7 +183,22 @@ namespace simpl
 
 			vm.push_stack(std::get<int>(lvalue) * std::get<int>(rvalue));
 		}
+		void do_eqeq(nary_expression &exp, vm &vm)
+		{
+			if (exp.expressions().size() != 2)
+				throw std::logic_error("invalid equality");
+			auto &left = exp.expressions()[1];
+			auto &right = exp.expressions()[0];
 
+			left->evaluate(*this);
+			right->evaluate(*this);
+
+			auto rvalue = vm.pop_stack();
+			auto lvalue = vm.pop_stack();
+
+			vm.push_stack(is_equal(lvalue, rvalue));
+
+		}
 		bool is_true(const value_t &v)
 		{
 			if (v.index() == 0)
@@ -194,6 +213,19 @@ namespace simpl
 				return strval == "true" || strval == "1" || strval == "t" || strval == "TRUE" || strval == "T";
 			}
 			return false;
+		}
+
+		int is_equal(const value_t &left, const value_t &right)
+		{
+			if (left.index() != right.index())
+				return 0;
+			if (left.index() == 1)
+			{
+				return std::get<int>(left) == std::get<int>(right) ? 1 : 0;
+			}
+			else
+				return std::get<std::string>(left) == std::get<std::string>(right) ? 1 : 0;
+			return 0;
 		}
 
 	public:

@@ -9,7 +9,7 @@ namespace simpl
 
 	bool is_op(char c)
 	{
-		return c == '+' || c == '-' || c == '*' || c == '/' || c == '=';
+		return c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c== '!';
 	}
 	bool is_eol(char c)
 	{

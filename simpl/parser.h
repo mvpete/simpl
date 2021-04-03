@@ -294,6 +294,8 @@ namespace simpl
 				return op_type::div;
 			else if (builtins::compare(t.begin, t.end, "*"))
 				return op_type::mult;
+			else if (builtins::compare(t.begin, t.end, "=="))
+				return op_type::eqeq;
 			return op_type::none;
 		}
 
