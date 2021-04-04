@@ -42,12 +42,9 @@ namespace simpl
 	public:
 		virtual void visit(call_statement &cs)
 		{
-			// evaluating the expression puts it on the stack.
-			for(const auto &expr : cs.expr())
-				expr->evaluate(*this);
-			// we also need to put a return value placeholder, if there's a retval
-			vm_.call(cs.function());
-			vm_.decrement_stack(cs.expr().size());
+			if (cs.expr())
+				cs.expr()->evaluate(*this);
+			vm_.pop_stack(); // an expression leaves a value on the top of the stack.			
 		}
 
 		virtual void visit(let_statement &cs)
@@ -187,6 +184,10 @@ namespace simpl
 			{
 				do_gteq(cs, vm_);
 				break;
+			}
+			case op_type::func:
+			{
+				do_func(cs, vm_);
 			}
 			}
 		}
@@ -343,7 +344,17 @@ namespace simpl
 
 			vm.push_stack(is_gteq(lvalue,rvalue));
 		}
-
+		void do_func(nary_expression &exp, vm &vm)
+		{
+			vm_.push_stack(value_t{}); // we put an empty value on the stack -- this is the retval;
+			// because all expressions, leave a value on the stack.
+			// evaluating the expression puts it on the stack.
+			for (const auto &expr : exp.expressions())
+				expr->evaluate(*this);
+			// we also need to put a return value placeholder, if there's a retval
+			vm_.call(exp.function());
+			vm_.decrement_stack(exp.expressions().size());
+		}
 		bool is_true(const value_t &v)
 		{
 			if (v.index() == 0)

@@ -78,19 +78,21 @@ namespace simpl
 			}
 			// peek the next token
 			auto nxt = tokenizer_.peek();
-			if (nxt.type == token_types::lparen)
-			{
-				tokenizer_.next();
-				return parse_function_call_statement(t);
-			}
-			else if (nxt.type == token_types::op && builtins::compare(nxt.begin,nxt.end,"="))
+			if (nxt.type == token_types::op && builtins::compare(nxt.begin, nxt.end, "="))
 			{
 				tokenizer_.next();
 				return parse_assignment_statement(t);
 			}
-			std::stringstream ss;
-			ss << "unexpected identifier - " << t.to_string() << std::endl;
-			throw parse_error(ss.str().c_str());
+			tokenizer_.reverse(t);
+			auto expr = parse_expression();
+			if (expr == nullptr)
+			{
+				throw parse_error("expected an expression");
+			}
+			close_statement();
+
+			return std::make_unique<call_statement>(std::move(expr));
+			
 		}
 
 		parse_val next_val()
@@ -132,7 +134,7 @@ namespace simpl
 			if (val.index() < 1)
 				throw parse_error("expected an value or identifier");
 
-			while (val.index() != 0)
+			while (val.index() != 0) // while
 			{
 				if (val.index() > 1)
 				{
@@ -142,7 +144,19 @@ namespace simpl
 					}
 					else
 					{
-						ostack.push(std::make_unique<expression>(std::get<identifier>(val)));
+						if (tokenizer_.peek().type == token_types::lparen)
+						{
+							tokenizer_.next(); // swallow (
+							auto expr_list = parse_expression_list();
+							// this is a function call. We want to then parse the expression list
+							// and create an expression
+							auto close = tokenizer_.next();
+							if (close.type != token_types::rparen)
+								throw parse_error("expected a ')'");
+							ostack.push(std::make_unique<nary_expression>(std::get<identifier>(val).name, std::move(expr_list)));
+						}
+						else
+							ostack.push(std::make_unique<expression>(std::get<identifier>(val)));
 					}
 				}
 				else if (val.index() == 1)
@@ -189,7 +203,7 @@ namespace simpl
 			if (close.type != token_types::rparen)
 				throw parse_error("expected a ')'");
 			close_statement();
-			return std::make_unique<call_statement>(t.to_string(), std::move(exprs));
+			return std::make_unique<call_statement>(std::make_unique<nary_expression>(t.to_string(), std::move(exprs)));
 		}
 
 		// let {identifier} = {expression};

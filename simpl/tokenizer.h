@@ -166,6 +166,11 @@ namespace simpl
 			return tkn;
 		}
 
+		void reverse(token_t &t)
+		{
+			cur_ = t.begin;
+			next_.type = empty_token;
+		}
 
 	private:
 		bool scan_identifier(token_t &t)

@@ -26,7 +26,7 @@ namespace simpl
 
 	}
 
-	enum class op_type { add, sub, mult, div, mod, eq, eqeq, neq, exp, gt, lt, gteq, lteq, none };
+	enum class op_type { add, sub, mult, div, mod, eq, eqeq, neq, exp, gt, lt, gteq, lteq, func, none };
 
 	int get_precendence(op_type op)
 	{

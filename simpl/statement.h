@@ -43,11 +43,10 @@ namespace simpl
 
 	class call_statement : public statement
 	{
-		std::string function_;
-		std::vector<expression_ptr> expr_;
+		expression_ptr expr_;
 	public:
-		call_statement(const std::string &function, std::vector<expression_ptr> &&expr)
-			:function_(function), expr_(std::move(expr))
+		call_statement(expression_ptr expr)
+			:expr_(std::move(expr))
 		{
 		}
 
@@ -56,11 +55,7 @@ namespace simpl
 			v.visit(*this);
 		}
 
-		const std::string &function() const
-		{
-			return function_;
-		}
-		const std::vector<expression_ptr> &expr() const
+		const expression_ptr &expr() const
 		{
 			return expr_;
 		}

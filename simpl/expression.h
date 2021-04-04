@@ -66,11 +66,20 @@ namespace simpl
 	class nary_expression : public expression
 	{
 		op_type op_;
+		const std::string fn_name_;
 		std::vector<expression_ptr> expressions_;
 	public:
+		nary_expression(const std::string &name, std::vector<expression_ptr> expr)
+			:op_(op_type::func), fn_name_(name), expressions_(std::move(expr))
+		{
+		}
 		nary_expression(op_type op)
 			:op_(op)
 		{
+		}
+		const std::string &function() const
+		{
+			return fn_name_;
 		}
 		void add(expression_ptr exp)
 		{
