@@ -55,7 +55,6 @@ namespace simpl
             }
         };
 
-
         detail::static_stack<var_scope, 4096> closures_;
         std::map<std::string, fn_def> functions_;
         detail::static_stack<value_t, 4096> stack_;
@@ -129,6 +128,17 @@ namespace simpl
         }
         void set_val(const std::string &name, size_t offset)
         {
+            auto stack = 0;
+            while (stack < closures_.size())
+            {
+                auto scope = closures_.offset(stack);
+                if (scope.has_value(name))
+                {
+                    return scope.set_value(name, stack_offset(offset));
+                }
+                ++stack;
+            }
+
             closures_.top().set_value(name, stack_.offset(offset));
         }
 
