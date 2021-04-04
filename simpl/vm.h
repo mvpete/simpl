@@ -170,17 +170,6 @@ namespace simpl
                 closures_.pop();
         }
 
-    private:
-        std::vector<std::reference_wrapper<simpl::value_t>> make_stack_args(size_t count)
-        {
-            std::vector<std::reference_wrapper<simpl::value_t>> args;
-            for (size_t i = 0; i < count; ++i)
-            {
-                args.push_back(std::ref(stack_.offset(i)));
-            }
-            return args;
-        }
-
     };
 
 
