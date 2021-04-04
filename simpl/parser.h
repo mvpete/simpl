@@ -12,10 +12,6 @@
 
 
 /*
-	IF { expr } THEN { statement }
-	PRINT { expr }
-
-	statement := statement | expression
 */
 namespace simpl
 {
@@ -30,34 +26,6 @@ namespace simpl
 		unknown_keyword,
 	};
 
-
-	namespace builtins
-	{
-		const char *print_fn = "print";
-
-		template <typename IteratorT, typename Iterator2T>
-		bool compare(IteratorT begin, IteratorT end, Iterator2T val)
-		{
-			auto len = end - begin;
-			if (strlen(val) != len)
-				return false;
-
-			while (begin != end)
-			{
-				if (*begin != *val)
-					return false;
-				++val;
-				++begin;
-			}
-			return true;
-		}
-
-		template <typename IteratorT, typename Iterator2T>
-		bool compare(token<IteratorT> &tkn, IteratorT val)
-		{
-			return compare(tkn.begin, tkn.end, val);
-		}
-	}
 
 	class parse_error : public std::exception
 	{
@@ -103,17 +71,22 @@ namespace simpl
 				return parse_let_statement(t);
 			case keywords::if_keyword:
 				return parse_if_statement(t);
+			case keywords::def_keyword:
+				return parse_def_statement(t);
+			case keywords::while_keyword:
+				return parse_while_statement(t);
 			}
 			// peek the next token
 			auto nxt = tokenizer_.peek();
 			if (nxt.type == token_types::lparen)
 			{
 				tokenizer_.next();
-				if (kw != unknown_keyword)
-				{
-					throw parse_error("not implemented");
-				}
 				return parse_function_call_statement(t);
+			}
+			else if (nxt.type == token_types::op && builtins::compare(nxt.begin,nxt.end,"="))
+			{
+				tokenizer_.next();
+				return parse_assignment_statement(t);
 			}
 			std::stringstream ss;
 			ss << "unexpected identifier - " << t.to_string() << std::endl;
@@ -130,6 +103,7 @@ namespace simpl
 			}
 			if (tkn.type == token_types::identifier_token)
 			{
+				tokenizer_.next();
 				return identifier{ std::string(tkn.begin, tkn.end) };
 			}
 			if (tkn.type == token_types::number)
@@ -210,12 +184,12 @@ namespace simpl
 
 		statement_ptr parse_function_call_statement(token_t &t)
 		{
-			auto expr = parse_expression();
+			auto exprs = parse_expression_list();
 			auto close = tokenizer_.next();
 			if (close.type != token_types::rparen)
 				throw parse_error("expected a ')'");
 			close_statement();
-			return std::make_unique<call_statement>(t.to_string(), std::move(expr));
+			return std::make_unique<call_statement>(t.to_string(), std::move(exprs));
 		}
 
 		// let {identifier} = {expression};
@@ -253,7 +227,7 @@ namespace simpl
 			return blk;
 		}
 
-		// if(cond) { // list of statements } else
+		// if(cond) { // list of statements }
 		statement_ptr parse_if_statement(token_t &t)
 		{
 			expect(token_types::lparen);
@@ -265,6 +239,86 @@ namespace simpl
 
 			return std::make_unique<if_statement>(std::move(cond), std::move(statement));
 
+		}
+
+		statement_ptr parse_while_statement(token_t &t)
+		{
+			expect(token_types::lparen);
+			auto cond = parse_expression();
+			if (cond == nullptr)
+				throw parse_error("expected an expression");
+			expect(token_types::rparen);
+			auto statement = parse_block_statement();
+
+			return std::make_unique<while_statement>(std::move(cond), std::move(statement));
+		}
+
+		statement_ptr parse_def_statement(token_t &t)
+		{
+			auto identifier = tokenizer_.next();
+			if (identifier.type != token_types::identifier_token)
+			{
+				throw parse_error("expected an identifier");
+			}
+			expect(token_types::lparen);
+			auto id_list = parse_identifier_list();
+			expect(token_types::rparen);
+			auto block = parse_block_statement();
+			return std::make_unique<def_statement>(identifier.to_string(), std::move(id_list), std::move(block));
+		}
+
+		// {identifier} = {expression};
+		statement_ptr parse_assignment_statement(token_t &identifier)
+		{
+			auto expr = parse_expression();
+			close_statement();
+			return std::make_unique<assignment_statement>(identifier.to_string(), std::move(expr));
+		}
+
+		std::vector<identifier> parse_identifier_list()
+		{			
+			std::vector<identifier> list;
+			while (tokenizer_.peek().type != token_types::rparen)
+			{
+				auto tkn = tokenizer_.next();
+				if (tkn.type != token_types::identifier_token)
+					throw parse_error("expected an identifier");
+				list.emplace_back(identifier{ tkn.to_string() });
+
+				auto pk = tokenizer_.peek();
+				if (pk.type == token_types::rparen)
+					break;
+
+				if (pk.type != token_types::comma)
+				{
+					throw parse_error("expected a comma");
+				}
+				tokenizer_.next();
+			}
+
+			return list;
+		}
+
+		std::vector<expression_ptr> parse_expression_list()
+		{
+			std::vector<expression_ptr> list;
+			while (tokenizer_.peek().type != token_types::rparen)
+			{
+				auto exp = parse_expression();
+				if(exp)
+					list.emplace_back(std::move(exp));
+
+				auto pk = tokenizer_.peek();
+				if (pk.type == token_types::rparen)
+					break;
+
+				if (pk.type != token_types::comma)
+				{
+					throw parse_error("expected a comma");
+				}
+				tokenizer_.next();
+			}
+			return list;
 		}
 
 		void close_statement()
@@ -281,24 +335,14 @@ namespace simpl
 				return keywords::def_keyword;
 			else if (builtins::compare(t.begin, t.end, "let"))
 				return keywords::let_keyword;
+			else if (builtins::compare(t.begin, t.end, "while"))
+				return keywords::while_keyword;
 			return keywords::unknown_keyword;
 		}
-
 		op_type to_op(token_t &t)
 		{
-			if (builtins::compare(t.begin, t.end, "+"))
-				return op_type::add;
-			else if (builtins::compare(t.begin, t.end, "-"))
-				return op_type::sub;
-			else if (builtins::compare(t.begin, t.end, "/"))
-				return op_type::div;
-			else if (builtins::compare(t.begin, t.end, "*"))
-				return op_type::mult;
-			else if (builtins::compare(t.begin, t.end, "=="))
-				return op_type::eqeq;
-			return op_type::none;
+			return to_op_type(t.begin, t.end);
 		}
-
 		
 	private:
 		token_t expect(token_types ttype)

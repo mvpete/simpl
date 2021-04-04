@@ -2,6 +2,7 @@
 #define __simpl_expression_h__
 
 #include "value.h"
+#include "op.h"
 
 #include <memory>
 #include <variant>
@@ -91,7 +92,7 @@ namespace simpl
 
 		virtual void evaluate(expression_visitor &v) override
 		{
-			v.visit(*this);
+			 v.visit(*this);
 		}
 
 	private:

@@ -12,7 +12,8 @@ int run_interpreter(InStream &s, bool user)
 	try
 	{
 		simpl::vm vm;
-		vm.reg_fn("exit", [](simpl::vm &vm)
+		simpl::vm_execution_context ctx(vm);
+		vm.reg_fn("exit",0, []()
 		{
 			throw exit_{};
 		});
@@ -25,7 +26,8 @@ int run_interpreter(InStream &s, bool user)
 				std::string line;
 				std::getline(s, line);
 				simpl::parser parser(line.c_str(), line.c_str()+line.length());
-				evaluate(parser.next(), vm);
+				
+				evaluate(parser.next(), ctx);
 				if(user)
 					std::cout << std::endl;
 			}
@@ -55,12 +57,14 @@ int run_string(const std::string &s)
 	try
 	{
 		simpl::vm vm;
+		simpl::vm_execution_context ctx(vm);
 		simpl::parser parser(s.c_str(), s.c_str() + s.length());
 		while (1)
 		{
 			auto nxt = parser.next();
 			if (!nxt) break;
-			evaluate(std::move(nxt), vm);
+
+			evaluate(std::move(nxt), ctx);
 		}
 	}
 	catch (const simpl::token_error &t)

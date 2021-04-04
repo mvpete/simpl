@@ -6,9 +6,8 @@
 
 namespace simpl
 {
-	void evaluate(statement_ptr statement, vm &vm)
+	void evaluate(statement_ptr statement, vm_execution_context &ctx)
 	{
-		vm_execution_context ctx(vm);
 		if(statement)
 			statement->evaluate(ctx);
 	}

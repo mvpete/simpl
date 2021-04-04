@@ -1,16 +1,15 @@
 #ifndef __simple_tokenizer_h__
 #define __simple_tokenizer_h__
 
+#include "op.h"
+
 #include <stdexcept>
 #include <sstream>
 
 namespace simpl
 {
 
-	bool is_op(char c)
-	{
-		return c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c== '!';
-	}
+
 	bool is_eol(char c)
 	{
 		return c == '\r' || c == '\n';
@@ -80,6 +79,9 @@ namespace simpl
 
 		token_t peek()
 		{
+			if (next_.type != empty_token)
+				return next_;
+
 			auto start = cur_;
 			for (; cur_ != end_; ++cur_)
 			{

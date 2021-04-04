@@ -142,8 +142,10 @@
   <ItemGroup>
     <ClInclude Include="evaluate.h" />
     <ClInclude Include="expression.h" />
+    <ClInclude Include="op.h" />
     <ClInclude Include="parser.h" />
     <ClInclude Include="statement.h" />
+    <ClInclude Include="static_stack.h" />
     <ClInclude Include="tokenizer.h" />
     <ClInclude Include="value.h" />
     <ClInclude Include="vm.h" />

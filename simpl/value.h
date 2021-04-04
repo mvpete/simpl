@@ -9,44 +9,6 @@ namespace simpl
 {
 	struct empty_t {};
 	struct identifier { std::string name;  };
-	enum class op_type { add, sub, mult, div, mod, eq, eqeq, neq, exp, none };
-
-	int get_precendence(op_type op)
-	{
-		switch (op)
-		{
-		default:
-			return 1;
-		case op_type::add:
-		case op_type::sub:
-			return 2;
-		case op_type::mult:
-		case op_type::div:
-		case op_type::mod:
-			return 3;
-		case op_type::exp:
-			return 4;
-		case op_type::eqeq:
-			return 5;
-		}
-	}
-
-	size_t get_cardinality(op_type op)
-	{
-		switch (op)
-		{
-		default:
-			return 1;
-		case op_type::add:
-		case op_type::sub:
-		case op_type::mult:
-		case op_type::div:
-		case op_type::mod:
-		case op_type::exp:
-		case op_type::eqeq:
-			return 2;
-		}
-	}
 
 	using value_t = std::variant<empty_t,int,std::string>;
 
