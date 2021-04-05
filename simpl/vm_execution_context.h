@@ -380,7 +380,7 @@ namespace simpl
 			for (const auto &expr : exp.expressions())
 				expr->evaluate(*this);
 			scope s{ vm_ };
-			vm_.call(exp.function(), exp.expressions().size());
+			vm_.call(exp.function());
 			vm_.decrement_stack(exp.expressions().size());
 		}
 		bool is_true(const value_t &v)

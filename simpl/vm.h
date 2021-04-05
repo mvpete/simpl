@@ -84,14 +84,14 @@ namespace simpl
             callstack_.push(activation_record{}); // main..
         }
 
-        void call(const std::string &fn_s, size_t retval_offset)
+        void call(const std::string &fn_s)
         {
             auto fn = functions_.find(fn_s);
             if (fn != functions_.end())
             {
                 if (fn->second.arity > stack_.size())
                     throw std::runtime_error("arity error");
-                push_callstack(fn_s, retval_offset);
+                activate_function(fn_s, fn->second.arity);
                 fn->second.fn();
             }
             else
@@ -124,20 +124,17 @@ namespace simpl
             return stack_.offset(offset);
         }
 
-        void push_callstack(const std::string &fn, size_t retval_offset)
-        {
-            callstack_.push(activation_record{ fn, &stack_.offset(retval_offset) });
-        }
-
-        void pop_callstack()
-        {
-            callstack_.pop();
-        }
-
+      
         size_t depth() const
         {
             return callstack_.size();
         }
+
+        void activate_function(const std::string &fn, size_t retval_offset)
+        {
+            callstack_.push(activation_record{ fn, &stack_.offset(retval_offset) });
+        }
+
 
         void return_()
         {
@@ -151,7 +148,16 @@ namespace simpl
         template <typename CallableT>
         void reg_fn(const std::string &id, size_t arity, CallableT &&fn)
         {
-            reg_fn(fn_def{ id, arity, fn });
+            reg_fn(fn_def
+            { 
+                id, 
+                arity, 
+                [this,fn=std::move(fn)]()
+                {
+                    fn();
+                    return_();
+                } 
+            });
         }
 
         void reg_fn(fn_def &&df)
