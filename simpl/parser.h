@@ -214,15 +214,15 @@ namespace simpl
 		{
 			const auto op = opstack.top();
 			opstack.pop();
-			size_t card = get_cardinality(std::get<op_type>(op));
-			if (card > ostack.size())
+			size_t arity = get_arity(std::get<op_type>(op));
+			if (arity > ostack.size())
 				throw parse_error("not enough arguments");
 			std::vector<expression_ptr> exp;
-			while (card)
+			while (arity)
 			{
 				exp.push_back(std::move(ostack.top()));
 				ostack.pop();
-				--card;
+				--arity;
 			}
 			auto nexp = std::make_unique<nary_expression>(std::get<op_type>(op));
 			nexp->add(std::move(exp));

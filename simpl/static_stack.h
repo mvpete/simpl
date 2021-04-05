@@ -15,6 +15,11 @@ namespace simpl
             size_t sptr_;
 
         public:
+            static_stack()
+                :sptr_(0)
+            {
+            }
+
             T& push(const T &v)
             {
                 if (sptr_ >= Size)

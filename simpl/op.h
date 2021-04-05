@@ -53,7 +53,7 @@ namespace simpl
 		}
 	}
 
-	size_t get_cardinality(op_type op)
+	size_t get_arity(op_type op)
 	{
 		switch (op)
 		{
