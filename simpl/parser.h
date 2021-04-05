@@ -23,9 +23,9 @@ namespace simpl
 		def_keyword,
 		end_keyword,
 		while_keyword,
+		return_keyword,
 		unknown_keyword,
 	};
-
 
 	class parse_error : public std::exception
 	{
@@ -45,9 +45,39 @@ namespace simpl
 		using token_t = typename tokenizer_t::token_t;
 		using statement_t = statement;
 
+
+
+		
+	private:
+		enum class scopes { main, function, while_, for_ };
+		void scope(scopes scope)
+		{
+			scope_ = scope;
+		}
+		scopes scope()
+		{
+			return scope_;
+		}
+
+		class change_scope
+		{
+			scopes prev_;
+			parser &parser_;
+		public:
+			change_scope(parser &p, scopes next)
+				:parser_(p), prev_(p.scope())
+			{
+				parser_.scope(next);
+			}
+			~change_scope()
+			{
+				parser_.scope(prev_);
+			}
+		};
+
 	public:
 		parser(const char *begin, const char *end)
-			:tokenizer_(begin, end)
+			:tokenizer_(begin, end), scope_(scopes::main)
 		{
 		}
 
@@ -56,6 +86,7 @@ namespace simpl
 			auto t = tokenizer_.next();
 			return parse_statement(t);
 		}
+
 
 	private:
 		statement_ptr parse_statement(token_t &t)
@@ -75,6 +106,8 @@ namespace simpl
 				return parse_def_statement(t);
 			case keywords::while_keyword:
 				return parse_while_statement(t);
+			case keywords::return_keyword:
+				return parse_return_statement(t);
 			}
 			// peek the next token
 			auto nxt = tokenizer_.peek();
@@ -267,8 +300,18 @@ namespace simpl
 			return std::make_unique<while_statement>(std::move(cond), std::move(statement));
 		}
 
+		statement_ptr parse_return_statement(token_t &t)
+		{
+			auto expr = parse_expression();
+			close_statement();
+			return std::make_unique<return_statement>(std::move(expr));
+		}
+
 		statement_ptr parse_def_statement(token_t &t)
 		{
+			if (scope_ != scopes::main)
+				throw parse_error("cannot define a function here");
+
 			auto identifier = tokenizer_.next();
 			if (identifier.type != token_types::identifier_token)
 			{
@@ -277,6 +320,7 @@ namespace simpl
 			expect(token_types::lparen);
 			auto id_list = parse_identifier_list();
 			expect(token_types::rparen);
+			change_scope sp(*this, scopes::function);
 			auto block = parse_block_statement();
 			return std::make_unique<def_statement>(identifier.to_string(), std::move(id_list), std::move(block));
 		}
@@ -351,6 +395,8 @@ namespace simpl
 				return keywords::let_keyword;
 			else if (builtins::compare(t.begin, t.end, "while"))
 				return keywords::while_keyword;
+			else if (builtins::compare(t.begin, t.end, "return"))
+				return keywords::return_keyword;
 			return keywords::unknown_keyword;
 		}
 		op_type to_op(token_t &t)
@@ -358,6 +404,7 @@ namespace simpl
 			return to_op_type(t.begin, t.end);
 		}
 		
+
 	private:
 		token_t expect(token_types ttype)
 		{
@@ -367,10 +414,9 @@ namespace simpl
 			return tkn;
 		}
 
-
 	private:
 		tokenizer_t tokenizer_;
-
+		scopes scope_;
 	};
 
 

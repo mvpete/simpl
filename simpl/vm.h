@@ -24,9 +24,7 @@ namespace simpl
         {
             std::map<std::string, value_t *> variables_;
         public:
-            var_scope()
-            {
-            }
+            var_scope() = default;
             void track(const std::string &name, value_t *v)
             {
                 if (variables_.find(name) != variables_.end())
@@ -55,23 +53,45 @@ namespace simpl
             }
         };
 
-        detail::static_stack<var_scope, 4096> closures_;
+        struct activation_record
+        {
+            activation_record() :retval(nullptr) {};
+            activation_record(const std::string &name, value_t *retval)
+                :function(name), retval(retval)
+            {
+            }
+            std::string function;
+            value_t *retval;
+        };
+
+
+    public:
+
+        using callstack_t = detail::static_stack<activation_record, 4096>;
+
+    private:
+
+
         std::map<std::string, fn_def> functions_;
         detail::static_stack<value_t, 4096> stack_;
+        detail::static_stack<var_scope, 4096> locals_;
+        callstack_t callstack_;
     public:
 
         vm()
         {
-            closures_.push(var_scope{});
+            locals_.push(var_scope{}); // global scope.
+            callstack_.push(activation_record{}); // main..
         }
 
-        void call(const std::string &fn_s)
+        void call(const std::string &fn_s, size_t retval_offset)
         {
             auto fn = functions_.find(fn_s);
             if (fn != functions_.end())
             {
                 if (fn->second.arity > stack_.size())
                     throw std::runtime_error("arity error");
+                push_callstack(fn_s, retval_offset);
                 fn->second.fn();
             }
             else
@@ -104,6 +124,30 @@ namespace simpl
             return stack_.offset(offset);
         }
 
+        void push_callstack(const std::string &fn, size_t retval_offset)
+        {
+            callstack_.push(activation_record{ fn, &stack_.offset(retval_offset) });
+        }
+
+        void pop_callstack()
+        {
+            callstack_.pop();
+        }
+
+        size_t depth() const
+        {
+            return callstack_.size();
+        }
+
+        void return_()
+        {
+            if (callstack_.size() == 1)
+                throw std::runtime_error("bad return statement");
+            auto &ar = callstack_.top();
+            *ar.retval = stack_.top();
+            callstack_.pop();
+        }
+
         template <typename CallableT>
         void reg_fn(const std::string &id, size_t arity, CallableT &&fn)
         {
@@ -124,14 +168,15 @@ namespace simpl
 
         void create_var(const std::string &name, size_t offset = 0)
         {
-            closures_.top().track(name, &stack_.offset(offset));
+            locals_.top().track(name, &stack_.offset(offset));
         }
+
         void set_val(const std::string &name, size_t offset)
         {
             auto stack = 0;
-            while (stack < closures_.size())
+            while (stack < locals_.size())
             {
-                auto scope = closures_.offset(stack);
+                auto scope = locals_.offset(stack);
                 if (scope.has_value(name))
                 {
                     return scope.set_value(name, stack_offset(offset));
@@ -139,15 +184,15 @@ namespace simpl
                 ++stack;
             }
 
-            closures_.top().set_value(name, stack_.offset(offset));
+            locals_.top().set_value(name, stack_.offset(offset));
         }
 
         value_t &load_var(const std::string &name)
         {
             auto offset = 0;
-            while (offset < closures_.size())
+            while (offset < locals_.size())
             {
-                auto scope = closures_.offset(offset);
+                auto scope = locals_.offset(offset);
                 if (scope.has_value(name))
                 {
                     return scope.get_value(name);
@@ -161,13 +206,13 @@ namespace simpl
 
         void enter_scope()
         {
-            closures_.push(var_scope{});
+            locals_.push(var_scope{});
         }
 
         void exit_scope()
         {
-            if (!closures_.empty())
-                closures_.pop();
+            if (!locals_.empty())
+                locals_.pop();
         }
 
     };

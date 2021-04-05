@@ -19,7 +19,9 @@ namespace simpl
 	class let_statement;
 	class if_statement;
 	class def_statement;
+	class return_statement;
 	class while_statement;
+	class block_statement;
 	class assignment_statement;
 
 	class statement_visitor
@@ -30,7 +32,9 @@ namespace simpl
 		virtual void visit(let_statement &cs) = 0;
 		virtual void visit(if_statement &is) = 0;
 		virtual void visit(def_statement &ds) = 0;
+		virtual void visit(return_statement &rs) = 0;
 		virtual void visit(while_statement &ws) = 0;
+		virtual void visit(block_statement &bs) = 0;
 		virtual void visit(assignment_statement &ws) = 0;
 	};
 
@@ -126,8 +130,11 @@ namespace simpl
 		}
 		virtual void evaluate(statement_visitor &v) override
 		{
-			for (const auto &stmt : statements_)
-				stmt->evaluate(v);
+			v.visit(*this);
+		}
+		const std::vector<statement_ptr> &statements() const
+		{
+			return statements_;
 		}
 
 	};
@@ -216,6 +223,26 @@ namespace simpl
 	private:
 		std::string identifier_;
 		expression_ptr expression_;
+	};
+
+	class return_statement : public statement
+	{
+	public:
+		return_statement(expression_ptr expr)
+			:expr_(std::move(expr))
+		{
+		}
+		virtual void evaluate(statement_visitor &v) override
+		{
+			v.visit(*this);
+		}
+		const expression_ptr &expr() const
+		{
+			return expr_;
+		}
+	private:
+		expression_ptr expr_;
+
 	};
 }
 

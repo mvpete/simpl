@@ -20,9 +20,14 @@ namespace simpl
 		{
 			vm_.exit_scope();
 		}
+		void reg_var(const std::string &name, size_t offset)
+		{
+			vm_.create_var(name, offset);
+		}
 	private:
 		vm &vm_;
 	};
+
 	class vm_execution_context : public statement_visitor, public expression_visitor
 	{
 	public:
@@ -53,7 +58,6 @@ namespace simpl
 			{
 				cs.expr()->evaluate(*this);
 			}
-
 			vm_.create_var(cs.name());
 		}
 
@@ -81,7 +85,6 @@ namespace simpl
 				[this, arity, ids=ds.identifiers(), stmt=std::shared_ptr<statement>(stmt.release())]() 
 				{
 					int offset = arity - 1;
-					scope s{vm_};
 					for (; offset >= 0; --offset)
 						vm_.create_var(ids[ids.size()-(offset+1)].name, offset);
 					stmt->evaluate(*this);					
@@ -90,12 +93,37 @@ namespace simpl
 			vm_.reg_fn(std::move(fn));
 		}
 
+		virtual void visit(return_statement &rs)
+		{
+			if (rs.expr())
+				rs.expr()->evaluate(*this);
+			else
+				vm_.push_stack(value_t{});
+			// then the value is at the top of the stack.
+			// now, put it into the activation record location
+			vm_.return_();
+			vm_.pop_stack();
+		}
+
 		virtual void visit(assignment_statement &as)
 		{
 			if (as.expr())
 				as.expr()->evaluate(*this); // places value on stack.
-			vm_.set_val(as.identifier(), 0);
+			vm_.set_val(as.identifier(), 0); // set the value of the identifier, to the value at the top.
 			vm_.pop_stack(); // take the value off the top.
+		}
+
+		virtual void visit(block_statement &bs)
+		{
+			// we need to capture the current activation ctx.
+			// if it changes, we're done. I think.
+			const auto depth = vm_.depth();
+			for (const auto &stmt : bs.statements())
+			{
+				stmt->evaluate(*this);
+				if(depth > vm_.depth())
+					return;
+			}
 		}
 
 		virtual void visit(while_statement &ws)
@@ -351,8 +379,8 @@ namespace simpl
 			// evaluating the expression puts it on the stack.
 			for (const auto &expr : exp.expressions())
 				expr->evaluate(*this);
-			// we also need to put a return value placeholder, if there's a retval
-			vm_.call(exp.function());
+			scope s{ vm_ };
+			vm_.call(exp.function(), exp.expressions().size());
 			vm_.decrement_stack(exp.expressions().size());
 		}
 		bool is_true(const value_t &v)

@@ -35,6 +35,11 @@ namespace simpl
                 return offset(0);
             }
 
+            const T &top() const
+            {
+                return offset(0);
+            }
+
             T &offset(size_t s)
             {
                 auto idx = s + 1;
