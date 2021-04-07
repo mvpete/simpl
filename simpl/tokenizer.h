@@ -8,8 +8,6 @@
 
 namespace simpl
 {
-
-
 	bool is_eol(char c)
 	{
 		return c == '\r' || c == '\n';
@@ -83,7 +81,7 @@ namespace simpl
 				return next_;
 
 			auto start = cur_;
-			for (; cur_ != end_; ++cur_)
+			for (; cur_ <= end_; ++cur_)
 			{
 				char c = *cur_;
 				if (isspace(c))

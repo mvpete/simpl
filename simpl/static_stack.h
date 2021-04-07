@@ -32,7 +32,11 @@ namespace simpl
             {
                 if (s > sptr_)
                     throw std::runtime_error("stack underflow");
-                sptr_ = sptr_ - s;
+                while (s > 0)
+                {
+                    stack_[sptr_--] = T{}; // this will destruct the object
+                    --s;
+                }
             }
 
             T &top()

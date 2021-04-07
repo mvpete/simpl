@@ -13,6 +13,8 @@ namespace simpl
 	class expression;
 	class nary_expression;
 
+	struct identifier { std::string name; };
+
 	class expression_visitor
 	{
 	public:
@@ -20,7 +22,6 @@ namespace simpl
 		virtual void visit(expression &cs) = 0;
 		virtual void visit(nary_expression &cs) = 0;
 	};
-
 
 	using expression_ptr = std::unique_ptr<expression>;
 

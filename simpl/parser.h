@@ -44,9 +44,6 @@ namespace simpl
 		using tokenizer_t = tokenizer<char>;
 		using token_t = typename tokenizer_t::token_t;
 		using statement_t = statement;
-
-
-
 		
 	private:
 		enum class scopes { main, function, while_, for_ };

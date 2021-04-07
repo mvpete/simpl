@@ -2,6 +2,7 @@
 #define __simpl_vm_execution_context_h__
 
 #include "expression.h"
+#include "operations.h"
 #include "statement.h"
 #include "vm.h"
 #include <functional>
@@ -36,11 +37,11 @@ namespace simpl
 		{
 			vm_.reg_fn("print", 1, [this]()
 			{
-				std::cout << to_string(vm_.stack_offset(0));
+				std::cout << cast<std::string>(vm_.stack_offset(0));
 			});
 			vm_.reg_fn("println", 1, [this]()
 			{
-				std::cout << to_string(vm_.stack_offset(0)) << "\n";
+				std::cout << cast<std::string>(vm_.stack_offset(0)) << "\n";
 			});
 		}
 
@@ -127,8 +128,7 @@ namespace simpl
 		}
 
 		virtual void visit(while_statement &ws)
-		{
-			
+		{			
 			// don't mind this little goto trick...
 			run_cond:
 			ws.cond()->evaluate(*this);
@@ -165,52 +165,52 @@ namespace simpl
 			{
 			case op_type::add:
 			{
-				do_add(cs, vm_);
+				do_binary<add_op>(cs, vm_);
 				break;
 			}
 			case op_type::sub:
 			{
-				do_sub(cs, vm_);
+				do_binary<sub_op>(cs, vm_);
 				break;
 			}
 			case op_type::div:
 			{
-				do_div(cs, vm_);
+				do_binary<div_op>(cs, vm_);
 				break;
 			}
 			case op_type::mult:
 			{
-				do_mult(cs, vm_);
+				do_binary<mult_op>(cs, vm_);
 				break;
 			}
 			case op_type::eqeq:
 			{
-				do_eqeq(cs, vm_);
+				do_binary<eqeq_op>(cs, vm_);
 				break;
 			}
 			case op_type::neq:
 			{
-				do_neq(cs, vm_);
+				do_binary<neq_op>(cs, vm_);
 				break;
 			}
 			case op_type::lt:
 			{
-				do_lt(cs, vm_);
+				do_binary<lt_op>(cs, vm_);
 				break;
 			}
 			case op_type::lteq:
 			{
-				do_lteq(cs, vm_);
+				do_binary<lte_op>(cs, vm_);
 				break;
 			}
 			case op_type::gt:
 			{
-				do_gt(cs, vm_);
+				do_binary<gt_op>(cs, vm_);
 				break;
 			}
 			case op_type::gteq:
 			{
-				do_gteq(cs, vm_);
+				do_binary<gte_op>(cs, vm_);
 				break;
 			}
 			case op_type::func:
@@ -221,10 +221,12 @@ namespace simpl
 		}
 
 	private:
-		void do_add(const nary_expression &exp, vm &vm)
+
+		template <typename OpT>
+		void do_binary(const nary_expression &exp, vm &vm)
 		{
 			if (exp.expressions().size() != 2)
-				throw std::logic_error("invalid add");
+				throw std::logic_error("bad arity");
 			auto &left = exp.expressions()[1];
 			auto &right = exp.expressions()[0];
 
@@ -234,144 +236,9 @@ namespace simpl
 			auto rvalue = vm.pop_stack();
 			auto lvalue = vm.pop_stack();
 
-			vm.push_stack(std::get<int>(lvalue) + std::get<int>(rvalue));
+			vm.push_stack(apply<OpT>(lvalue, rvalue));
 		}
-		void do_sub(nary_expression &exp, vm &vm)
-		{
-			if (exp.expressions().size() != 2)
-				throw std::logic_error("invalid add");
-			auto &left = exp.expressions()[1];
-			auto &right = exp.expressions()[0];
-
-			left->evaluate(*this);
-			right->evaluate(*this);
-
-			auto rvalue = vm.pop_stack();
-			auto lvalue = vm.pop_stack();
-
-			vm.push_stack(std::get<int>(lvalue) - std::get<int>(rvalue));
-		}
-		void do_div(nary_expression &exp, vm &vm)
-		{
-			if (exp.expressions().size() != 2)
-				throw std::logic_error("invalid add");
-			auto &left = exp.expressions()[1];
-			auto &right = exp.expressions()[0];
-
-			left->evaluate(*this);
-			right->evaluate(*this);
-
-			auto rvalue = vm.pop_stack();
-			auto lvalue = vm.pop_stack();
-
-			vm.push_stack(std::get<int>(lvalue) / std::get<int>(rvalue));
-		}
-		void do_mult(nary_expression &exp, vm &vm)
-		{
-			if (exp.expressions().size() != 2)
-				throw std::logic_error("invalid add");
-			auto &left = exp.expressions()[1];
-			auto &right = exp.expressions()[0];
-
-			left->evaluate(*this);
-			right->evaluate(*this);
-
-			auto rvalue = vm.pop_stack();
-			auto lvalue = vm.pop_stack();
-
-			vm.push_stack(std::get<int>(lvalue) * std::get<int>(rvalue));
-		}
-		void do_eqeq(nary_expression &exp, vm &vm)
-		{
-			if (exp.expressions().size() != 2)
-				throw std::logic_error("invalid equality");
-			auto &left = exp.expressions()[1];
-			auto &right = exp.expressions()[0];
-
-			left->evaluate(*this);
-			right->evaluate(*this);
-
-			auto rvalue = vm.pop_stack();
-			auto lvalue = vm.pop_stack();
-
-			vm.push_stack(is_equal(lvalue, rvalue));
-
-		}
-		void do_neq(nary_expression &exp, vm &vm)
-		{
-			if (exp.expressions().size() != 2)
-				throw std::logic_error("invalid equality");
-			auto &left = exp.expressions()[1];
-			auto &right = exp.expressions()[0];
-
-			left->evaluate(*this);
-			right->evaluate(*this);
-
-			auto rvalue = vm.pop_stack();
-			auto lvalue = vm.pop_stack();
-
-			vm.push_stack(!is_equal(lvalue, rvalue));
-		}
-		void do_lt(nary_expression &exp, vm &vm)
-		{
-			if (exp.expressions().size() != 2)
-				throw std::logic_error("invalid equality");
-			auto &left = exp.expressions()[1];
-			auto &right = exp.expressions()[0];
-
-			left->evaluate(*this);
-			right->evaluate(*this);
-
-			auto rvalue = vm.pop_stack();
-			auto lvalue = vm.pop_stack();
-
-			vm.push_stack(is_lt(lvalue,rvalue));
-		}
-		void do_lteq(nary_expression &exp, vm &vm)
-		{
-			if (exp.expressions().size() != 2)
-				throw std::logic_error("invalid equality");
-			auto &left = exp.expressions()[1];
-			auto &right = exp.expressions()[0];
-
-			left->evaluate(*this);
-			right->evaluate(*this);
-
-			auto rvalue = vm.pop_stack();
-			auto lvalue = vm.pop_stack();
-
-			vm.push_stack(is_lteq(lvalue,rvalue));
-		}
-		void do_gt(nary_expression &exp, vm &vm)
-		{
-			if (exp.expressions().size() != 2)
-				throw std::logic_error("invalid equality");
-			auto &left = exp.expressions()[1];
-			auto &right = exp.expressions()[0];
-
-			left->evaluate(*this);
-			right->evaluate(*this);
-
-			auto rvalue = vm.pop_stack();
-			auto lvalue = vm.pop_stack();
-
-			vm.push_stack(is_gt(lvalue,rvalue));
-		}
-		void do_gteq(nary_expression &exp, vm &vm)
-		{
-			if (exp.expressions().size() != 2)
-				throw std::logic_error("invalid equality");
-			auto &left = exp.expressions()[1];
-			auto &right = exp.expressions()[0];
-
-			left->evaluate(*this);
-			right->evaluate(*this);
-
-			auto rvalue = vm.pop_stack();
-			auto lvalue = vm.pop_stack();
-
-			vm.push_stack(is_gteq(lvalue,rvalue));
-		}
+		
 		void do_func(nary_expression &exp, vm &vm)
 		{
 			vm_.push_stack(value_t{}); // we put an empty value on the stack -- this is the retval;
@@ -383,81 +250,12 @@ namespace simpl
 			vm_.call(exp.function());
 			vm_.decrement_stack(exp.expressions().size());
 		}
+
 		bool is_true(const value_t &v)
 		{
-			if (v.index() == 0)
-				return false;
-			if (v.index() == 1)
-			{
-				return std::get<int>(v) > 0;
-			}
-			else if (v.index() == 2)
-			{
-				const auto &strval = std::get<std::string>(v);
-				return strval == "true" || strval == "1" || strval == "t" || strval == "TRUE" || strval == "T";
-			}
-			return false;
+			return cast<bool>(v);
 		}
-		int is_equal(const value_t &left, const value_t &right)
-		{
-			if (left.index() != right.index())
-				return 0;
-			if (left.index() == 1)
-			{
-				return std::get<int>(left) == std::get<int>(right) ? 1 : 0;
-			}
-			else
-				return std::get<std::string>(left) == std::get<std::string>(right) ? 1 : 0;
-			return 0;
-		}
-		int is_lt(const value_t &left, const value_t &right)
-		{
-			if (left.index() != right.index())
-				return 0;
-			if (left.index() == 1)
-			{
-				return std::get<int>(left) < std::get<int>(right) ? 1 : 0;
-			}
-			else
-				return std::get<std::string>(left) < std::get<std::string>(right) ? 1 : 0;
-			return 0;
-		}
-		int is_lteq(const value_t &left, const value_t &right)
-		{
-			if (left.index() != right.index())
-				return 0;
-			if (left.index() == 1)
-			{
-				return std::get<int>(left) <= std::get<int>(right) ? 1 : 0;
-			}
-			else
-				return std::get<std::string>(left) <= std::get<std::string>(right) ? 1 : 0;
-			return 0;
-		}
-		int is_gt(const value_t &left, const value_t &right)
-		{
-			if (left.index() != right.index())
-				return 0;
-			if (left.index() == 1)
-			{
-				return std::get<int>(left) > std::get<int>(right) ? 1 : 0;
-			}
-			else
-				return std::get<std::string>(left) > std::get<std::string>(right) ? 1 : 0;
-			return 0;
-		}
-		int is_gteq(const value_t &left, const value_t &right)
-		{
-			if (left.index() != right.index())
-				return 0;
-			if (left.index() == 1)
-			{
-				return std::get<int>(left) >= std::get<int>(right) ? 1 : 0;
-			}
-			else
-				return std::get<std::string>(left) >= std::get<std::string>(right) ? 1 : 0;
-			return 0;
-		}
+		
 
 	public:
 		vm &vm_;

@@ -1,34 +1,25 @@
 #ifndef __simpl_value_h__
 #define __simpl_value_h__
 
-#include <sstream>
+#include <map>
+#include <memory>
 #include <string>
 #include <variant>
+#include <vector>
 
 namespace simpl
 {
 	struct empty_t {};
-	struct identifier { std::string name;  };
+	struct blob_t;
+	struct array_t;
+	
+	using blobref_t = std::shared_ptr<blob_t>;
+	using arrayref_t = std::shared_ptr<array_t>;
 
-	using value_t = std::variant<empty_t,int,std::string>;
+	using value_t = std::variant<empty_t, int, std::string, blobref_t, arrayref_t>;
+	struct blob_t { std::map<std::string, value_t> values; };
+	struct array_t { std::vector<value_t> values; };
 
-	std::string to_string(const value_t &r)
-	{
-		switch (r.index())
-		{
-		default:
-		case 0:
-			return "null";
-		case 1:
-		{
-			std::stringstream ss;
-			ss << std::get<int>(r);
-			return ss.str();
-		}
-		case 2:
-			return std::get<std::string>(r);
-		}
-	}
 }
 
 #endif //__simpl_value_h__
