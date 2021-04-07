@@ -142,20 +142,35 @@ namespace simpl
 
 		virtual void visit(expression &ex)
 		{
-			if (ex.value().index() == 0)
+			if (std::holds_alternative<empty_t>(ex.value()))
 				throw  std::logic_error("invalid expression");
-			if (ex.value().index() == 1)
+
+			if (std::holds_alternative<value_t>(ex.value()))
 			{
 				vm_.push_stack(std::get<value_t>(ex.value()));
 			}
-			else if (ex.value().index() == 2)
+			else if (std::holds_alternative<expression_ptr>(ex.value()))
 			{
 				std::get<expression_ptr>(ex.value())->evaluate(*this);
 			}
-			else if (ex.value().index() == 3)
+			else if (std::holds_alternative<identifier>(ex.value()))
 			{
 				auto id = std::get<identifier>(ex.value());
 				vm_.push_stack(vm_.load_var(id.name));
+			}
+		}
+
+		virtual void visit(new_expression &ns)
+		{
+			auto blob = new_blob();
+			vm_.push_stack(blob);
+			for (const auto &init : ns.initializers())
+			{
+				if (init.expr)
+				{
+					init.expr->evaluate(*this);
+					blob->values[init.identifier] = vm_.pop_stack();
+				}
 			}
 		}
 

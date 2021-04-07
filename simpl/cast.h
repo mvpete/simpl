@@ -20,13 +20,26 @@ namespace simpl
         }
     };
 
+
+#define CAST(To, From) \
+template<>\
+To to(const From &from)\
+
+#define INVALID_CAST(To, From) \
+template<>\
+To to(const From &f)\
+{\
+    throw invalid_cast(); \
+}\
+
+
     template <typename To, typename From>
     To to(const From &value)
     {
         static_assert(false, "you shall not pass");
     }
 
-    // specialize casts here.
+    // specialize casts here. to<to,from>
     template <>
     std::string to<std::string, int>(const int &value)
     {
@@ -70,6 +83,22 @@ namespace simpl
         return strval == "true" || strval == "1" || strval == "t" || strval == "TRUE" || strval == "T";
     }
 
+    CAST(bool, blobref_t)
+    {
+        return from != nullptr;
+    }
+    
+
+
+    CAST(blobref_t, blobref_t)
+    {
+        return from;
+    }
+
+    INVALID_CAST(int, blobref_t);
+    INVALID_CAST(empty_t, blobref_t);
+    INVALID_CAST(arrayref_t, blobref_t);
+
     template <typename T>
     struct cast_
     {
@@ -81,7 +110,7 @@ namespace simpl
 
         void operator()(const blobref_t &v)
         {
-            throw invalid_cast("cannot cast empty_t");
+            value = to<T>(v);
         }
 
         void operator()(const arrayref_t &v)
@@ -98,16 +127,35 @@ namespace simpl
         {
             value = to<T>(lv);
         }
-    };
+    };    
 
     template <typename T>
-    const T cast(value_t value)
+    const T cast(const value_t &value)
     {
-        cast_<T> ct{};
+        cast_<T> ct;
         std::visit(ct, value);
         return ct.value;
     }
-
+        
+    CAST(std::string, blobref_t)
+    {
+        if (from == nullptr)
+            return "null";
+        std::stringstream ss;
+        size_t count = 0;
+        size_t size = from->values.size();
+        ss << "{ ";
+        for (const auto i : from->values)
+        {
+            ss << i.first << " : " << cast<std::string>(i.second);
+            ++count;
+            if (count != size)
+                ss << ", ";
+        }
+        ss << " }";
+        return ss.str();
+    }
+    
 }
 
 

@@ -12,6 +12,7 @@ namespace simpl
 {
 	class expression;
 	class nary_expression;
+	class new_expression;
 
 	struct identifier { std::string name; };
 
@@ -21,13 +22,27 @@ namespace simpl
 		virtual ~expression_visitor() = default;
 		virtual void visit(expression &cs) = 0;
 		virtual void visit(nary_expression &cs) = 0;
+		virtual void visit(new_expression &ns) = 0;
 	};
 
 	using expression_ptr = std::unique_ptr<expression>;
 
+	struct initializer 
+	{ 
+		initializer(std::string &&id, expression_ptr expr)
+			:identifier(std::move(id)), expr(std::move(expr))
+		{
+		}
+
+		std::string identifier; 
+		expression_ptr expr; 
+	};
+	using initializer_list_t = std::vector<initializer>;
+
 	// a simpl expression tree, either a value, or an expression.
 	class expression
 	{
+	public:
 		using value_type = std::variant<empty_t, value_t, expression_ptr, identifier>;
 
 	public:
@@ -35,6 +50,7 @@ namespace simpl
 			:value_(empty_t{})
 		{
 		}
+
 		expression(const value_t &v)
 			:value_(v)
 		{
@@ -110,6 +126,27 @@ namespace simpl
 
 	};
 
+	class new_expression : public expression
+	{
+	public:
+		new_expression(initializer_list_t &&init)
+			:initializers_(std::move(init))
+		{
+		}
+
+		const initializer_list_t& initializers()
+		{
+			return initializers_;
+		}
+
+		virtual void evaluate(expression_visitor &v) override
+		{
+			v.visit(*this);
+		}
+
+	private:
+		initializer_list_t initializers_;
+	};
 }
 
 #endif // __simpl_expression_h__

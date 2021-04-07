@@ -9,8 +9,6 @@
 #include <vector>
 #include <variant>
 
-
-
 /*
 */
 namespace simpl
@@ -22,6 +20,7 @@ namespace simpl
 		let_keyword,
 		def_keyword,
 		end_keyword,
+		new_keyword,
 		while_keyword,
 		return_keyword,
 		unknown_keyword,
@@ -36,7 +35,7 @@ namespace simpl
 		}
 	};
 
-	using parse_val = std::variant<empty_t, op_type, identifier, value_t>;
+	using parse_val = std::variant<empty_t, op_type, identifier, keywords, value_t>;
 
 	class parser
 	{
@@ -136,6 +135,9 @@ namespace simpl
 			if (tkn.type == token_types::identifier_token)
 			{
 				tokenizer_.next();
+				keywords kw;
+				if (is_keyword(tkn, kw))
+					return kw;
 				return identifier{ std::string(tkn.begin, tkn.end) };
 			}
 			if (tkn.type == token_types::number)
@@ -158,22 +160,23 @@ namespace simpl
 
 			auto val = next_val();
 
-			if (val.index() == 0)
+			if (std::holds_alternative<empty_t>(val))
 				return nullptr;
 
 			if (val.index() < 1)
 				throw parse_error("expected an value or identifier");
 
-			while (val.index() != 0) // while
+			while (!std::holds_alternative<empty_t>(val)) // while
 			{
 				if (val.index() > 1)
 				{
-					if (val.index() == 3)
+					if (std::holds_alternative<value_t>(val))
 					{
 						ostack.push(std::make_unique<expression>(std::get<value_t>(val)));
 					}
-					else
+					else if (std::holds_alternative<identifier>(val))
 					{
+						auto id = std::get<identifier>(val);
 						if (tokenizer_.peek().type == token_types::lparen)
 						{
 							tokenizer_.next(); // swallow (
@@ -183,13 +186,20 @@ namespace simpl
 							auto close = tokenizer_.next();
 							if (close.type != token_types::rparen)
 								throw parse_error("expected a ')'");
-							ostack.push(std::make_unique<nary_expression>(std::get<identifier>(val).name, std::move(expr_list)));
+							ostack.push(std::make_unique<nary_expression>(id.name, std::move(expr_list)));
 						}
 						else
 							ostack.push(std::make_unique<expression>(std::get<identifier>(val)));
 					}
+					else if (std::holds_alternative<keywords>(val))
+					{
+						auto keyword = std::get<keywords>(val);
+						ostack.push(parse_keyword_expression(keyword));
+					}
+					else
+						throw parse_error("undefined parse_val");
 				}
-				else if (val.index() == 1)
+				else if (std::holds_alternative<op_type>(val))
 				{
 					auto pr = get_precendence(std::get<op_type>(val));
 					if (!opstack.empty() && pr <= get_precendence(std::get<op_type>(opstack.top())))
@@ -376,26 +386,91 @@ namespace simpl
 			return list;
 		}
 
+		expression_ptr parse_keyword_expression(keywords kw)
+		{
+			switch (kw)
+			{
+			case keywords::new_keyword:
+				return parse_new_expression();
+			default:
+				throw parse_error("you can't do that here.");
+			}
+		}
+
+		expression_ptr parse_new_expression()
+		{			
+			auto initializers = parse_initializer_list();			
+			return std::make_unique<new_expression>(std::move(initializers));
+		}
+
+		initializer_list_t parse_initializer_list()
+		{
+			initializer_list_t list;
+			expect(token_types::lbrack);
+			while (tokenizer_.peek().type != token_types::rbrack)
+			{
+				auto id = tokenizer_.next();
+				if (id.type != token_types::identifier_token)
+					throw parse_error("expected an identifier");
+
+				auto eq = tokenizer_.next();
+				if (eq.type != token_types::op || !builtins::compare(eq.begin, eq.end, "="))
+					throw parse_error("expected '='");
+
+				auto expr = parse_expression();
+				if (expr == nullptr)
+					throw parse_error("expected an expression");
+
+				list.emplace_back(id.to_string(), std::move(expr));
+
+				auto pk = tokenizer_.peek();
+				if (pk.type == token_types::rbrack)
+					break;
+				if (pk.type != token_types::comma)
+				{
+					throw parse_error("expected a comma");
+				}
+				tokenizer_.next();
+			}
+			expect(token_types::rbrack);
+			return list;
+		}
+
 		void close_statement()
 		{
 			if (tokenizer_.next().type != token_types::eos)
 				throw parse_error("expected a ';'");
 		}
 
-		keywords to_keyword(token_t &t)
+		template <typename IteratorT>
+		keywords to_keyword(IteratorT begin, IteratorT end)
 		{
-			if (builtins::compare(t.begin, t.end, "if"))
+			if (builtins::compare(begin, end, "if"))
 				return keywords::if_keyword;
-			else if (builtins::compare(t.begin, t.end, "def"))
+			else if (builtins::compare(begin, end, "def"))
 				return keywords::def_keyword;
-			else if (builtins::compare(t.begin, t.end, "let"))
+			else if (builtins::compare(begin, end, "new"))
+				return keywords::new_keyword;
+			else if (builtins::compare(begin, end, "let"))
 				return keywords::let_keyword;
-			else if (builtins::compare(t.begin, t.end, "while"))
+			else if (builtins::compare(begin, end, "while"))
 				return keywords::while_keyword;
-			else if (builtins::compare(t.begin, t.end, "return"))
+			else if (builtins::compare(begin, end, "return"))
 				return keywords::return_keyword;
 			return keywords::unknown_keyword;
 		}
+
+		keywords to_keyword(token_t &t)
+		{
+			return to_keyword(t.begin, t.end);
+		}
+
+		bool is_keyword(token_t &tkn, keywords &kw_out)
+		{
+			kw_out = to_keyword(tkn);
+			return kw_out != keywords::unknown_keyword;
+		}
+
 		op_type to_op(token_t &t)
 		{
 			return to_op_type(t.begin, t.end);

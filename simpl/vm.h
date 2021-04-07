@@ -179,7 +179,7 @@ namespace simpl
 
         void set_val(const std::string &name, size_t offset)
         {
-            auto stack = 0;
+            size_t stack = 0;
             while (stack < locals_.size())
             {
                 auto scope = locals_.offset(stack);
@@ -195,7 +195,7 @@ namespace simpl
 
         value_t &load_var(const std::string &name)
         {
-            auto offset = 0;
+            size_t offset = 0;
             while (offset < locals_.size())
             {
                 auto scope = locals_.offset(offset);
