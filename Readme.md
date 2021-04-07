@@ -17,20 +17,71 @@ Examples
 ---
 
  ```
- # The one and only, Hello World
-
- print("hello world");
-
- ```
-
-
- ```
- # This is a loop.
- let i=10;
- while(i>0) {
-    println("I'm in a loop.");
-    i=i-1;
- }
+    ### Comments ###
+    # this is a comment
+    
+    ### Features ###
+    
+    ## Equations
+    
+    ## Variables
+    
+    # Declare a variable
+    let hw = "hello world!";
+    println(hw);
+    
+    # I have loose typing so you can assign a number to a string, and vice versa
+    hw = 4+4;
+    println(hw);
+    
+    # quack-quack
+    hw = "goodbye " + 4;
+    println(hw);
+    
+    ## Loops
+    let i=10;
+    println(i);
+    while(i>0)
+    {
+        println("in a while crocodile");
+        i = i-1;
+    }
+    
+    # I don't have for loops yet
+    # for(let i=0; i<5; ++i); 
+    
+    ## Functions
+    
+    # I can define a function
+    def foo(a,b)  {
+        println(a);
+        println(b);
+        return "foo";
+    }
+    # I can call a function
+    println(foo("test",5));
+    
+    # I even supports recursion
+    def recursive(i)  {
+        println(i);
+        if(i>0) {
+            println("i am recursive");
+            recursive(i-1);
+        }
+    }
+    
+    recursive(5);
+    
+    ### Future Work ###
+    
+    ## Arrays
+    # [];
+    # ["foo", 1, new bag{}, 4*4]
+    
+    ## Structures
+    # let kh = new { name="king", suit="hearts" };
+    # kh.name = "queen";
+    # println(kh.name);
 
 
  ```
