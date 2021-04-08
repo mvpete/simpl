@@ -7,11 +7,11 @@ simpl has support for comments, variables, assignment, functions, and loops.
 
 Usage
 ---
-*Note:* - as of now, the library is not consumable. So these steps are bogus, and won't work.
 
 You can use SIMPL in your C++ application (requires C++17 or higher) and create bindings.
 1) Add SIMPL to your include path
-3) `#include <simpl.h>`
+3) `#include <simpl/simpl.h>`
+12) Do some other stuff...
 
 Examples
 ---
