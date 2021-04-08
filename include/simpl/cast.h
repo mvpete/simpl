@@ -2,8 +2,7 @@
 #define __simpl_cast_h__
 
 #include <stdexcept>
-
-#include "value.h"
+#include <simpl/value.h>
 
 namespace simpl
 {

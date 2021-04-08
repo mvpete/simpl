@@ -1,13 +1,14 @@
 #ifndef __simpl_vm_h__
 #define __simpl_vm_h__
 
-#include "value.h"
-#include "static_stack.h"
+#include <simpl/value.h>
+#include <simpl/static_stack.h>
 
 #include <iostream>
 #include <functional>
 #include <map>
 #include <stack>
+#include <sstream>
 
 namespace simpl
 {

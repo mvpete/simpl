@@ -1,8 +1,8 @@
 #ifndef __simpl_parser_h__
 #define __simpl_parser_h__
 
-#include "tokenizer.h"
-#include "statement.h"
+#include <simpl/tokenizer.h>
+#include <simpl/statement.h>
 
 #include <memory>
 #include <stack>

@@ -15,46 +15,44 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="tokenizer.h">
+    <ClInclude Include="..\include\simpl\cast.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="parser.h">
+    <ClInclude Include="..\include\simpl\evaluate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vm.h">
+    <ClInclude Include="..\include\simpl\expression.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="evaluate.h">
+    <ClInclude Include="..\include\simpl\op.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="statement.h">
+    <ClInclude Include="..\include\simpl\operations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="value.h">
+    <ClInclude Include="..\include\simpl\parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="expression.h">
+    <ClInclude Include="..\include\simpl\statement.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vm_execution_context.h">
+    <ClInclude Include="..\include\simpl\static_stack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="op.h">
+    <ClInclude Include="..\include\simpl\tokenizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="static_stack.h">
+    <ClInclude Include="..\include\simpl\value.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="operations.h">
+    <ClInclude Include="..\include\simpl\vm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cast.h">
+    <ClInclude Include="..\include\simpl\vm_execution_context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClInclude Include="..\include\simpl\simpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

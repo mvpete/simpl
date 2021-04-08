@@ -57,8 +57,8 @@ recursive(5);
 ### Work in Progress ###
 
 ## Arrays
-# new [];
-# new ["foo", 1, new {}, 4*4]
+new [];
+new ["foo", 1, new {}, 4*4];
 
 ## Structures
 let kh = new { name="king", suit="hearts" };

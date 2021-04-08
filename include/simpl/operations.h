@@ -3,8 +3,8 @@
 
 #include <stdexcept>
 
-#include "cast.h"
-#include "value.h"
+#include <simpl/cast.h>
+#include <simpl/value.h>
 
 namespace simpl
 {

@@ -1,19 +1,18 @@
 #include <string>
 #include <fstream>
 
-#include "parser.h"
-#include "evaluate.h"
+#include <simpl/simpl.h>
 
 struct exit_ {};
 
 template <typename InStream>
-int run_interpreter(InStream &s, bool user)
+int run_interpreter(InStream &s)
 {
 	try
 	{
 		simpl::vm vm;
 		simpl::vm_execution_context ctx(vm);
-		vm.reg_fn("exit",0, []()
+		vm.reg_fn("exit", 0, []()
 		{
 			throw exit_{};
 		});
@@ -21,15 +20,15 @@ int run_interpreter(InStream &s, bool user)
 		{
 			try
 			{
-				if(user)
-					std::cout << ">";
+				std::cout << ">";
 				std::string line;
 				std::getline(s, line);
-				simpl::parser parser(line.c_str(), line.c_str()+line.length());
-				
+				if (line.empty())
+					continue;
+				simpl::parser parser(line.c_str(), line.c_str() + line.length());
+
 				evaluate(parser.next(), ctx);
-				if(user)
-					std::cout << std::endl;
+				std::cout << std::endl;
 			}
 			catch (const simpl::token_error &t)
 			{
@@ -93,11 +92,11 @@ int main(int argc, const char **argv)
 			std::cout << "cannot open file" << std::endl;
 			return -1;
 		}
-		std::string str((std::istreambuf_iterator<char>(fs)),std::istreambuf_iterator<char>());
+		std::string str((std::istreambuf_iterator<char>(fs)), std::istreambuf_iterator<char>());
 		run_string(str);
 	}
 	else
 	{
-		return run_interpreter(std::cin, false);
+		return run_interpreter(std::cin);
 	}
 }

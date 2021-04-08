@@ -1,7 +1,7 @@
 #ifndef __simple_tokenizer_h__
 #define __simple_tokenizer_h__
 
-#include "op.h"
+#include <simpl/op.h>
 
 #include <stdexcept>
 #include <sstream>
@@ -83,7 +83,7 @@ namespace simpl
 				return next_;
 
 			auto start = cur_;
-			for (; cur_ <= end_; ++cur_)
+			for (; cur_ < end_; ++cur_)
 			{
 				char c = *cur_;
 				if (isspace(c))

@@ -1,8 +1,8 @@
 #ifndef __simpl_expression_h__
 #define __simpl_expression_h__
 
-#include "value.h"
-#include "op.h"
+#include <simpl/value.h>
+#include <simpl/op.h>
 
 #include <memory>
 #include <variant>

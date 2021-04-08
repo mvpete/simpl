@@ -1,8 +1,8 @@
 #ifndef __simpl_evaluate_h__
 #define __simpl_evaluate_h__
 
-#include "vm.h"
-#include "vm_execution_context.h"
+#include <simpl/vm.h>
+#include <simpl/vm_execution_context.h>
 
 namespace simpl
 {

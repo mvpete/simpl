@@ -1,10 +1,11 @@
 #ifndef __simpl_vm_execution_context_h__
 #define __simpl_vm_execution_context_h__
 
-#include "expression.h"
-#include "operations.h"
-#include "statement.h"
-#include "vm.h"
+#include <simpl/expression.h>
+#include <simpl/operations.h>
+#include <simpl/statement.h>
+#include <simpl/vm.h>
+
 #include <functional>
 
 namespace simpl
