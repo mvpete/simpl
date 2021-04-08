@@ -37,6 +37,8 @@ namespace simpl
 		number,
 		lparen,
 		rparen,
+		sqlbrack,
+		sqrbrack,
 		lbrack,
 		rbrack,
 		comma,
@@ -136,6 +138,16 @@ namespace simpl
 				else if (c == '}')
 				{
 					next_ = token_t(token_types::rbrack, start, cur_++);
+					return next_;
+				}
+				else if (c == '[')
+				{
+					next_ = token_t(token_types::sqlbrack, start, cur_++);
+					return next_;
+				}
+				else if (c == ']')
+				{
+					next_ = token_t(token_types::sqrbrack, start, cur_++);
 					return next_;
 				}
 				else if (c == ',')

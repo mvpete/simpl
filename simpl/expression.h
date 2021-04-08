@@ -12,7 +12,8 @@ namespace simpl
 {
 	class expression;
 	class nary_expression;
-	class new_expression;
+	class new_blob_expression;
+	class new_array_expression;
 
 	struct identifier { std::string name; };
 
@@ -22,7 +23,8 @@ namespace simpl
 		virtual ~expression_visitor() = default;
 		virtual void visit(expression &cs) = 0;
 		virtual void visit(nary_expression &cs) = 0;
-		virtual void visit(new_expression &ns) = 0;
+		virtual void visit(new_blob_expression &ns) = 0;
+		virtual void visit(new_array_expression &nas) = 0;
 	};
 
 	using expression_ptr = std::unique_ptr<expression>;
@@ -38,6 +40,7 @@ namespace simpl
 		expression_ptr expr; 
 	};
 	using initializer_list_t = std::vector<initializer>;
+	using expression_list_t = std::vector<expression_ptr>;
 
 	// a simpl expression tree, either a value, or an expression.
 	class expression
@@ -126,10 +129,10 @@ namespace simpl
 
 	};
 
-	class new_expression : public expression
+	class new_blob_expression : public expression
 	{
 	public:
-		new_expression(initializer_list_t &&init)
+		new_blob_expression(initializer_list_t &&init)
 			:initializers_(std::move(init))
 		{
 		}
@@ -146,6 +149,28 @@ namespace simpl
 
 	private:
 		initializer_list_t initializers_;
+	};
+
+	class new_array_expression : public expression
+	{
+	public:
+		new_array_expression(expression_list_t &&init)
+			:expressions_(std::move(init))
+		{
+		}
+
+		const expression_list_t &expressions()
+		{
+			return expressions_;
+		}
+
+		virtual void evaluate(expression_visitor &v) override
+		{
+			v.visit(*this);
+		}
+
+	private:
+		expression_list_t expressions_;
 	};
 }
 

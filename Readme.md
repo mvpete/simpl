@@ -75,11 +75,12 @@ Examples
     ### Future Work ###
     
     ## Arrays
-    # [];
-    # ["foo", 1, new bag{}, 4*4]
+    # new [];
+    # let arr = new ["foo", 1, new {}, 4*4];
+    # arr[0]
     
     ## Structures
-    # let kh = new { name="king", suit="hearts" };
+    let kh = new { name="king", suit="hearts" };
     # kh.name = "queen";
     # println(kh.name);
 

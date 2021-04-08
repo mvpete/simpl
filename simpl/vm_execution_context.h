@@ -160,7 +160,7 @@ namespace simpl
 			}
 		}
 
-		virtual void visit(new_expression &ns)
+		virtual void visit(new_blob_expression &ns)
 		{
 			auto blob = new_blob();
 			vm_.push_stack(blob);
@@ -173,6 +173,19 @@ namespace simpl
 				}
 			}
 		}
+
+		virtual void visit(new_array_expression &nas)
+		{
+			auto array = new_array();
+			vm_.push_stack(array);
+			for (const auto &expr : nas.expressions())
+			{
+				expr->evaluate(*this);
+				array->values.push_back(vm_.pop_stack());
+			}
+
+		}
+
 
 		virtual void visit(nary_expression &cs)
 		{

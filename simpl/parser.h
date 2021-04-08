@@ -180,7 +180,7 @@ namespace simpl
 						if (tokenizer_.peek().type == token_types::lparen)
 						{
 							tokenizer_.next(); // swallow (
-							auto expr_list = parse_expression_list();
+							auto expr_list = parse_expression_list(token_types::rparen);
 							// this is a function call. We want to then parse the expression list
 							// and create an expression
 							auto close = tokenizer_.next();
@@ -238,7 +238,7 @@ namespace simpl
 
 		statement_ptr parse_function_call_statement(token_t &t)
 		{
-			auto exprs = parse_expression_list();
+			auto exprs = parse_expression_list(token_types::rparen);
 			auto close = tokenizer_.next();
 			if (close.type != token_types::rparen)
 				throw parse_error("expected a ')'");
@@ -364,17 +364,17 @@ namespace simpl
 			return list;
 		}
 
-		std::vector<expression_ptr> parse_expression_list()
+		std::vector<expression_ptr> parse_expression_list(token_types right)
 		{
 			std::vector<expression_ptr> list;
-			while (tokenizer_.peek().type != token_types::rparen)
+			while (tokenizer_.peek().type != right)
 			{
 				auto exp = parse_expression();
 				if(exp)
 					list.emplace_back(std::move(exp));
 
 				auto pk = tokenizer_.peek();
-				if (pk.type == token_types::rparen)
+				if (pk.type == right)
 					break;
 
 				if (pk.type != token_types::comma)
@@ -391,16 +391,29 @@ namespace simpl
 			switch (kw)
 			{
 			case keywords::new_keyword:
-				return parse_new_expression();
+			{
+				if (tokenizer_.peek().type == token_types::sqlbrack)
+					return parse_new_array_expression();
+				else
+					return parse_new_blob_expression();
+			}
 			default:
 				throw parse_error("you can't do that here.");
 			}
 		}
 
-		expression_ptr parse_new_expression()
+		expression_ptr parse_new_blob_expression()
 		{			
 			auto initializers = parse_initializer_list();			
-			return std::make_unique<new_expression>(std::move(initializers));
+			return std::make_unique<new_blob_expression>(std::move(initializers));
+		}
+
+		expression_ptr parse_new_array_expression()
+		{
+			expect(token_types::sqlbrack);
+			auto expr = parse_expression_list(token_types::sqrbrack);
+			expect(token_types::sqrbrack);
+			return std::make_unique<new_array_expression>(std::move(expr));
 		}
 
 		initializer_list_t parse_initializer_list()
