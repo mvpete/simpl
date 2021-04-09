@@ -8,6 +8,7 @@ struct exit_ {};
 template <typename InStream>
 int run_interpreter(InStream &s)
 {
+	std::string prompt = ">";
 	try
 	{
 		simpl::vm vm;
@@ -16,19 +17,35 @@ int run_interpreter(InStream &s)
 		{
 			throw exit_{};
 		});
+		std::stringstream ss;
 		while (s.good())
 		{
 			try
 			{
-				std::cout << ">";
+				std::cout << prompt;
 				std::string line;
 				std::getline(s, line);
 				if (line.empty())
 					continue;
-				simpl::parser parser(line.c_str(), line.c_str() + line.length());
 
-				evaluate(parser.next(), ctx);
-				std::cout << std::endl;
+				ss << line;
+				line = ss.str();
+				simpl::parser parser(line.c_str(), line.c_str() + line.length());
+				
+				auto stmt = parser.next();
+				if (stmt == nullptr) 
+				{
+					prompt = "+";
+					continue;
+				}
+				else 
+				{
+					evaluate(std::move(stmt), ctx);
+					ss.str("");
+					prompt = ">";
+					std::cout << std::endl;
+				}
+
 			}
 			catch (const simpl::token_error &t)
 			{

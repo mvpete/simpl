@@ -71,18 +71,42 @@ Examples
     }
     
     recursive(5);
+
+    ## Arrays
+
+    let arr = new [];
+    let arr = new ["foo", 1, new {}, 4*4];
+
+    ## Structures
+
+    let kh = new { name="king", suit="hearts" };
     
     ### Future Work ###
     
-    ## Arrays
-    # new [];
-    # let arr = new ["foo", 1, new {}, 4*4];
+    ## Arrays   
     # arr[0]
     
     ## Structures
-    let kh = new { name="king", suit="hearts" };
     # kh.name = "queen";
     # println(kh.name);
+
+    ## Multi-methods
+
+    #def multi_method(a is string, b is number) {
+        println("m(string,number)");
+    }
+
+    #def multi_method(a is number, b is number) {
+        println("m(number,number)");
+    }
+
+    # let foo = [ "hello", "world" ];
+    # let bar = ["hello", 10];
+
+    #multi_method(foo...);
+    # prints "m(string,number)"
+    #multi_method(bar...)
+    # prints "m(number,number)"
 
 
  ```

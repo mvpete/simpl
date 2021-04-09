@@ -272,6 +272,9 @@ namespace simpl
 			auto blk = std::make_unique<block_statement>();
 			while (tokenizer_.peek().type != token_types::rbrack)
 			{
+				if (tokenizer_.peek().type == token_types::eof)
+					return nullptr;
+
 				auto tkn = tokenizer_.next();
 				auto stmt = parse_statement(tkn);
 				if (stmt)
@@ -329,6 +332,9 @@ namespace simpl
 			expect(token_types::rparen);
 			change_scope sp(*this, scopes::function);
 			auto block = parse_block_statement();
+
+			if (block == nullptr) return nullptr;
+
 			return std::make_unique<def_statement>(identifier.to_string(), std::move(id_list), std::move(block));
 		}
 
@@ -345,6 +351,9 @@ namespace simpl
 			std::vector<identifier> list;
 			while (tokenizer_.peek().type != token_types::rparen)
 			{
+				if (tokenizer_.peek().type == token_types::eof)
+					return std::vector<identifier>();
+
 				auto tkn = tokenizer_.next();
 				if (tkn.type != token_types::identifier_token)
 					throw parse_error("expected an identifier");
@@ -369,6 +378,9 @@ namespace simpl
 			std::vector<expression_ptr> list;
 			while (tokenizer_.peek().type != right)
 			{
+				if (tokenizer_.peek().type == token_types::eof)
+					return list;
+
 				auto exp = parse_expression();
 				if(exp)
 					list.emplace_back(std::move(exp));
@@ -422,6 +434,9 @@ namespace simpl
 			expect(token_types::lbrack);
 			while (tokenizer_.peek().type != token_types::rbrack)
 			{
+				if (tokenizer_.peek().type == token_types::eof)
+					return list;
+
 				auto id = tokenizer_.next();
 				if (id.type != token_types::identifier_token)
 					throw parse_error("expected an identifier");
