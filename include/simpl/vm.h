@@ -1,6 +1,7 @@
 #ifndef __simpl_vm_h__
 #define __simpl_vm_h__
 
+#include <simpl/detail/signature.h>
 #include <simpl/value.h>
 #include <simpl/static_stack.h>
 
@@ -115,6 +116,11 @@ namespace simpl
             return top;
         }
 
+        size_t stack_size()
+        {
+            return stack_.size();
+        }
+
         void decrement_stack(size_t offset)
         {
             stack_.pop(offset);
@@ -160,6 +166,18 @@ namespace simpl
                 } 
             });
         }
+
+        template <typename CallableT>
+        void reg_fn(const std::string &id, CallableT &&fn)
+        {
+            reg_fn(id, detail::get_signature<CallableT>().arity, []()
+            {
+                // unpack the signature here.
+
+            });
+        }
+
+
 
         void reg_fn(fn_def &&df)
         {

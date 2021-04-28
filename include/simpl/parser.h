@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <stack>
+#include <string>
 #include <vector>
 #include <variant>
 
@@ -72,6 +73,12 @@ namespace simpl
 		};
 
 	public:
+
+		parser(const std::string &text)
+			:tokenizer_(text.c_str(), text.c_str() + text.length()), scope_(scopes::main)
+		{
+		}
+
 		parser(const char *begin, const char *end)
 			:tokenizer_(begin, end), scope_(scopes::main)
 		{
@@ -82,7 +89,6 @@ namespace simpl
 			auto t = tokenizer_.next();
 			return parse_statement(t);
 		}
-
 
 	private:
 		statement_ptr parse_statement(token_t &t)
@@ -107,11 +113,16 @@ namespace simpl
 			}
 			// peek the next token
 			auto nxt = tokenizer_.peek();
+
+			// hmm. descent.
+
+
 			if (nxt.type == token_types::op && builtins::compare(nxt.begin, nxt.end, "="))
 			{
 				tokenizer_.next();
 				return parse_assignment_statement(t);
 			}
+
 			tokenizer_.reverse(t);
 			auto expr = parse_expression();
 			if (expr == nullptr)
@@ -120,7 +131,7 @@ namespace simpl
 			}
 			close_statement();
 
-			return std::make_unique<call_statement>(std::move(expr));
+			return std::make_unique<expr_statement>(std::move(expr));
 			
 		}
 
@@ -138,12 +149,14 @@ namespace simpl
 				keywords kw;
 				if (is_keyword(tkn, kw))
 					return kw;
-				return identifier{ std::string(tkn.begin, tkn.end) };
+
+				return parse_identifier(tkn);
+				
 			}
 			if (tkn.type == token_types::number)
 			{
 				tokenizer_.next();
-				return std::stoi(std::string(tkn.begin, tkn.end));
+				return std::stod(std::string(tkn.begin, tkn.end));
 			}
 			if (tkn.type == token_types::op)
 			{
@@ -151,6 +164,46 @@ namespace simpl
 				return to_op(tkn);
 			}
 			return parse_val{};
+		}
+
+		identifier parse_identifier(const token_t &tkn)
+		{
+			identifier id{ tkn.to_string() };
+			while (1)
+			{
+				auto nt = tokenizer_.peek().type;
+				if (nt == token_types::period)
+				{
+					tokenizer_.next();
+					if (tokenizer_.peek().type != token_types::identifier_token)
+						throw parse_error("expected an identifier");
+					auto acc = tokenizer_.next();
+					id.push_path(acc.to_string());
+				}
+				// variable[index]
+				else if (nt == token_types::sqlbrack)
+				{
+					tokenizer_.next();
+					auto tkn_type = tokenizer_.peek().type;
+					if (tkn_type != token_types::identifier_token && tkn_type != token_types::number)
+						throw parse_error("expected an identifier or number");
+
+					auto acc = tokenizer_.next();
+					if (tokenizer_.peek().type != token_types::sqrbrack)
+						throw parse_error("expected a closing ']'");
+
+					tokenizer_.next();
+					indexor val;
+					if (tkn_type == token_types::number)
+						val = to<size_t>(acc.to_string());
+					else
+						val = acc.to_string();
+					id.push_path(val);
+				}
+				else
+					break;
+			}
+			return id;
 		}
 
 		expression_ptr parse_expression()
@@ -243,7 +296,7 @@ namespace simpl
 			if (close.type != token_types::rparen)
 				throw parse_error("expected a ')'");
 			close_statement();
-			return std::make_unique<call_statement>(std::make_unique<nary_expression>(t.to_string(), std::move(exprs)));
+			return std::make_unique<expr_statement>(std::make_unique<nary_expression>(t.to_string(), std::move(exprs)));
 		}
 
 		// let {identifier} = {expression};
@@ -519,7 +572,18 @@ namespace simpl
 		scopes scope_;
 	};
 
-
+	std::vector<statement_ptr> parse(const std::string &s)
+	{
+		parser p(s);
+		std::vector<statement_ptr> ast;
+		while (1)
+		{
+			auto stmt = p.next();
+			if (!stmt) break;
+			ast.push_back(std::move(stmt));
+		}
+		return ast;
+	}
 	
 }
 

@@ -40,7 +40,7 @@ To to(const From &f)\
 
     // specialize casts here. to<to,from>
     template <>
-    std::string to<std::string, int>(const int &value)
+    std::string to<std::string, double>(const double &value)
     {
         std::stringstream ss;
         ss << value;
@@ -54,10 +54,10 @@ To to(const From &f)\
     }
 
     template <>
-    int to<int, std::string>(const std::string &v)
+    double to<double, std::string>(const std::string &v)
     {
         // for now.
-        int rv = -1;
+        double rv = -1;
         std::stringstream ss;
         ss << v;
         ss >> rv;
@@ -65,13 +65,13 @@ To to(const From &f)\
     }
 
     template <>
-    int to<int, int>(const int &v)
+    double to<double, double>(const double &v)
     {
         return v;
     }
 
     template <>
-    bool to<bool, int>(const int &v)
+    bool to<bool, double>(const double &v)
     {
         return v > 0;
     }
@@ -82,19 +82,27 @@ To to(const From &f)\
         return strval == "true" || strval == "1" || strval == "t" || strval == "TRUE" || strval == "T";
     }
 
+    template <>
+    size_t to<size_t, std::string>(const std::string &strval)
+    {
+        std::stringstream ss;
+        ss << strval;
+        size_t val(0);
+        ss >> val;
+        return val;
+    }
+
     CAST(bool, blobref_t)
     {
         return from != nullptr;
     }
     
-
-
     CAST(blobref_t, blobref_t)
     {
         return from;
     }
 
-    INVALID_CAST(int, blobref_t);
+    INVALID_CAST(double, blobref_t);
     INVALID_CAST(empty_t, blobref_t);
     INVALID_CAST(arrayref_t, blobref_t);
 
@@ -117,7 +125,7 @@ To to(const From &f)\
             throw invalid_cast("cannot cast empty_t");
         }
 
-        void operator()(int lv)
+        void operator()(double lv)
         {
             value = to<T>(lv);
         }

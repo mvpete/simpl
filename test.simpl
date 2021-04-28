@@ -1,8 +1,15 @@
 
+println("### Comments ###");
+println("# this is a comment");
+println("");
+
 ### Comments ###
 # this is a comment
 
+
 ### Features ###
+println("### Features ###");
+
 
 ## Equations
 
@@ -56,15 +63,25 @@ recursive(5);
 
 ### Work in Progress ###
 
+println("## Arrays");
+println("");
+
 ## Arrays
 new [];
-new ["foo", 1, new {}, 4*4];
+let my_array = new ["foo", 1, new {}, 4*4];
+println(my_array[0]);
+println(my_array[3]);
 
 ## Structures
 let kh = new { name="king", suit="hearts" };
 println(kh);
+println(kh.name);
+println(kh[suit]);
+
+# kh.inner.inner.inner[inner];
+
 # kh.name = "queen";
-# println(kh.name);
+
 
 ## add boolean logic operators && ||, with short circuiting
 
@@ -73,5 +90,7 @@ println(kh);
 # else if(...)
 # else
 
+## logical && and ||
 
 ## file I/O
+

@@ -23,7 +23,8 @@ Examples
     ### Features ###
     
     ## Equations
-    
+    1 + 3;
+
     ## Variables
     
     # Declare a variable
@@ -92,7 +93,7 @@ Examples
 
     ## Multi-methods
 
-    #def multi_method(a is string, b is number) {
+    #def multi_method(a [is string], b [is number]) {
         println("m(string,number)");
     }
 
@@ -108,5 +109,13 @@ Examples
     #multi_method(bar...)
     # prints "m(number,number)"
 
+    
+
 
  ```
+
+ ### References
+
+ https://ruslanspivak.com/lsbasi-part18/
+ https://craftinginterpreters.com/
+ https://github.com/ChaiScript

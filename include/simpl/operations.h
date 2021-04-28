@@ -49,9 +49,9 @@ namespace simpl
             result = lv;
         }
 
-        void operator()(int lv)
+        void operator()(double lv)
         {
-            int rv = cast<int>(rvalue);
+            double rv = cast<double>(rvalue);
             result = lv + rv;
         }
 
@@ -85,9 +85,9 @@ namespace simpl
             result = lv;
         }
 
-        void operator()(int lv)
+        void operator()(double lv)
         {
-            int rv = cast<int>(rvalue);
+            double rv = cast<double>(rvalue);
             result = lv - rv;
         }
 
@@ -119,9 +119,9 @@ namespace simpl
             result = lv;
         }
 
-        void operator()(int lv)
+        void operator()(double lv)
         {
-            int rv = cast<int>(rvalue);
+            double rv = cast<double>(rvalue);
             result = lv * rv;
         }
 
@@ -153,9 +153,9 @@ namespace simpl
             result = lv;
         }
 
-        void operator()(int lv)
+        void operator()(double lv)
         {
-            int rv = cast<int>(rvalue);
+            double rv = cast<double>(rvalue);
             result = lv / rv;
         }
 
@@ -187,9 +187,9 @@ namespace simpl
             result = std::holds_alternative<empty_t>(rvalue);
         }
 
-        void operator()(int lv)
+        void operator()(double lv)
         {
-            result = lv == cast<int>(rvalue);
+            result = lv == cast<double>(rvalue);
         }
 
         void operator()(const std::string &lv)
@@ -220,9 +220,9 @@ namespace simpl
             result = !std::holds_alternative<empty_t>(rvalue);
         }
 
-        void operator()(int lv)
+        void operator()(double lv)
         {
-            result = lv != cast<int>(rvalue);
+            result = lv != cast<double>(rvalue);
         }
 
         void operator()(const std::string &lv)
@@ -253,9 +253,9 @@ namespace simpl
             result = false;
         }
 
-        void operator()(int lv)
+        void operator()(double lv)
         {
-            result = lv < cast<int>(rvalue);
+            result = lv < cast<double>(rvalue);
         }
 
         void operator()(const std::string &lv)
@@ -286,9 +286,9 @@ namespace simpl
             result = false;
         }
 
-        void operator()(int lv)
+        void operator()(double lv)
         {
-            result = lv <= cast<int>(rvalue);
+            result = lv <= cast<double>(rvalue);
         }
 
         void operator()(const std::string &lv)
@@ -319,9 +319,9 @@ namespace simpl
             result = false;
         }
 
-        void operator()(int lv)
+        void operator()(double lv)
         {
-            result = lv > cast<int>(rvalue);
+            result = lv > cast<double>(rvalue);
         }
 
         void operator()(const std::string &lv)
@@ -352,9 +352,9 @@ namespace simpl
             result = false;
         }
 
-        void operator()(int lv)
+        void operator()(double lv)
         {
-            result = lv >= cast<int>(rvalue);
+            result = lv >= cast<double>(rvalue);
         }
 
         void operator()(const std::string &lv)

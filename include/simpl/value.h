@@ -25,7 +25,7 @@ namespace simpl
 		return std::make_shared<array_t>();
 	}
 
-	using value_t = std::variant<empty_t, bool, int, std::string, blobref_t, arrayref_t>;
+	using value_t = std::variant<empty_t, bool, double, std::string, blobref_t, arrayref_t>;
 	struct blob_t { std::map<std::string, value_t> values; };
 	struct array_t { std::vector<value_t> values; };
 

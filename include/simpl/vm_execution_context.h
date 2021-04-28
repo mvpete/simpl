@@ -44,10 +44,14 @@ namespace simpl
 			{
 				std::cout << cast<std::string>(vm_.stack_offset(0)) << "\n";
 			});
+			vm_.reg_fn("test", [](const std::string &s)
+			{
+				return std::string();
+			});
 		}
 
 	public:
-		virtual void visit(call_statement &cs)
+		virtual void visit(expr_statement &cs)
 		{
 			if (cs.expr())
 				cs.expr()->evaluate(*this);
@@ -156,8 +160,7 @@ namespace simpl
 			}
 			else if (std::holds_alternative<identifier>(ex.value()))
 			{
-				auto id = std::get<identifier>(ex.value());
-				vm_.push_stack(vm_.load_var(id.name));
+				load_identifier(std::get<identifier>(ex.value()));
 			}
 		}
 
@@ -184,9 +187,7 @@ namespace simpl
 				expr->evaluate(*this);
 				array->values.push_back(vm_.pop_stack());
 			}
-
 		}
-
 
 		virtual void visit(nary_expression &cs)
 		{
@@ -249,6 +250,8 @@ namespace simpl
 			}
 		}
 
+		
+
 	private:
 
 		template <typename OpT>
@@ -283,6 +286,45 @@ namespace simpl
 		bool is_true(const value_t &v)
 		{
 			return cast<bool>(v);
+		}
+
+		void load_identifier(const identifier &id)
+		{
+			auto &val = vm_.load_var(id.name);
+			if (id.path.size() == 0)
+			{
+				vm_.push_stack(val);
+			}
+			else
+			{
+				auto next_val = val;
+				for (const auto &indexor : id.path)
+				{
+					next_val = at(next_val, indexor);
+				}
+				vm_.push_stack(next_val);
+			}
+		}
+
+		value_t &at(value_t &val, indexor at)
+		{
+			if (std::holds_alternative<size_t>(at))
+			{
+				// check that the variable is an array
+				if (!std::holds_alternative<arrayref_t>(val))
+					throw std::runtime_error("not an array");
+
+				auto array = std::get<arrayref_t>(val);
+				return array->values.at(std::get<size_t>(at));
+			}
+
+			// check that the variable is a blob.
+			if (!std::holds_alternative<blobref_t>(val))
+				throw std::runtime_error("not an object");
+
+			auto blob = std::get<blobref_t>(val);
+			return blob->values.at(std::get<std::string>(at));
+
 		}
 		
 

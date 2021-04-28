@@ -15,7 +15,7 @@
 namespace simpl
 {
 	
-	class call_statement;
+	class expr_statement;
 	class let_statement;
 	class if_statement;
 	class def_statement;
@@ -28,7 +28,7 @@ namespace simpl
 	{
 	public:
 		virtual ~statement_visitor() = default;
-		virtual void visit(call_statement &cs) = 0;
+		virtual void visit(expr_statement &cs) = 0;
 		virtual void visit(let_statement &cs) = 0;
 		virtual void visit(if_statement &is) = 0;
 		virtual void visit(def_statement &ds) = 0;
@@ -45,11 +45,11 @@ namespace simpl
 	};
 	using statement_ptr = std::unique_ptr<statement>;
 
-	class call_statement : public statement
+	class expr_statement : public statement
 	{
 		expression_ptr expr_;
 	public:
-		call_statement(expression_ptr expr)
+		expr_statement(expression_ptr expr)
 			:expr_(std::move(expr))
 		{
 		}

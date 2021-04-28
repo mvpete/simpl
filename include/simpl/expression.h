@@ -15,7 +15,18 @@ namespace simpl
 	class new_blob_expression;
 	class new_array_expression;
 
-	struct identifier { std::string name; };
+	using indexor = std::variant<std::string, size_t>;
+	struct identifier 
+	{ 
+		std::string name; 
+		std::vector<indexor> path; 
+
+		template <typename T>
+		void push_path(T &&val)
+		{
+			path.emplace_back(std::forward<T>(val));
+		}
+	};
 
 	class expression_visitor
 	{
@@ -172,6 +183,7 @@ namespace simpl
 	private:
 		expression_list_t expressions_;
 	};
+
 }
 
 #endif // __simpl_expression_h__

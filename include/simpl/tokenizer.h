@@ -13,21 +13,31 @@ namespace simpl
 		return c == '\r' || c == '\n';
 	}
 
+	struct position
+	{
+		size_t line;
+		size_t col;
+
+		position(size_t line, size_t col)
+			:line(line), col(col)
+		{
+		}
+	};
 
 	class token_error : public std::exception
 	{
 	public:
-		token_error(int line, const char *message)
-			:std::exception(message), line_(line)
+		token_error(const position &pos, const char *message)
+			:std::exception(message), pos_(pos)
 		{
 		}
 
-		int line() const
+		position pos() const
 		{
-			return line_;
+			return pos_;
 		}
 	private:
-		int line_;
+		position pos_;
 	};
 
 	enum token_types
@@ -46,6 +56,7 @@ namespace simpl
 		eof,
 		eos,
 		comment,
+		period,
 		empty_token
 	};
 
@@ -73,7 +84,7 @@ namespace simpl
 	public:
 		template<typename IteratorT>
 		tokenizer(IteratorT begin,  IteratorT end)
-			:begin_(begin), end_(end), cur_(begin), line_(0)
+			:begin_(begin), end_(end), cur_(begin),position_(0,0)
 		{
 		}
 
@@ -83,7 +94,7 @@ namespace simpl
 				return next_;
 
 			auto start = cur_;
-			for (; cur_ < end_; ++cur_)
+			for (; cur_ < end_; ++cur_, ++position_.col)
 			{
 				char c = *cur_;
 				if (isspace(c))
@@ -112,7 +123,8 @@ namespace simpl
 				}
 				else if (is_eol(c) && scan_eol())
 				{
-					++line_;
+					++position_.line;
+					position_.col=0;
 					continue;
 				}
 				else if (c == ';')
@@ -155,12 +167,16 @@ namespace simpl
 					next_ = token_t(token_types::comma, start, cur_++);
 					return next_;
 				}
+				else if (c == '.')
+				{
+					next_ = token_t(token_types::period, start, cur_++);
+					return next_;
+				}
 				else
 				{
 					std::stringstream ss;
 					ss << "err: invalid token '" << c << "'";
-
-					throw token_error(line_, ss.str().c_str());
+					throw token_error(position_, ss.str().c_str());
 				}
 			}
 			next_= token_t(token_types::eof, cur_, end_);
@@ -189,7 +205,7 @@ namespace simpl
 			for (;cur_ != end_; ++cur_)
 			{
 				char c = *cur_;
-				if (!isalnum(c))
+				if (!isalnum(c) && c != '_')
 					break;
 			}
 
@@ -250,7 +266,7 @@ namespace simpl
 			}
 
 			if (cur_ == end_ || *cur_ != '\"')
-				throw token_error(line_,"missing closing quote");
+				throw token_error(position_,"missing closing quote");
 
 			t.type = token_types::literal;
 			t.begin = start;
@@ -261,6 +277,16 @@ namespace simpl
 
 		bool scan_eol()
 		{
+			if (*cur_ == '\r' && cur_ + 1 != end_ && *(cur_ + 1) == '\n')
+			{
+				cur_ += 2;
+				return true;
+			}
+			else if(*cur_ == '\r' || *cur_ == '\n')
+			{
+				cur_++;
+				return true;
+			}
 			return false;
 		}
 
@@ -269,7 +295,7 @@ namespace simpl
 
 	private:
 		const CharT *begin_, *end_, *cur_;
-		int line_;
+		position position_;
 		token_t next_;
 
 	};

@@ -30,7 +30,7 @@ int run_interpreter(InStream &s)
 
 				ss << line;
 				line = ss.str();
-				simpl::parser parser(line.c_str(), line.c_str() + line.length());
+				simpl::parser parser(line);
 				
 				auto stmt = parser.next();
 				if (stmt == nullptr) 
