@@ -171,7 +171,7 @@ namespace simpl
         void reg_fn(const std::string &id, CallableT &&fn)
         {
             constexpr auto sig = detail::get_signature<CallableT>();
-            const auto argstr = format_string("{0}({1})", id, sig.arguments_string());
+           // const auto argstr = format_string("{0}({1})", id, sig.arguments_string());
 
             reg_fn(id, sig.arity, []()
             {
