@@ -44,8 +44,16 @@ namespace simpl
 			{
 				std::cout << cast<std::string>(vm_.stack_offset(0)) << "\n";
 			});
-			vm_.reg_fn("test", [](const std::string &s)
+			vm_.reg_fn("test", []()
 			{
+
+
+
+
+
+
+
+
 				return std::string();
 			});
 		}

@@ -170,7 +170,10 @@ namespace simpl
         template <typename CallableT>
         void reg_fn(const std::string &id, CallableT &&fn)
         {
-            reg_fn(id, detail::get_signature<CallableT>().arity, []()
+            constexpr auto sig = detail::get_signature<CallableT>();
+            const auto argstr = format_string("{0}({1})", id, sig.arguments_string());
+
+            reg_fn(id, sig.arity, []()
             {
                 // unpack the signature here.
 
