@@ -29,6 +29,23 @@ namespace simpl
 	struct blob_t { std::map<std::string, value_t> values; };
 	struct array_t { std::vector<value_t> values; };
 
+	std::string get_type_string(const value_t &v)
+	{
+		if (std::holds_alternative<empty_t>(v))
+			return typeid(empty_t{}).name();
+		else if (std::holds_alternative<bool>(v))
+			return typeid(bool{}).name();
+		else if (std::holds_alternative<double>(v))
+			return typeid(double{}).name();
+		else if (std::holds_alternative<std::string>(v))
+			return typeid(std::string{}).name();
+		else if (std::holds_alternative<blobref_t>(v))
+			return typeid(blob_t{}).name();
+		else if (std::holds_alternative<arrayref_t>(v))
+			return typeid(array_t{}).name();
+		throw std::runtime_error("unknown type");
+	}
+
 }
 
 #endif //__simpl_value_h__

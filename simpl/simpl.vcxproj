@@ -144,7 +144,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\include\simpl\cast.h" />
+    <ClInclude Include="..\include\simpl\detail\format.h" />
     <ClInclude Include="..\include\simpl\detail\signature.h" />
+    <ClInclude Include="..\include\simpl\detail\type_traits.h" />
     <ClInclude Include="..\include\simpl\evaluate.h" />
     <ClInclude Include="..\include\simpl\expression.h" />
     <ClInclude Include="..\include\simpl\op.h" />

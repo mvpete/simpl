@@ -1,6 +1,7 @@
 #ifndef __simpl_parser_h__
 #define __simpl_parser_h__
 
+#include <simpl/detail/format.h>
 #include <simpl/tokenizer.h>
 #include <simpl/statement.h>
 
@@ -30,8 +31,8 @@ namespace simpl
 	class parse_error : public std::exception
 	{
 	public:
-		parse_error(const char *msg)
-			:std::exception(msg)
+		parse_error(const position &p, const char *msg)
+			:std::exception(detail::format("parser error '{0}'. ({1})", msg, p).c_str())
 		{
 		}
 	};
@@ -127,7 +128,7 @@ namespace simpl
 			auto expr = parse_expression();
 			if (expr == nullptr)
 			{
-				throw parse_error("expected an expression");
+				throw parse_error(tokenizer_.pos(), "expected an expression");
 			}
 			close_statement();
 
@@ -176,7 +177,7 @@ namespace simpl
 				{
 					tokenizer_.next();
 					if (tokenizer_.peek().type != token_types::identifier_token)
-						throw parse_error("expected an identifier");
+						throw parse_error(tokenizer_.pos(), "expected an identifier");
 					auto acc = tokenizer_.next();
 					id.push_path(acc.to_string());
 				}
@@ -186,11 +187,11 @@ namespace simpl
 					tokenizer_.next();
 					auto tkn_type = tokenizer_.peek().type;
 					if (tkn_type != token_types::identifier_token && tkn_type != token_types::number)
-						throw parse_error("expected an identifier or number");
+						throw parse_error(tokenizer_.pos(), "expected an identifier or number");
 
 					auto acc = tokenizer_.next();
 					if (tokenizer_.peek().type != token_types::sqrbrack)
-						throw parse_error("expected a closing ']'");
+						throw parse_error(tokenizer_.pos(), "expected a closing ']'");
 
 					tokenizer_.next();
 					indexor val;
@@ -217,7 +218,7 @@ namespace simpl
 				return nullptr;
 
 			if (val.index() < 1)
-				throw parse_error("expected an value or identifier");
+				throw parse_error(tokenizer_.pos(), "expected an value or identifier");
 
 			while (!std::holds_alternative<empty_t>(val)) // while
 			{
@@ -238,7 +239,7 @@ namespace simpl
 							// and create an expression
 							auto close = tokenizer_.next();
 							if (close.type != token_types::rparen)
-								throw parse_error("expected a ')'");
+								throw parse_error(tokenizer_.pos(), "expected a ')'");
 							ostack.push(std::make_unique<nary_expression>(id.name, std::move(expr_list)));
 						}
 						else
@@ -250,7 +251,7 @@ namespace simpl
 						ostack.push(parse_keyword_expression(keyword));
 					}
 					else
-						throw parse_error("undefined parse_val");
+						throw parse_error(tokenizer_.pos(), "undefined parse_val");
 				}
 				else if (std::holds_alternative<op_type>(val))
 				{
@@ -276,7 +277,7 @@ namespace simpl
 			opstack.pop();
 			size_t arity = get_arity(std::get<op_type>(op));
 			if (arity > ostack.size())
-				throw parse_error("not enough arguments");
+				throw parse_error(tokenizer_.pos(), "not enough arguments");
 			std::vector<expression_ptr> exp;
 			while (arity)
 			{
@@ -294,7 +295,7 @@ namespace simpl
 			auto exprs = parse_expression_list(token_types::rparen);
 			auto close = tokenizer_.next();
 			if (close.type != token_types::rparen)
-				throw parse_error("expected a ')'");
+				throw parse_error(tokenizer_.pos(), "expected a ')'");
 			close_statement();
 			return std::make_unique<expr_statement>(std::make_unique<nary_expression>(t.to_string(), std::move(exprs)));
 		}
@@ -304,13 +305,13 @@ namespace simpl
 		{
 			auto identifier = tokenizer_.next();
 			if (identifier.type != token_types::identifier_token)
-				throw parse_error("expected an identifier");
+				throw parse_error(tokenizer_.pos(), "expected an identifier");
 			auto eq = tokenizer_.next();
 			expression_ptr expr;
 			if (eq.type != token_types::empty_token && eq.type != token_types::eos && eq.type != token_types::eof)
 			{
 				if (eq.type != token_types::op || !builtins::compare(eq.begin, eq.end, "="))
-					throw parse_error("expected an '='");
+					throw parse_error(tokenizer_.pos(), "expected an '='");
 				expr = parse_expression();
 			}
 			close_statement();
@@ -343,7 +344,7 @@ namespace simpl
 			expect(token_types::lparen);
 			auto cond = parse_expression();
 			if (cond == nullptr)
-				throw parse_error("expected an expression");
+				throw parse_error(tokenizer_.pos(), "expected an expression");
 			expect(token_types::rparen);
 			auto statement = parse_block_statement();
 
@@ -356,7 +357,7 @@ namespace simpl
 			expect(token_types::lparen);
 			auto cond = parse_expression();
 			if (cond == nullptr)
-				throw parse_error("expected an expression");
+				throw parse_error(tokenizer_.pos(), "expected an expression");
 			expect(token_types::rparen);
 			auto statement = parse_block_statement();
 
@@ -373,12 +374,12 @@ namespace simpl
 		statement_ptr parse_def_statement(token_t &t)
 		{
 			if (scope_ != scopes::main)
-				throw parse_error("cannot define a function here");
+				throw parse_error(tokenizer_.pos(), "cannot define a function here");
 
 			auto identifier = tokenizer_.next();
 			if (identifier.type != token_types::identifier_token)
 			{
-				throw parse_error("expected an identifier");
+				throw parse_error(tokenizer_.pos(), "expected an identifier");
 			}
 			expect(token_types::lparen);
 			auto id_list = parse_identifier_list();
@@ -409,7 +410,7 @@ namespace simpl
 
 				auto tkn = tokenizer_.next();
 				if (tkn.type != token_types::identifier_token)
-					throw parse_error("expected an identifier");
+					throw parse_error(tokenizer_.pos(), "expected an identifier");
 				list.emplace_back(identifier{ tkn.to_string() });
 
 				auto pk = tokenizer_.peek();
@@ -418,7 +419,7 @@ namespace simpl
 
 				if (pk.type != token_types::comma)
 				{
-					throw parse_error("expected a comma");
+					throw parse_error(tokenizer_.pos(), "expected a comma");
 				}
 				tokenizer_.next();
 			}
@@ -444,7 +445,7 @@ namespace simpl
 
 				if (pk.type != token_types::comma)
 				{
-					throw parse_error("expected a comma");
+					throw parse_error(tokenizer_.pos(), "expected a comma");
 				}
 				tokenizer_.next();
 			}
@@ -463,7 +464,7 @@ namespace simpl
 					return parse_new_blob_expression();
 			}
 			default:
-				throw parse_error("you can't do that here.");
+				throw parse_error(tokenizer_.pos(), "you can't do that here.");
 			}
 		}
 
@@ -492,15 +493,15 @@ namespace simpl
 
 				auto id = tokenizer_.next();
 				if (id.type != token_types::identifier_token)
-					throw parse_error("expected an identifier");
+					throw parse_error(tokenizer_.pos(), "expected an identifier");
 
 				auto eq = tokenizer_.next();
 				if (eq.type != token_types::op || !builtins::compare(eq.begin, eq.end, "="))
-					throw parse_error("expected '='");
+					throw parse_error(tokenizer_.pos(), "expected '='");
 
 				auto expr = parse_expression();
 				if (expr == nullptr)
-					throw parse_error("expected an expression");
+					throw parse_error(tokenizer_.pos(), "expected an expression");
 
 				list.emplace_back(id.to_string(), std::move(expr));
 
@@ -509,7 +510,7 @@ namespace simpl
 					break;
 				if (pk.type != token_types::comma)
 				{
-					throw parse_error("expected a comma");
+					throw parse_error(tokenizer_.pos(), "expected a comma");
 				}
 				tokenizer_.next();
 			}
@@ -520,7 +521,7 @@ namespace simpl
 		void close_statement()
 		{
 			if (tokenizer_.next().type != token_types::eos)
-				throw parse_error("expected a ';'");
+				throw parse_error(tokenizer_.pos(), "expected a ';'");
 		}
 
 		template <typename IteratorT>
@@ -563,7 +564,7 @@ namespace simpl
 		{
 			auto tkn = tokenizer_.next();
 			if (tkn.type != ttype)
-				throw parse_error("expected a token");
+				throw parse_error(tokenizer_.pos(), "expected a token");
 			return tkn;
 		}
 

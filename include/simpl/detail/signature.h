@@ -2,6 +2,8 @@
 #define __simpl_detail_signature_h__
 
 #include <simpl/value.h>
+#include <simpl/detail/format.h>
+#include <simpl/detail/type_traits.h>
 
 namespace simpl
 {
@@ -18,29 +20,22 @@ namespace simpl
 
         template<typename T, typename ...Ts>
         struct are_valid_types<T,Ts...>
-            : std::conditional_t<is_one_of<typename std::decay<T>::type, bool, double, std::string, blob_t, array_t, value_t>::value, are_valid_types<Ts...>, std::false_type> {};
+            : std::conditional_t<is_one_of<typename std::decay<T>::type, bool, double, std::string, blob_t, array_t, value_t, void>::value, are_valid_types<Ts...>, std::false_type> {};
+
+        template<typename ...>
+        struct decay_tuple 
+        {
+            using type = std::tuple<>;
+        };
+
+        template <typename T, typename ...Args>
+        struct decay_tuple<T, Args...> 
+        {
+            using type = std::tuple<typename std::decay_t<T>, Args...>;
+        };
 
         template<typename T>
         struct signature : signature<decltype(&T::operator())> {};
-
-        template <typename ...>
-        struct to_string
-        {
-            static std::string value()
-            {
-                return std::string();
-            }
-        };
-
-        template <typename T, typename ...Ts>
-        struct to_string<T, Ts...>
-        {
-            static std::string value()
-            {
-                return std::string(typeid(T).name()) + ", " + to_string<Ts...>::value();
-            }
-        };
-
 
         template <typename R, typename ...Args>
         struct signature_impl
@@ -57,9 +52,16 @@ namespace simpl
                 typedef typename std::tuple_element<i, std::tuple<Args...>>::type type;
             };
 
+            using types = typename decay_tuple<Args...>::type;
+
             std::string arguments_string() const
             {
                 return to_string<Args...>::value();
+            }
+
+            std::vector<std::string> arguments()
+            {
+                return to_vector<Args...>::value();
             }
 
         };

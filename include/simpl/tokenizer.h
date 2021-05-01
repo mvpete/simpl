@@ -2,6 +2,7 @@
 #define __simple_tokenizer_h__
 
 #include <simpl/op.h>
+#include <simpl/detail/format.h>
 
 #include <stdexcept>
 #include <sstream>
@@ -24,11 +25,17 @@ namespace simpl
 		}
 	};
 
+	std::ostream &operator<<(std::ostream &os, const position &p)
+	{
+		os << p.line << ":" << p.col;
+		return os;
+	}
+
 	class token_error : public std::exception
 	{
 	public:
 		token_error(const position &pos, const char *message)
-			:std::exception(message), pos_(pos)
+			:std::exception(detail::format("token error: {0} ({1})", message, pos).c_str()), pos_(pos)
 		{
 		}
 
@@ -174,9 +181,7 @@ namespace simpl
 				}
 				else
 				{
-					std::stringstream ss;
-					ss << "err: invalid token '" << c << "'";
-					throw token_error(position_, ss.str().c_str());
+					throw token_error(position_, detail::format("invalid token '{0}'", c).c_str());
 				}
 			}
 			next_= token_t(token_types::eof, cur_, end_);
@@ -196,6 +201,11 @@ namespace simpl
 		{
 			cur_ = t.begin;
 			next_.type = empty_token;
+		}
+
+		const position &pos() const
+		{
+			return position_;
 		}
 
 	private:
@@ -289,9 +299,6 @@ namespace simpl
 			}
 			return false;
 		}
-
-
-
 
 	private:
 		const CharT *begin_, *end_, *cur_;

@@ -10,7 +10,10 @@
 
 namespace simpl
 {
-	class scope
+
+	namespace detail
+	{
+		class scope
 	{
 	public:
 		scope(vm &vm)
@@ -30,31 +33,30 @@ namespace simpl
 		vm &vm_;
 	};
 
+		std::string format_name(const std::string &name, const std::vector<identifier> &identifiers)
+		{
+			std::stringstream ss;
+			ss << name << "(";
+			for (size_t i = 0; i < identifiers.size(); ++i)
+				ss << detail::to_string<value_t>::value();
+			ss << ")";
+			return ss.str();
+		}
+	}
+
 	class vm_execution_context : public statement_visitor, public expression_visitor
 	{
 	public:
 		vm_execution_context(simpl::vm &vm)
 			:vm_(vm)
 		{
-			vm_.reg_fn("print", 1, [this]()
+			vm_.reg_fn("print", [this](const value_t &v)
 			{
 				std::cout << cast<std::string>(vm_.stack_offset(0));
 			});
-			vm_.reg_fn("println", 1, [this]()
+			vm_.reg_fn("println", [this](const value_t &v)
 			{
-				std::cout << cast<std::string>(vm_.stack_offset(0)) << "\n";
-			});
-			vm_.reg_fn("test", []()
-			{
-
-
-
-
-
-
-
-
-				return std::string();
+				std::cout << cast<std::string>(v) << "\n";
 			});
 		}
 
@@ -82,17 +84,17 @@ namespace simpl
 			const auto &val = vm_.pop_stack();
 			if (is_true(val))
 			{
-				scope s{ vm_ };
+				detail::scope s{ vm_ };
 				is.statement()->evaluate(*this);
 			}
 		}
 
 		virtual void visit(def_statement &ds)
 		{
-			auto name = ds.name();
+			auto name = detail::format_name(ds.name(), ds.identifiers());
 			auto arity = ds.identifiers().size();
 			auto stmt = std::move(ds.release_statement());
-			fn_def fn
+			detail::fn_def fn
 			{ 
 				name,
 				arity,
@@ -148,7 +150,7 @@ namespace simpl
 			const auto &val = vm_.pop_stack();
 			if (!is_true(val))
 				return;
-			scope s{ vm_ };
+			detail::scope s{ vm_ };
 			ws.block()->evaluate(*this);
 			goto run_cond;
 		}
@@ -286,9 +288,21 @@ namespace simpl
 			// evaluating the expression puts it on the stack.
 			for (const auto &expr : exp.expressions())
 				expr->evaluate(*this);
-			scope s{ vm_ };
-			vm_.call(exp.function());
-			vm_.decrement_stack(exp.expressions().size());
+
+			detail::scope s{ vm_ };
+			call_def cd{ exp.function(), make_arg_list(vm, exp.expressions().size()) };
+			vm_.call(cd);
+			//vm_.decrement_stack(exp.expressions().size());
+		}
+ 
+		std::vector<std::string> make_arg_list(vm& vm, size_t s)
+		{
+			std::vector<std::string> args;
+			for (size_t i = s; i > 0; --i)
+			{
+				args.push_back(get_type_string(vm.stack_offset(i-1)));
+			}
+			return args;
 		}
 
 		bool is_true(const value_t &v)

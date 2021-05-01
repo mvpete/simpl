@@ -13,7 +13,7 @@ int run_interpreter(InStream &s)
 	{
 		simpl::vm vm;
 		simpl::vm_execution_context ctx(vm);
-		vm.reg_fn("exit", 0, []()
+		vm.reg_fn("exit", []()
 		{
 			throw exit_{};
 		});

@@ -3,6 +3,11 @@ println("### Comments ###");
 println("# this is a comment");
 println("");
 
+let a = "hello";
+foo(a);
+a = 5;
+foo(a);
+
 ### Comments ###
 # this is a comment
 
