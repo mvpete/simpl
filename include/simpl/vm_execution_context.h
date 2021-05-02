@@ -33,12 +33,14 @@ namespace simpl
 		vm &vm_;
 	};
 
-		std::string format_name(const std::string &name, const std::vector<identifier> &identifiers)
+		std::string format_name(const std::string &name, const std::vector<argument> &arguments)
 		{
 			std::stringstream ss;
 			ss << name << "(";
-			for (size_t i = 0; i < identifiers.size(); ++i)
-				ss << detail::to_string<value_t>::value();
+			for (size_t i = 0; i < arguments.size(); ++i)
+			{
+				ss << arguments[i].type;
+			}
 			ss << ")";
 			return ss.str();
 		}
@@ -91,14 +93,14 @@ namespace simpl
 
 		virtual void visit(def_statement &ds)
 		{
-			auto name = detail::format_name(ds.name(), ds.identifiers());
-			auto arity = ds.identifiers().size();
+			auto name = detail::format_name(ds.name(), ds.arguments());
+			auto arity = ds.arguments().size();
 			auto stmt = std::move(ds.release_statement());
 			detail::fn_def fn
 			{ 
 				name,
 				arity,
-				[this, arity, ids=ds.identifiers(), stmt=std::shared_ptr<statement>(stmt.release())]() 
+				[this, arity, ids=ds.arguments(), stmt=std::shared_ptr<statement>(stmt.release())]() 
 				{
 					int offset = arity - 1;
 					for (; offset >= 0; --offset)
@@ -260,8 +262,6 @@ namespace simpl
 			}
 		}
 
-		
-
 	private:
 
 		template <typename OpT>
@@ -292,7 +292,7 @@ namespace simpl
 			detail::scope s{ vm_ };
 			call_def cd{ exp.function(), make_arg_list(vm, exp.expressions().size()) };
 			vm_.call(cd);
-			//vm_.decrement_stack(exp.expressions().size());
+			vm_.decrement_stack(exp.expressions().size());
 		}
  
 		std::vector<std::string> make_arg_list(vm& vm, size_t s)
@@ -300,7 +300,7 @@ namespace simpl
 			std::vector<std::string> args;
 			for (size_t i = s; i > 0; --i)
 			{
-				args.push_back(get_type_string(vm.stack_offset(i-1)));
+				args.push_back(detail::get_type_string(vm.stack_offset(i-1)));
 			}
 			return args;
 		}

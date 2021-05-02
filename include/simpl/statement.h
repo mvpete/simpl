@@ -143,8 +143,8 @@ namespace simpl
 	{
 
 	public:
-		def_statement(const std::string &name, std::vector<identifier> &&id_list, statement_ptr statement)
-			:name_(name), identifiers_(std::move(id_list)), statement_(std::move(statement))
+		def_statement(const std::string &name, std::vector<argument> &&id_list, statement_ptr statement)
+			:name_(name), arguments_(std::move(id_list)), statement_(std::move(statement))
 		{
 		}
 
@@ -158,9 +158,9 @@ namespace simpl
 			return name_;
 		}
 
-		const std::vector<identifier> &identifiers()
+		const std::vector<argument> &arguments()
 		{
-			return identifiers_;
+			return arguments_;
 		}
 
 		statement_ptr release_statement()
@@ -170,7 +170,7 @@ namespace simpl
 
 	private:
 		std::string name_;
-		std::vector<identifier> identifiers_;
+		std::vector<argument> arguments_;
 		statement_ptr statement_;
 	};
 

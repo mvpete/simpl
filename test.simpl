@@ -3,10 +3,10 @@ println("### Comments ###");
 println("# this is a comment");
 println("");
 
-let a = "hello";
-foo(a);
-a = 5;
-foo(a);
+def foo(a is number, b is string)
+{
+    println("foo(is number, is string)");
+}
 
 ### Comments ###
 # this is a comment
@@ -54,6 +54,8 @@ def foo(a,b)  {
 }
 # I can call a function
 println(foo("test",5));
+
+foo(5, "hello");
 
 # I even supports recursion
 def recursive(i)  {

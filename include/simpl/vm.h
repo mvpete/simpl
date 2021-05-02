@@ -143,10 +143,7 @@ namespace simpl
             }
             std::string function;
             value_t *retval;
-        };
-
-
-   
+        };   
 
         template <size_t N, typename ...Args>
         struct arg_list
@@ -299,9 +296,7 @@ namespace simpl
                 }
                 ++offset;
             }
-            std::stringstream ss;
-            ss << "undefined variable '" << name << "'";
-            throw std::runtime_error(ss.str());
+            throw std::runtime_error(detail::format("undefined variable '{0}'", name));
         }
 
         void enter_scope()
@@ -320,15 +315,15 @@ namespace simpl
         void reg_fn(const std::string &id, size_t arity, CallableT &&fn)
         {
             reg_fn(detail::fn_def
+            {
+                id,
+                arity,
+                [this,fn = std::move(fn)]()
                 {
-                    id,
-                    arity,
-                    [this,fn = std::move(fn)]()
-                    {
-                        fn();
-                        return_();
-                    }
-                });
+                    fn();
+                    return_();
+                }
+            });
         }
 
 

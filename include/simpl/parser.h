@@ -18,6 +18,7 @@ namespace simpl
 	enum keywords
 	{
 		if_keyword,
+		keyword_is,
 		else_keyword,
 		let_keyword,
 		def_keyword,
@@ -382,7 +383,7 @@ namespace simpl
 				throw parse_error(tokenizer_.pos(), "expected an identifier");
 			}
 			expect(token_types::lparen);
-			auto id_list = parse_identifier_list();
+			auto id_list = parse_argument_list();
 			expect(token_types::rparen);
 			change_scope sp(*this, scopes::function);
 			auto block = parse_block_statement();
@@ -398,6 +399,54 @@ namespace simpl
 			auto expr = parse_expression();
 			close_statement();
 			return std::make_unique<assignment_statement>(identifier.to_string(), std::move(expr));
+		}
+
+		std::vector<argument> parse_argument_list()
+		{
+			std::vector<argument> list;
+			while (tokenizer_.peek().type != token_types::rparen)
+			{
+				if (tokenizer_.peek().type == token_types::eof)
+					return std::vector<argument>();
+
+				auto tkn = tokenizer_.next();
+				if (tkn.type != token_types::identifier_token)
+					throw parse_error(tokenizer_.pos(), "expected an identifier");
+
+				auto pk = tokenizer_.peek();
+
+				keywords kw{ keywords::unknown_keyword };
+				if (pk.type == token_types::identifier_token && is_keyword(pk, kw) && kw == keywords::keyword_is)
+				{
+					tokenizer_.next();
+					auto type = tokenizer_.next();
+					if (type.type != token_types::identifier_token)
+						throw parse_error(tokenizer_.pos(), "expected a type");
+
+					auto type_str = detail::to_type_string(type.to_string());
+					if (!type_str.has_value())
+						throw parse_error(tokenizer_.pos(), detail::format("type '{0}' is invalid", type.to_string()).c_str());
+
+					list.emplace_back(tkn.to_string(), type_str.value());
+					pk = tokenizer_.peek();
+				}
+				else
+				{
+					list.emplace_back(tkn.to_string());
+				}
+
+
+				if (pk.type == token_types::rparen)
+					break;
+
+				if (pk.type != token_types::comma)
+				{
+					throw parse_error(tokenizer_.pos(), "expected a comma");
+				}
+				tokenizer_.next();
+			}
+
+			return list;
 		}
 
 		std::vector<identifier> parse_identifier_list()
@@ -529,6 +578,8 @@ namespace simpl
 		{
 			if (builtins::compare(begin, end, "if"))
 				return keywords::if_keyword;
+			else if (builtins::compare(begin, end, "is"))
+				return keywords::keyword_is;
 			else if (builtins::compare(begin, end, "def"))
 				return keywords::def_keyword;
 			else if (builtins::compare(begin, end, "new"))

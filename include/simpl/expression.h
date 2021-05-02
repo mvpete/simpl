@@ -3,6 +3,7 @@
 
 #include <simpl/value.h>
 #include <simpl/op.h>
+#include <simpl/detail/type_traits.h>
 
 #include <memory>
 #include <variant>
@@ -26,6 +27,22 @@ namespace simpl
 		{
 			path.emplace_back(std::forward<T>(val));
 		}
+	};
+
+	struct argument
+	{
+		argument(const std::string &name)
+			:name(name), type(detail::to_string<value_t>::value())
+		{
+		}
+
+		argument(const std::string &name, const std::string &type_name)
+			:name(name), type(type_name)
+		{
+		}
+
+		std::string name;
+		std::string type;
 	};
 
 	class expression_visitor
