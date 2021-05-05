@@ -97,6 +97,8 @@ namespace simpl
 	{
 		expression_ptr cond_;
 		statement_ptr doif_;
+		std::unique_ptr<if_statement> next_;
+		statement_ptr else_;
 	public:
 		if_statement(expression_ptr cond, statement_ptr doif)
 			:cond_(std::move(cond)), doif_(std::move(doif))
@@ -115,6 +117,26 @@ namespace simpl
 		const expression_ptr &cond() const
 		{
 			return cond_;
+		}
+
+		const std::unique_ptr<if_statement> &next() const
+		{
+			return next_;
+		}
+
+		void next(std::unique_ptr<if_statement> next)
+		{
+			next_ = std::move(next);
+		}
+
+		const statement_ptr &else_statement() const
+		{
+			return else_;
+		}
+
+		void else_statement(statement_ptr else_st)
+		{
+			else_ = std::move(else_st);
 		}
 
 	private:

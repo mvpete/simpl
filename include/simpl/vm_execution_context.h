@@ -85,13 +85,31 @@ namespace simpl
 
 		virtual void visit(if_statement &is)
 		{
-			if (is.cond())
-				is.cond()->evaluate(*this);
-			const auto &val = vm_.pop_stack();
-			if (is_true(val))
+			auto if_stmt = &is;
+			while (if_stmt != nullptr)
 			{
-				detail::scope s{ vm_ };
-				is.statement()->evaluate(*this);
+				if (if_stmt->cond())
+					if_stmt->cond()->evaluate(*this);
+				const auto &val = vm_.pop_stack();
+				if (is_true(val))
+				{
+					detail::scope s{ vm_ };
+					if_stmt->statement()->evaluate(*this);
+					break;
+				}
+
+				if (if_stmt->next()) // else if
+				{
+					if_stmt = if_stmt->next().get();
+					continue;
+				}
+				else if (if_stmt->else_statement()) // else
+				{
+					if_stmt->else_statement()->evaluate(*this);
+					break;
+				}
+				else
+					break; // no else
 			}
 		}
 

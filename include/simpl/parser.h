@@ -322,22 +322,27 @@ namespace simpl
 
 		statement_ptr parse_block_statement()
 		{
-			auto next = tokenizer_.next();
-			if (next.type != token_types::lbrack)
-				return parse_statement(next);
-			auto blk = std::make_unique<block_statement>();
-			while (tokenizer_.peek().type != token_types::rbrack)
+			if (maybe(token_types::lbrack))
 			{
-				if (tokenizer_.peek().type == token_types::eof)
-					return nullptr;
+				auto blk = std::make_unique<block_statement>();
+				while (tokenizer_.peek().type != token_types::rbrack)
+				{
+					if (tokenizer_.peek().type == token_types::eof)
+						return nullptr;
 
-				auto tkn = tokenizer_.next();
-				auto stmt = parse_statement(tkn);
-				if (stmt)
-					blk->add(std::move(stmt));
+					auto tkn = tokenizer_.next();
+					auto stmt = parse_statement(tkn);
+					if (stmt)
+						blk->add(std::move(stmt));
+				}
+				tokenizer_.next(); // consume }
+				return blk;
 			}
-			tokenizer_.next(); // consume {
-			return blk;
+			else
+			{
+				auto tkn = tokenizer_.next();
+				return parse_statement(tkn);
+			}
 		}
 
 		// if(cond) { // list of statements }
@@ -347,22 +352,54 @@ namespace simpl
 			auto cond = parse_expression();
 			if (cond == nullptr)
 				throw parse_error(tokenizer_.pos(), "expected an expression");
-			statement_ptr statement = nullptr;
-			if (maybe(token_types::rparen))
-			{
-				statement = parse_block_statement();
-			}
-			else
-			{
-				auto tkn = tokenizer_.next();
-				statement = parse_statement(tkn);
-			}
+			expect(token_types::rparen);
+			
+			auto statement = parse_block_statement();
+
 			if (statement == nullptr)
 				throw parse_error(tokenizer_.pos(), "expected a statement");
 
-			return std::make_unique<if_statement>(std::move(cond), std::move(statement));
+			auto if_stmt = std::make_unique<if_statement>(std::move(cond), std::move(statement));
+			auto else_if = if_stmt.get();
+			while (1)
+			{
+				auto nxt = tokenizer_.peek();
+				keywords kw;
+				if (nxt.type != token_types::identifier_token || !is_keyword(nxt, kw) || kw != keywords::else_keyword)
+					break;
+				// it's at least else, consume
+				tokenizer_.next();
+				nxt = tokenizer_.peek();
+				if (nxt.type != token_types::identifier_token || !is_keyword(nxt, kw) || kw != keywords::if_keyword)
+				{
+					auto else_block = parse_block_statement();
+					// add it
+					else_if->else_statement(std::move(else_block));
+					break;
+				}
+				
+				// else we parse a full if, consume if
+				tokenizer_.next();
+
+				expect(token_types::lparen);
+				cond = parse_expression();
+				if (cond == nullptr)
+					throw parse_error(tokenizer_.pos(), "expected an expression");
+				expect(token_types::rparen);
+				statement = parse_block_statement();
+
+				if (statement == nullptr)
+					throw parse_error(tokenizer_.pos(), "expected a statement");
+
+				auto next_if = std::make_unique<if_statement>(std::move(cond), std::move(statement));
+				else_if->next(std::move(next_if));
+				else_if = else_if->next().get();
+			}
+			return if_stmt;
 
 		}
+
+
 
 		statement_ptr parse_while_statement(token_t &t)
 		{
@@ -618,6 +655,8 @@ namespace simpl
 		{
 			if (builtins::compare(begin, end, "if"))
 				return keywords::if_keyword;
+			else if (builtins::compare(begin, end, "else"))
+				return keywords::else_keyword;
 			else if (builtins::compare(begin, end, "is"))
 				return keywords::keyword_is;
 			else if (builtins::compare(begin, end, "def"))

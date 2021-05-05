@@ -3,12 +3,6 @@ println("### Comments ###");
 println("# this is a comment");
 println("");
 
-for(let i=0; i<3; i=i+1)
-{
-   println("in a for loop");
-}
-
-
 ### Comments ###
 # this is a comment
 
