@@ -60,6 +60,10 @@ namespace simpl
 			{
 				std::cout << cast<std::string>(v) << "\n";
 			});
+			vm_.reg_fn("is_empty", [](const value_t &v)
+			{
+				return std::holds_alternative<empty_t>(v);
+			});
 		}
 
 	public:
@@ -155,6 +159,24 @@ namespace simpl
 			detail::scope s{ vm_ };
 			ws.block()->evaluate(*this);
 			goto run_cond;
+		}
+
+		virtual void visit(for_statement &fs)
+		{
+			// we need to add the loop scope.
+			detail::scope loop{ vm_ };
+			fs.init()->evaluate(*this);
+			run_for_cond:
+			fs.cond()->evaluate(*this);
+			const auto &val = vm_.pop_stack();
+			if (!is_true(val))
+				return;
+			{
+				detail::scope s{ vm_ };
+				fs.block()->evaluate(*this);
+			}
+			fs.incr()->evaluate(*this);
+			goto run_for_cond;
 		}
 
 		virtual void visit(expression &ex)
@@ -255,9 +277,20 @@ namespace simpl
 				do_binary<gte_op>(cs, vm_);
 				break;
 			}
+			case op_type::log_and:
+			{
+				do_and(cs, vm_);
+				break;
+			}
+			case op_type::log_or:
+			{
+				do_or(cs, vm_);
+				break;
+			}
 			case op_type::func:
 			{
 				do_func(cs, vm_);
+				break;
 			}
 			}
 		}
@@ -279,6 +312,35 @@ namespace simpl
 			auto lvalue = vm.pop_stack();
 
 			vm.push_stack(apply<OpT>(lvalue, rvalue));
+		}
+
+		
+		void do_and(const nary_expression &exp, vm &vm)
+		{
+			if(exp.expressions().size() != 2)
+				throw std::logic_error("bad arity");
+			auto &left = exp.expressions()[1];
+			auto &right = exp.expressions()[0];
+
+			left->evaluate(*this);
+			if (!is_true(vm_.stack_offset(0)))
+				return;
+			vm_.pop_stack();
+			right->evaluate(*this);
+		}
+
+		void do_or(const nary_expression &exp, vm &vm)
+		{
+			if (exp.expressions().size() != 2)
+				throw std::logic_error("bad arity");
+			auto &left = exp.expressions()[1];
+			auto &right = exp.expressions()[0];
+
+			left->evaluate(*this);
+			if (is_true(vm_.stack_offset(0)))
+				return;
+			vm_.pop_stack();
+			right->evaluate(*this);
 		}
 		
 		void do_func(nary_expression &exp, vm &vm)

@@ -26,7 +26,7 @@ namespace simpl
 
 	}
 
-	enum class op_type { add, sub, mult, div, mod, eq, eqeq, neq, exp, gt, lt, gteq, lteq, func, none };
+	enum class op_type { add, sub, mult, div, mod, eq, eqeq, neq, exp, gt, lt, gteq, lteq, log_and, log_or, func, none };
 
 	int get_precendence(op_type op)
 	{
@@ -49,6 +49,8 @@ namespace simpl
 		case op_type::lteq:
 		case op_type::eqeq:
 		case op_type::neq:
+		case op_type::log_and:
+		case op_type::log_or:
 			return 7;
 		}
 	}
@@ -71,13 +73,19 @@ namespace simpl
 		case op_type::lteq:
 		case op_type::eqeq:
 		case op_type::neq:
+		case op_type::log_and:
+		case op_type::log_or:
 			return 2;
 		}
 	}
 
 	bool is_op(char c)
 	{
-		return c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '!' || c == '<' || c == '>';
+		return c == '+' || c == '-' || c == '*' 
+						|| c == '/' || c == '=' 
+						|| c == '!' || c == '<' 
+						|| c == '>' || c == '&'
+						|| c == '|';
 	}
 
 	template <typename IteratorT>
@@ -103,6 +111,10 @@ namespace simpl
 			return op_type::gt;
 		else if (builtins::compare(begin, end, ">="))
 			return op_type::gteq;
+		else if (builtins::compare(begin, end, "&&"))
+			return op_type::log_and;
+		else if (builtins::compare(begin, end, "||"))
+			return op_type::log_or;
 		return op_type::none;
 	}
 

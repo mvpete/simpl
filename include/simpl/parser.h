@@ -22,6 +22,7 @@ namespace simpl
 		else_keyword,
 		let_keyword,
 		def_keyword,
+		for_keyword,
 		end_keyword,
 		new_keyword,
 		while_keyword,
@@ -110,6 +111,8 @@ namespace simpl
 				return parse_def_statement(t);
 			case keywords::while_keyword:
 				return parse_while_statement(t);
+			case keywords::for_keyword:
+				return parse_for_statement(t);
 			case keywords::return_keyword:
 				return parse_return_statement(t);
 			}
@@ -117,8 +120,6 @@ namespace simpl
 			auto nxt = tokenizer_.peek();
 
 			// hmm. descent.
-
-
 			if (nxt.type == token_types::op && builtins::compare(nxt.begin, nxt.end, "="))
 			{
 				tokenizer_.next();
@@ -302,7 +303,7 @@ namespace simpl
 		}
 
 		// let {identifier} = {expression};
-		statement_ptr parse_let_statement(token_t &t)
+		statement_ptr parse_let_statement(token_t &)
 		{
 			auto identifier = tokenizer_.next();
 			if (identifier.type != token_types::identifier_token)
@@ -346,8 +347,18 @@ namespace simpl
 			auto cond = parse_expression();
 			if (cond == nullptr)
 				throw parse_error(tokenizer_.pos(), "expected an expression");
-			expect(token_types::rparen);
-			auto statement = parse_block_statement();
+			statement_ptr statement = nullptr;
+			if (maybe(token_types::rparen))
+			{
+				statement = parse_block_statement();
+			}
+			else
+			{
+				auto tkn = tokenizer_.next();
+				statement = parse_statement(tkn);
+			}
+			if (statement == nullptr)
+				throw parse_error(tokenizer_.pos(), "expected a statement");
 
 			return std::make_unique<if_statement>(std::move(cond), std::move(statement));
 
@@ -363,6 +374,27 @@ namespace simpl
 			auto statement = parse_block_statement();
 
 			return std::make_unique<while_statement>(std::move(cond), std::move(statement));
+		}
+
+		// for(let i=0; i<10; i=i+1)
+		// for(expr;expr;expr)
+		statement_ptr parse_for_statement(token_t &t)
+		{
+			expect(token_types::lparen);
+			auto lt = tokenizer_.next();
+			auto init = parse_let_statement(lt);
+			auto cond = parse_expression();
+			close_statement();
+			auto id = tokenizer_.next();
+			if (id.type != token_types::identifier_token)
+				throw std::runtime_error("expected an identifier");
+			tokenizer_.next(); // skip =
+			auto incr = parse_assignment_expression(id);
+			expect(token_types::rparen);
+			change_scope sp(*this, scopes::for_);
+			auto block = parse_block_statement();
+
+			return std::make_unique<for_statement>(std::move(init), std::move(cond), std::move(incr), std::move(block));
 		}
 
 		statement_ptr parse_return_statement(token_t &t)
@@ -393,12 +425,20 @@ namespace simpl
 			return std::make_unique<def_statement>(identifier.to_string(), std::move(id_list), std::move(block));
 		}
 
+		// TODO: Sort this out, technically an assignment can be an expression. We also 
+		// have to parse the identifier path... Blah.
+		statement_ptr parse_assignment_expression(token_t &identifier)
+		{
+			auto expr = parse_expression();
+			return std::make_unique<assignment_statement>(identifier.to_string(), std::move(expr));
+		}
+
 		// {identifier} = {expression};
 		statement_ptr parse_assignment_statement(token_t &identifier)
 		{
-			auto expr = parse_expression();
+			auto expr = parse_assignment_expression(identifier);
 			close_statement();
-			return std::make_unique<assignment_statement>(identifier.to_string(), std::move(expr));
+			return expr;
 		}
 
 		std::vector<argument> parse_argument_list()
@@ -588,6 +628,8 @@ namespace simpl
 				return keywords::let_keyword;
 			else if (builtins::compare(begin, end, "while"))
 				return keywords::while_keyword;
+			else if (builtins::compare(begin, end, "for"))
+				return keywords::for_keyword;
 			else if (builtins::compare(begin, end, "return"))
 				return keywords::return_keyword;
 			return keywords::unknown_keyword;
@@ -617,6 +659,23 @@ namespace simpl
 			if (tkn.type != ttype)
 				throw parse_error(tokenizer_.pos(), "expected a token");
 			return tkn;
+		}
+
+		bool maybe(token_types ttype, token_t &tkn)
+		{
+			auto peek = tokenizer_.peek();
+			if (peek.type == ttype)
+			{
+				tkn = tokenizer_.next();
+				return true;
+			}
+			return false;
+		}
+
+		bool maybe(token_types ttype)
+		{
+			token_t tkn;
+			return maybe(ttype, tkn);
 		}
 
 	private:

@@ -14,13 +14,14 @@
 
 namespace simpl
 {
-	
+
 	class expr_statement;
 	class let_statement;
 	class if_statement;
 	class def_statement;
 	class return_statement;
 	class while_statement;
+	class for_statement;
 	class block_statement;
 	class assignment_statement;
 
@@ -34,6 +35,7 @@ namespace simpl
 		virtual void visit(def_statement &ds) = 0;
 		virtual void visit(return_statement &rs) = 0;
 		virtual void visit(while_statement &ws) = 0;
+		virtual void visit(for_statement &fs) = 0;
 		virtual void visit(block_statement &bs) = 0;
 		virtual void visit(assignment_statement &ws) = 0;
 	};
@@ -116,7 +118,7 @@ namespace simpl
 		}
 
 	private:
-		
+
 	};
 
 	class block_statement : public statement
@@ -243,6 +245,44 @@ namespace simpl
 	private:
 		expression_ptr expr_;
 
+	};
+
+	class for_statement : public statement
+	{
+	public:
+		for_statement(statement_ptr init, expression_ptr cond, statement_ptr incr, statement_ptr block)
+			:init_(std::move(init)), cond_(std::move(cond)), incr_(std::move(incr)), block_(std::move(block))
+		{
+		}
+		virtual void evaluate(statement_visitor &v) override
+		{
+			v.visit(*this);
+		}
+		const statement_ptr &init() const
+		{
+			return init_;
+		}
+		
+		const expression_ptr &cond() const
+		{
+			return cond_;
+		}
+
+		const statement_ptr &incr() const
+		{
+			return incr_;
+		}
+
+		const statement_ptr &block() const
+		{
+			return block_;
+		}
+
+	private:
+		statement_ptr init_;
+		expression_ptr cond_;
+		statement_ptr incr_;
+		statement_ptr block_;
 	};
 }
 

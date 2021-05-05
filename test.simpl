@@ -3,10 +3,11 @@ println("### Comments ###");
 println("# this is a comment");
 println("");
 
-def foo(a is number, b is string)
+for(let i=0; i<3; i=i+1)
 {
-    println("foo(is number, is string)");
+   println("in a for loop");
 }
+
 
 ### Comments ###
 # this is a comment
@@ -14,6 +15,28 @@ def foo(a is number, b is string)
 
 ### Features ###
 println("### Features ###");
+
+
+println("## Logic");
+
+if(0&&b) {
+    println("won't print, & won't fail on the variable");
+}
+
+if(1 && 1) {
+    println("should print");
+}
+
+if(0||1) {
+    println("long or");
+}
+
+if(1||0) 
+    println("short or");
+
+if(0||0) {
+    println("won't print");
+}
 
 
 ## Equations
@@ -46,18 +69,19 @@ while(i>0)
 
 ## Functions
 
-# I can define a function
+### I can define a function
 def foo(a,b)  {
     println(a);
     println(b);
     return "foo";
 }
-# I can call a function
+
+### I can call a function
 println(foo("test",5));
 
 foo(5, "hello");
 
-# I even supports recursion
+### I even supports recursion
 def recursive(i)  {
     println(i);
     if(i>0) {
@@ -67,6 +91,23 @@ def recursive(i)  {
 }
 
 recursive(5);
+
+### I have powerful pattern matching dynamic dispatch
+
+def bar(a is string, b is number) {
+    println("a is string, b is number");
+}
+
+def bar(a is number, b is number) {
+    println("a is number, b is number");
+}
+
+let a = "hello";
+let b = 10;
+
+bar(a,b);
+a = 5;
+bar(a,b);
 
 ### Work in Progress ###
 
@@ -89,15 +130,10 @@ println(kh[suit]);
 
 # kh.name = "queen";
 
-
-## add boolean logic operators && ||, with short circuiting
-
-## add empty_t keyword for the empty type & add additional branching
-# if(v == empty_t){}
+## add for the empty type & add additional branching
+# if(is_empty(v)){}
 # else if(...)
 # else
-
-## logical && and ||
 
 ## file I/O
 

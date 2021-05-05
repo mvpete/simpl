@@ -29,8 +29,6 @@ namespace simpl
 	struct blob_t { std::map<std::string, value_t> values; };
 	struct array_t { std::vector<value_t> values; };
 
-
-
 }
 
 #endif //__simpl_value_h__
