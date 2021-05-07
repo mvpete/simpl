@@ -16,6 +16,9 @@
     <Filter Include="Header Files\detail">
       <UniqueIdentifier>{a9ef1eb5-21bc-40ec-befc-fc31a6f24865}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\libraries">
+      <UniqueIdentifier>{6e714341-3075-4427-b4d7-ad797381986e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\simpl\cast.h">
@@ -65,6 +68,21 @@
     </ClInclude>
     <ClInclude Include="..\include\simpl\detail\type_traits.h">
       <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\simpl\engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\simpl\library.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\simpl\libraries\io.h">
+      <Filter>Header Files\libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\simpl\libraries\file.h">
+      <Filter>Header Files\libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\simpl\object.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

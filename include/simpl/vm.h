@@ -85,18 +85,6 @@ namespace simpl
             std::map<std::string, fn_def> functions_;
         };
 
-        template <typename T>
-        T get(const value_t &v)
-        {
-            return std::get<T>(v);
-        }
-
-        template<>
-        value_t get<value_t>(const value_t &v)
-        {
-            return v;
-        }
-
     }
 
     class vm
@@ -159,7 +147,7 @@ namespace simpl
         {
             static std::tuple<T, Args...> next(vm &vm)
             {
-                return std::tuple_cat(std::make_tuple(detail::get<T>(vm.stack_offset(N-1))), arg_list<N-1, Args...>::next(vm));
+                return std::tuple_cat(std::make_tuple(detail::get_value<T>(vm.stack_offset(N-1))), arg_list<N-1, Args...>::next(vm));
             }
         };
 
@@ -172,14 +160,14 @@ namespace simpl
  
 
     public:
-
-        using callstack_t = detail::static_stack<activation_record, 4096>;
+        static constexpr size_t Stack_Size = 128;
+        using callstack_t = detail::static_stack<activation_record, Stack_Size>;
 
     private:
 
         detail::dispatch_table functions_;
-        detail::static_stack<value_t, 4096> stack_;
-        detail::static_stack<var_scope, 4096> locals_;
+        detail::static_stack<value_t, Stack_Size> stack_;
+        detail::static_stack<var_scope, Stack_Size> locals_;
         callstack_t callstack_;
     public:
 
@@ -243,6 +231,7 @@ namespace simpl
                 throw std::runtime_error("bad return statement");
             auto &ar = callstack_.top();
             *ar.retval = stack_.top();
+            stack_.pop();
             callstack_.pop();
         }
 
@@ -254,7 +243,15 @@ namespace simpl
             reg_fn(name, sig.arity, [this, sig, fn]()
             {
                 auto args = load_args(*this, typename detail::signature<CallableT>::types{});
-                std::apply(fn, args);
+                if constexpr(std::is_same_v<detail::signature<CallableT>::result_type, void>)
+                {
+                    std::apply(fn, args);
+                    push_stack(empty_t{});
+                }
+                else 
+                {
+                    push_stack(std::apply(fn, args));
+                }
             });
         }
 

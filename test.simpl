@@ -1,7 +1,19 @@
 
+#@import <io>
+#@import <file>
+
+let f = open_f("test");
+close_f(f);
+
+
+
 println("### Comments ###");
 println("# this is a comment");
 println("");
+
+println("Enter some text:");
+let uv = getln();
+println("You entered: " + uv);
 
 ### Comments ###
 # this is a comment
@@ -10,6 +22,12 @@ println("");
 ### Features ###
 println("### Features ###");
 
+#let a = open_f("blah.txt");
+#write(a, "blah");
+#writeln(a, "blah");
+#close(a);
+
+#a=empty;
 
 println("## Logic");
 
@@ -59,7 +77,7 @@ while(i>0)
 }
 
 # I don't have for loops yet
-# for(let i=0; i<5; ++i); 
+# for(let i=0; i<5; i=i+1); 
 
 ## Functions
 

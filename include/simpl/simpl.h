@@ -4,7 +4,7 @@
 #include <simpl/evaluate.h>
 #include <simpl/tokenizer.h>
 #include <simpl/parser.h>
-#include <simpl/vm.h>
+#include <simpl/engine.h>
 
 
 #endif // __simpl_h__

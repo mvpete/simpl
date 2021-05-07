@@ -3,45 +3,19 @@
 
 #include <simpl/value.h>
 #include <simpl/detail/format.h>
-#include <simpl/detail/type_traits.h>
 
 namespace simpl
-{
+{      
     namespace detail
     {
-        template <typename...>
-        struct is_one_of : std::false_type {};
-
-        template <typename F, typename S, typename... T>
-        struct is_one_of<F, S, T...> : std::conditional_t<std::is_same_v<F, S>, std::true_type, is_one_of<F, T...>> {};
-        
-        template <typename ...>
-        struct are_valid_types : std::true_type {};
-
-        template<typename T, typename ...Ts>
-        struct are_valid_types<T,Ts...>
-            : std::conditional_t<is_one_of<typename std::decay<T>::type, bool, double, std::string, blob_t, array_t, value_t, void>::value, are_valid_types<Ts...>, std::false_type> {};
-
-        template<typename ...>
-        struct decay_tuple 
-        {
-            using type = std::tuple<>;
-        };
-
-        template <typename T, typename ...Args>
-        struct decay_tuple<T, Args...> 
-        {
-            using type = std::tuple<typename std::decay_t<T>, Args...>;
-        };
-
         template<typename T>
         struct signature : signature<decltype(&T::operator())> {};
 
         template <typename R, typename ...Args>
         struct signature_impl
         {
-            static_assert(are_valid_types<Args...>::value, "callable has an invalid argument");
-            static_assert(are_valid_types<R>::value, "invalid return type");
+            static_assert(are_valid_arg_types<Args...>::value, "cannot register function - invalid argument type");
+            static_assert(are_valid_return_types<R>::value, "cannot register function - invalid return type");
 
             static constexpr size_t arity = sizeof...(Args);
             using result_type = R;

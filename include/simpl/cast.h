@@ -134,6 +134,12 @@ To to(const From &f)\
         {
             value = to<T>(lv);
         }
+
+        void operator()(const objectref_t &lv)
+        {
+            throw invalid_cast("cannot cast objectref_t");
+        }
+
     };    
 
     template <typename T>

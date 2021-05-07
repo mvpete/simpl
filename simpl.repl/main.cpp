@@ -11,12 +11,12 @@ int run_interpreter(InStream &s)
 	std::string prompt = ">";
 	try
 	{
-		simpl::vm vm;
-		simpl::vm_execution_context ctx(vm);
-		vm.reg_fn("exit", []()
+		simpl::engine e;
+		e.machine().reg_fn("exit", []()
 		{
 			throw exit_{};
 		});
+
 		std::stringstream ss;
 		while (s.good())
 		{
@@ -40,7 +40,7 @@ int run_interpreter(InStream &s)
 				}
 				else 
 				{
-					evaluate(std::move(stmt), ctx);
+					evaluate(std::move(stmt), e);
 					ss.str("");
 					prompt = ">";
 					std::cout << std::endl;
@@ -72,15 +72,14 @@ int run_string(const std::string &s)
 {
 	try
 	{
-		simpl::vm vm;
-		simpl::vm_execution_context ctx(vm);
+		simpl::engine e;
 		simpl::parser parser(s.c_str(), s.c_str() + s.length());
 		while (1)
 		{
 			auto nxt = parser.next();
 			if (!nxt) break;
 
-			evaluate(std::move(nxt), ctx);
+			evaluate(std::move(nxt), e);
 		}
 	}
 	catch (const simpl::token_error &t)

@@ -147,8 +147,13 @@
     <ClInclude Include="..\include\simpl\detail\format.h" />
     <ClInclude Include="..\include\simpl\detail\signature.h" />
     <ClInclude Include="..\include\simpl\detail\type_traits.h" />
+    <ClInclude Include="..\include\simpl\engine.h" />
     <ClInclude Include="..\include\simpl\evaluate.h" />
     <ClInclude Include="..\include\simpl\expression.h" />
+    <ClInclude Include="..\include\simpl\libraries\file.h" />
+    <ClInclude Include="..\include\simpl\libraries\io.h" />
+    <ClInclude Include="..\include\simpl\library.h" />
+    <ClInclude Include="..\include\simpl\object.h" />
     <ClInclude Include="..\include\simpl\op.h" />
     <ClInclude Include="..\include\simpl\operations.h" />
     <ClInclude Include="..\include\simpl\parser.h" />

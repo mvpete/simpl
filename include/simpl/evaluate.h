@@ -1,15 +1,14 @@
 #ifndef __simpl_evaluate_h__
 #define __simpl_evaluate_h__
 
-#include <simpl/vm.h>
-#include <simpl/vm_execution_context.h>
+#include <simpl/engine.h>
 
 namespace simpl
 {
-	void evaluate(statement_ptr statement, vm_execution_context &ctx)
+	void evaluate(statement_ptr statement, engine &e)
 	{
 		if(statement)
-			statement->evaluate(ctx);
+			statement->evaluate(e.context());
 	}
 }
 

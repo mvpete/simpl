@@ -52,14 +52,6 @@ namespace simpl
 		vm_execution_context(simpl::vm &vm)
 			:vm_(vm)
 		{
-			vm_.reg_fn("print", [this](const value_t &v)
-			{
-				std::cout << cast<std::string>(vm_.stack_offset(0));
-			});
-			vm_.reg_fn("println", [this](const value_t &v)
-			{
-				std::cout << cast<std::string>(v) << "\n";
-			});
 			vm_.reg_fn("is_empty", [](const value_t &v)
 			{
 				return std::holds_alternative<empty_t>(v);
@@ -142,7 +134,6 @@ namespace simpl
 			// then the value is at the top of the stack.
 			// now, put it into the activation record location
 			vm_.return_();
-			vm_.pop_stack();
 		}
 
 		virtual void visit(assignment_statement &as)

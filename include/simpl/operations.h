@@ -70,6 +70,11 @@ namespace simpl
         {
             throw invalid_operation();
         }
+
+        void operator()(const objectref_t &lv)
+        {
+            throw invalid_operation();
+        }
         
     };
 
@@ -102,6 +107,11 @@ namespace simpl
         }
 
         void operator()(const arrayref_t &v)
+        {
+            throw invalid_operation();
+        }
+
+        void operator()(const objectref_t &lv)
         {
             throw invalid_operation();
         }
@@ -139,6 +149,11 @@ namespace simpl
         {
             throw invalid_operation();
         }
+
+        void operator()(const objectref_t &lv)
+        {
+            throw invalid_operation();
+        }
     };
 
     struct div_op : op_base<value_t>
@@ -170,6 +185,11 @@ namespace simpl
         }
 
         void operator()(const arrayref_t &v)
+        {
+            throw invalid_operation();
+        }
+
+        void operator()(const objectref_t &lv)
         {
             throw invalid_operation();
         }
@@ -206,6 +226,11 @@ namespace simpl
         {
             throw invalid_operation();
         }
+
+        void operator()(const objectref_t &lv)
+        {
+            throw invalid_operation();
+        }
     };
 
     struct neq_op : op_base<bool>
@@ -236,6 +261,11 @@ namespace simpl
         }
 
         void operator()(const arrayref_t &v)
+        {
+            throw invalid_operation();
+        }
+
+        void operator()(const objectref_t &lv)
         {
             throw invalid_operation();
         }
@@ -272,6 +302,11 @@ namespace simpl
         {
             throw invalid_operation();
         }
+
+        void operator()(const objectref_t &lv)
+        {
+            throw invalid_operation();
+        }
     };
 
     struct lte_op : op_base<bool>
@@ -305,6 +340,11 @@ namespace simpl
         {
             throw invalid_operation();
         }
+
+        void operator()(const objectref_t &lv)
+        {
+            throw invalid_operation();
+        }
     };
 
     struct gt_op : op_base<bool>
@@ -335,6 +375,11 @@ namespace simpl
         }
 
         void operator()(const arrayref_t &v)
+        {
+            throw invalid_operation();
+        }
+
+        void operator()(const objectref_t &lv)
         {
             throw invalid_operation();
         }
@@ -372,6 +417,10 @@ namespace simpl
             throw invalid_operation();
         }
 
+        void operator()(const objectref_t &lv)
+        {
+            throw invalid_operation();
+        }
 
     };
 

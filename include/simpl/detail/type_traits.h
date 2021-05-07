@@ -2,6 +2,7 @@
 #define __simpl_type_traits_h__
 
 #include <optional>
+#
 
 namespace simpl
 {
@@ -53,50 +54,49 @@ namespace detail
             return to_vector<Ts...>::value().push_back(std::string(typeid(T).name()));
         }
     };
+           
+
+    template <typename...>
+    struct is_one_of : std::false_type {};
+
+    template <typename F, typename S, typename... T>
+    struct is_one_of<F, S, T...> : std::conditional_t<std::is_same_v<F, S>, std::true_type, is_one_of<F, T...>> {};
 
 
-    // TODO: Use variadics for this, and just used the value_t
-    std::string get_type_string(const value_t &v)
+    template<typename T>
+    struct is_valid_arg_type : std::false_type {};
+
+
+    template<typename T>
+    struct is_valid_return_type : std::false_type {};
+
+    template <typename ...>
+    struct are_valid_arg_types : std::true_type {};
+
+    template<typename T, typename ...Ts>
+    struct are_valid_arg_types<T, Ts...>
+        : std::conditional_t<is_valid_arg_type<typename std::decay<T>::type>::value, are_valid_arg_types<Ts...>, std::false_type> {};
+
+
+    template <typename ...>
+    struct are_valid_return_types : std::true_type {};
+
+    template<typename T, typename ...Ts>
+    struct are_valid_return_types<T, Ts...>
+        : std::conditional_t<is_valid_return_type<typename std::decay<T>::type>::value, are_valid_return_types<Ts...>, std::false_type> {};
+
+    template<typename ...>
+    struct decay_tuple
     {
-        if (std::holds_alternative<empty_t>(v))
-            return typeid(empty_t{}).name();
-        else if (std::holds_alternative<bool>(v))
-            return typeid(bool{}).name();
-        else if (std::holds_alternative<double>(v))
-            return typeid(double{}).name();
-        else if (std::holds_alternative<std::string>(v))
-            return typeid(std::string{}).name();
-        else if (std::holds_alternative<blobref_t>(v))
-            return typeid(blob_t{}).name();
-        else if (std::holds_alternative<arrayref_t>(v))
-            return typeid(array_t{}).name();
-        throw std::runtime_error("unknown type");
-    }
+        using type = std::tuple<>;
+    };
 
-    std::optional<std::string> to_type_string(const std::string &simpl_type)
+    template <typename T, typename ...Args>
+    struct decay_tuple<T, Args...>
     {
-        if (simpl_type == "string")
-        {
-            return typeid(std::string).name();
-        }
-        else if (simpl_type == "bool")
-        {
-            return typeid(bool).name();
-        }
-        else if (simpl_type == "number")
-        {
-            return typeid(double).name();
-        }
-        else if (simpl_type == "blob")
-        {
-            return typeid(blob_t).name();
-        }
-        else if (simpl_type == "array")
-        {
-            return typeid(array_t).name();
-        }
-        return std::optional<std::string>{};        
-    }
+        using type = std::tuple<typename std::decay_t<T>, Args...>;
+    };
+
 }
 }
 

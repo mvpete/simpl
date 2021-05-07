@@ -25,16 +25,17 @@ namespace simpl
                 if (sptr_ >= Size)
                     throw std::runtime_error("stack overflow");
                 stack_[sptr_++] = v;
-                return stack_[sptr_];
+                return top();
             }
 
             void pop(size_t s=1)
             {
                 if (s > sptr_)
                     throw std::runtime_error("stack underflow");
+              
                 while (s > 0)
                 {
-                    stack_[sptr_--] = T{}; // this will destruct the object
+                    stack_[--sptr_] = T{}; // this will destruct the object
                     --s;
                 }
             }
