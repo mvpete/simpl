@@ -130,6 +130,9 @@ namespace detail
         return std::optional<std::string>{};
     }
 
+    template <typename T>
+    struct simple_type_info;
+
     template<typename T>
     ref_t<T> convert_to(objectref_t &base)
     {

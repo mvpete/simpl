@@ -22,6 +22,20 @@ namespace simpl
 
     namespace detail
     {
+        std::string format_name(const std::string &name, const std::vector<std::string> &arguments)
+        {
+            std::stringstream ss;
+            ss << name << "(";
+            for (size_t i = 0; i < arguments.size(); ++i)
+            {
+                ss << arguments[i];
+                if (i != arguments.size() - 1)
+                    ss << ",";
+            }
+            ss << ")";
+            return ss.str();
+        }
+
         struct fn_def
         {
             std::string name;
@@ -70,10 +84,16 @@ namespace simpl
 
             const fn_def *find_match(const std::string &name, const std::vector<std::string> &args)
             {
+
+                auto callname = detail::format_name(name, args);
                 std::stringstream ss;
                 ss << name << "(";
-                for (const auto &a : args)
-                    ss << a;
+                for (size_t i = 0; i < args.size(); ++i)
+                {
+                    ss << args[i];
+                    if (i != args.size() - 1)
+                        ss << ",";
+                }
                 ss << ")";
                 auto match = functions_.find(ss.str());
                 if (match == functions_.end())
@@ -145,19 +165,21 @@ namespace simpl
         template<size_t N, typename T, typename ...Args>
         struct arg_list<N, T, Args...>
         {
-            static std::tuple<T, Args...> next(vm &vm)
+            static std::tuple<std::reference_wrapper<T>, std::reference_wrapper<Args>...> next(vm &vm)
             {
-                return std::tuple_cat(std::make_tuple(detail::get_value<T>(vm.stack_offset(N-1))), arg_list<N-1, Args...>::next(vm));
+                return std::tuple_cat(std::make_tuple(std::ref(detail::get_value<T>(vm.stack_offset(N - 1)))), arg_list<N - 1, Args...>::next(vm));
             }
         };
 
+        template <typename T>
+        struct deducer {};
 
         template <typename ...Args>
-        std::tuple<Args...> load_args(vm &vm, std::tuple<Args...>)
+        std::tuple<std::reference_wrapper<Args>...> load_args(vm &vm, deducer<std::tuple<Args...>>)
         {
-            return arg_list<sizeof...(Args), Args...>::next(vm);
+            auto args = arg_list<sizeof...(Args), Args...>::next(vm);
+            return args;
         }
- 
 
     public:
         static constexpr size_t Stack_Size = 128;
@@ -242,7 +264,7 @@ namespace simpl
             const auto name = detail::format("{0}({1})", id, sig.arguments_string());
             reg_fn(name, sig.arity, [this, sig, fn]()
             {
-                auto args = load_args(*this, typename detail::signature<CallableT>::types{});
+                auto args = load_args(*this, deducer<typename detail::signature<CallableT>::types>{});
                 if constexpr(std::is_same_v<detail::signature<CallableT>::result_type, void>)
                 {
                     std::apply(fn, args);

@@ -40,6 +40,8 @@ namespace simpl
 			for (size_t i = 0; i < arguments.size(); ++i)
 			{
 				ss << arguments[i].type;
+				if (i != arguments.size() - 1)
+					ss << ",";
 			}
 			ss << ")";
 			return ss.str();

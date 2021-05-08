@@ -22,7 +22,7 @@ namespace detail
     {
         static std::string value()
         {
-            return std::string(typeid(T).name()) + ", " + to_string<Ts...>::value();
+            return std::string(typeid(T).name()) + "," + to_string<Ts...>::value();
         }
     };
 
@@ -94,7 +94,7 @@ namespace detail
     template <typename T, typename ...Args>
     struct decay_tuple<T, Args...>
     {
-        using type = std::tuple<typename std::decay_t<T>, Args...>;
+        using type = std::tuple<typename std::decay_t<T>, typename std::decay_t<Args>...>;
     };
 
 }

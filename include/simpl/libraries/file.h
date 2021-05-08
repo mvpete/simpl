@@ -4,27 +4,23 @@
 #include <simpl/value.h>
 #include <simpl/library.h>
 
+#include <fstream>
+
 namespace simpl
 {
-    class file
-    {
-	public:
-		file() {};
-		file(const std::string &name)
-			:name_(name)
-		{
-		}
-		std::string get() {
-			return name_;
-		}
-
-	private:
-		std::string name_;
-    };
+	template<>
+	struct detail::is_valid_arg_type<std::fstream> : std::true_type {};
 
 	template<>
-	struct detail::is_valid_arg_type<file> : std::true_type {};
+	struct detail::simple_type_info<std::fstream>
+	{
+		const char* name() const noexcept
+		{
+			return "file";
+		};
+	};
 
+	using file = std::fstream;
 
     class file_lib final : public library
 	{
@@ -41,10 +37,19 @@ namespace simpl
 			{
 				return make_ref<file>(name);
 			});
-			vm.reg_fn("close_f", [](file &v)
+			vm.reg_fn("close_f", [](file &fs)
 			{
-				int i = 0;
+				fs.close();
 			});
+			vm.reg_fn("write", [](file &fs, const std::string &s) -> void
+			{
+				fs << s;
+			});
+			vm.reg_fn("writeln", [](file &fs, std::string &s) -> void
+			{
+				fs << s << '\n';
+			});
+
 		}
 	};
 }

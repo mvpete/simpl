@@ -1,8 +1,14 @@
 
 #@import <io>
 #@import <file>
+#@directive ...
 
-let f = open_f("test");
+#@import "../file.simpl"
+
+
+let f = open_f("test.txt");
+writeln(f, "test test test");
+write(f, "not a new line");
 close_f(f);
 
 
