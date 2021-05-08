@@ -185,12 +185,6 @@ namespace simpl
         static constexpr size_t Stack_Size = 128;
         using callstack_t = detail::static_stack<activation_record, Stack_Size>;
 
-    private:
-
-        detail::dispatch_table functions_;
-        detail::static_stack<value_t, Stack_Size> stack_;
-        detail::static_stack<var_scope, Stack_Size> locals_;
-        callstack_t callstack_;
     public:
 
         vm()
@@ -282,6 +276,22 @@ namespace simpl
             functions_.register_function(std::move(df));
         }
 
+        template<typename T>
+        void register_type(const std::string &simpl_name)
+        {
+            if (types_.find(simpl_name) != types_.end())
+                throw std::runtime_error(detail::format("type '{0}' already registered", simpl_name));
+            types_[simpl_name] = typeid(T).name();
+        }
+
+        std::optional<std::string> lookup_type(const std::string &simpl_name)
+        {
+            auto t = types_.find(simpl_name);
+            if (t == types_.end())
+                return std::optional<std::string>{};
+            return t->second;
+        }
+
         void create_var(const std::string &name, size_t offset = 0)
         {
             locals_.top().track(name, &stack_.offset(offset));
@@ -345,6 +355,13 @@ namespace simpl
             });
         }
 
+    private:
+
+        detail::dispatch_table functions_;
+        detail::static_stack<value_t, Stack_Size> stack_;
+        detail::static_stack<var_scope, Stack_Size> locals_;
+        callstack_t callstack_;
+        std::map<std::string, std::string> types_;
 
     };
 

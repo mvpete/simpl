@@ -221,11 +221,13 @@ namespace simpl
 
 			if (val.index() < 1)
 				throw parse_error(tokenizer_.pos(), "expected an value or identifier");
-
+			bool expect_op = false;
 			while (!std::holds_alternative<empty_t>(val)) // while
 			{
 				if (val.index() > 1)
 				{
+					if (expect_op)
+						break;
 					if (std::holds_alternative<value_t>(val))
 					{
 						ostack.push(std::make_unique<expression>(std::get<value_t>(val)));
@@ -254,6 +256,7 @@ namespace simpl
 					}
 					else
 						throw parse_error(tokenizer_.pos(), "undefined parse_val");
+					expect_op = true;
 				}
 				else if (std::holds_alternative<op_type>(val))
 				{
@@ -263,6 +266,7 @@ namespace simpl
 						make_op_expression(ostack, opstack);
 					}
 					opstack.push(val);
+					expect_op = false;
 				}
 				val = next_val();
 			}
@@ -500,11 +504,7 @@ namespace simpl
 					if (type.type != token_types::identifier_token)
 						throw parse_error(tokenizer_.pos(), "expected a type");
 
-					auto type_str = detail::to_type_string(type.to_string());
-					if (!type_str.has_value())
-						throw parse_error(tokenizer_.pos(), detail::format("type '{0}' is invalid", type.to_string()).c_str());
-
-					list.emplace_back(tkn.to_string(), type_str.value());
+					list.emplace_back(tkn.to_string(), type.to_string());
 					pk = tokenizer_.peek();
 				}
 				else

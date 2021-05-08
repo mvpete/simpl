@@ -84,5 +84,8 @@
     <ClInclude Include="..\include\simpl\object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\simpl\libraries\array.h">
+      <Filter>Header Files\libraries</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

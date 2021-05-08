@@ -32,7 +32,11 @@ namespace simpltest
 
 		TEST_METHOD(TestParseForLoopStatement)
 		{
-			Assert::Fail();
+			auto ast = simpl::parse("for(let i=0; i<5; i=i+1)");
+			Assert::AreEqual(size_t{ 1 }, ast.size());
+			const auto &stmt = ast[0];
+			auto whle = dynamic_cast<simpl::for_statement *>(stmt.get());
+			Assert::IsNotNull(whle);
 		}
 
 		TEST_METHOD(TestParseIfStatement)
@@ -46,12 +50,20 @@ namespace simpltest
 
 		TEST_METHOD(TestParseIfElseStatement)
 		{
-			Assert::Fail();
+			auto ast = simpl::parse("if(1) { 1+2; } else { i; }");
+			Assert::AreEqual(size_t{ 1 }, ast.size());
+			const auto &stmt = ast[0];
+			auto iff = dynamic_cast<simpl::if_statement *>(stmt.get());
+			Assert::IsNotNull(iff);
 		}
 
 		TEST_METHOD(TestParseIfElseIfStatement)
 		{
-			Assert::Fail();
+			auto ast = simpl::parse("if(1) { 1+2; } else if (0) { i; }");
+			Assert::AreEqual(size_t{ 1 }, ast.size());
+			const auto &stmt = ast[0];
+			auto iff = dynamic_cast<simpl::if_statement *>(stmt.get());
+			Assert::IsNotNull(iff);
 		}
 
 		TEST_METHOD(TestParseComment)

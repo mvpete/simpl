@@ -30,6 +30,12 @@ namespace simpl
 				std::getline(std::cin, line);
 				return line;
 			});
+			vm.reg_fn("getnum", []()
+			{
+				double number;
+				std::cin >> number;
+				return number;
+			});
         }
     };
 }

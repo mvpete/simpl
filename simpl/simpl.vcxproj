@@ -150,6 +150,7 @@
     <ClInclude Include="..\include\simpl\engine.h" />
     <ClInclude Include="..\include\simpl\evaluate.h" />
     <ClInclude Include="..\include\simpl\expression.h" />
+    <ClInclude Include="..\include\simpl\libraries\array.h" />
     <ClInclude Include="..\include\simpl\libraries\file.h" />
     <ClInclude Include="..\include\simpl\libraries\io.h" />
     <ClInclude Include="..\include\simpl\library.h" />

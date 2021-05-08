@@ -33,13 +33,19 @@ namespace simpl
 		vm &vm_;
 	};
 
-		std::string format_name(const std::string &name, const std::vector<argument> &arguments)
+		std::string format_name(vm& vm, const std::string &name, const std::vector<argument> &arguments)
 		{
 			std::stringstream ss;
 			ss << name << "(";
 			for (size_t i = 0; i < arguments.size(); ++i)
 			{
-				ss << arguments[i].type;
+				auto simpl_type = arguments[i].type;
+				auto type_str = simpl_type.has_value() ? detail::to_builtin_type_string(simpl_type.value()) : detail::to_string<value_t>::value();
+				if (!type_str.has_value())
+					type_str = vm.lookup_type(simpl_type.value());
+				if (!type_str.has_value())
+					throw std::runtime_error("unknown type");
+				ss << type_str.value();
 				if (i != arguments.size() - 1)
 					ss << ",";
 			}
@@ -109,7 +115,7 @@ namespace simpl
 
 		virtual void visit(def_statement &ds)
 		{
-			auto name = detail::format_name(ds.name(), ds.arguments());
+			auto name = detail::format_name(vm_, ds.name(), ds.arguments());
 			auto arity = ds.arguments().size();
 			auto stmt = std::move(ds.release_statement());
 			detail::fn_def fn

@@ -5,11 +5,8 @@
 
 #@import "../file.simpl"
 
-
-let f = open_f("test.txt");
-writeln(f, "test test test");
-write(f, "not a new line");
-close_f(f);
+let x = new [1, 2, 3];
+print(size(x));
 
 
 
@@ -27,11 +24,6 @@ println("You entered: " + uv);
 
 ### Features ###
 println("### Features ###");
-
-#let a = open_f("blah.txt");
-#write(a, "blah");
-#writeln(a, "blah");
-#close(a);
 
 #a=empty;
 
@@ -120,6 +112,13 @@ def bar(a is number, b is number) {
     println("a is number, b is number");
 }
 
+def bar(a is file, b is string)
+{
+    println("a is file, b is string");
+}
+
+bar(f, "hello");
+
 let a = "hello";
 let b = 10;
 
@@ -154,4 +153,9 @@ println(kh[suit]);
 # else
 
 ## file I/O
+
+let f = open_f("test.txt");
+writeln(f, "test test test");
+write(f, "not a new line");
+close_f(f);
 

@@ -46,10 +46,10 @@ namespace detail
     struct is_valid_arg_type<std::string> : std::true_type {};
 
     template<>
-    struct is_valid_arg_type<arrayref_t> : std::true_type {};
+    struct is_valid_arg_type<array_t> : std::true_type {};
 
     template<>
-    struct is_valid_arg_type<blobref_t> : std::true_type {};
+    struct is_valid_arg_type<blob_t> : std::true_type {};
 
     template<>
     struct is_valid_arg_type<value_t> : std::true_type {};
@@ -105,7 +105,7 @@ namespace detail
         throw std::runtime_error("unknown type");
     }
 
-    std::optional<std::string> to_type_string(const std::string &simpl_type)
+    std::optional<std::string> to_builtin_type_string(const std::string &simpl_type)
     {
         if (simpl_type == "string")
         {
@@ -142,7 +142,7 @@ namespace detail
     }
 
     template <typename T>
-    typename std::enable_if<is_one_of<T, empty_t, bool, double, std::string, blobref_t, arrayref_t, objectref_t>::value, T>::type& get_value(value_t &v)
+    typename std::enable_if<is_one_of<T, empty_t, bool, double, std::string, objectref_t>::value, T>::type& get_value(value_t &v)
     {
         return std::get<T>(v);
     }
@@ -153,8 +153,22 @@ namespace detail
         return v;
     }
 
+    template<typename T>
+    typename std::enable_if<std::is_same_v<T, blob_t>, blob_t>::type &get_value(value_t &v)
+    {
+        auto blobref = std::get<blobref_t>(v);
+        return *blobref;
+    }
+
+    template<typename T>
+    typename std::enable_if<std::is_same_v<T, array_t>, array_t>::type &get_value(value_t &v)
+    {
+        auto arrayref = std::get<arrayref_t>(v);
+        return *arrayref;
+    }
+
     template <typename T>
-    typename std::enable_if<!is_one_of<T, empty_t, bool, double, std::string, blobref_t, arrayref_t, objectref_t, value_t>::value, T>::type& get_value(value_t &v)
+    typename std::enable_if<!is_one_of<T, empty_t, bool, double, std::string, blob_t, array_t, objectref_t, value_t>::value, T>::type& get_value(value_t &v)
     {
         if (!std::holds_alternative<objectref_t>(v))
             throw std::runtime_error("not an object");
@@ -162,12 +176,7 @@ namespace detail
         auto objref = std::get<objectref_t>(v);
         return convert_to<T>(objref)->value();
     }
-
-
 }
-
-
-
 }
 
 #endif //__simpl_value_h__

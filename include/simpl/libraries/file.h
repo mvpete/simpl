@@ -8,6 +8,8 @@
 
 namespace simpl
 {
+	// This is so we can use the compile time type. i.e. binding
+	// C++ functions into the runtime.
 	template<>
 	struct detail::is_valid_arg_type<std::fstream> : std::true_type {};
 
@@ -33,6 +35,9 @@ namespace simpl
 
 		void load(vm &vm) override
 		{
+			// This is to participate w/ function def pattern matching.
+			vm.register_type<std::fstream>("file");
+
 			vm.reg_fn("open_f", [](const std::string &name)
 			{
 				return make_ref<file>(name);
@@ -45,7 +50,7 @@ namespace simpl
 			{
 				fs << s;
 			});
-			vm.reg_fn("writeln", [](file &fs, std::string &s) -> void
+			vm.reg_fn("writeln", [](file &fs, const std::string &s) -> void
 			{
 				fs << s << '\n';
 			});

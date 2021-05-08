@@ -32,7 +32,7 @@ namespace simpl
 	struct argument
 	{
 		argument(const std::string &name)
-			:name(name), type(detail::to_string<value_t>::value())
+			:name(name)
 		{
 		}
 
@@ -42,7 +42,7 @@ namespace simpl
 		}
 
 		std::string name;
-		std::string type;
+		std::optional<std::string> type;
 	};
 
 	class expression_visitor
