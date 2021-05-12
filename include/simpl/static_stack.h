@@ -28,6 +28,14 @@ namespace simpl
                 return top();
             }
 
+            T &push(T &&v)
+            {
+                if (sptr_ >= Size)
+                    throw std::runtime_error("stack overflow");
+                stack_[sptr_++] = std::move(v);
+                return top();
+            }
+
             void pop(size_t s=1)
             {
                 if (s > sptr_)

@@ -87,5 +87,8 @@
     <ClInclude Include="..\include\simpl\libraries\array.h">
       <Filter>Header Files\libraries</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\simpl\libraries\string.h">
+      <Filter>Header Files\libraries</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

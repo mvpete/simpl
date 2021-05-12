@@ -2,6 +2,7 @@
 #define __simpl_io_h_
 
 #include <simpl/library.h>
+#include <simpl/cast.h>
 
 namespace simpl
 {

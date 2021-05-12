@@ -34,7 +34,7 @@ namespace simpl
         }
 
         value_t &rvalue;
-        ResultT result;
+        ResultT result = ResultT{};
     };
 
     struct add_op : op_base<value_t>

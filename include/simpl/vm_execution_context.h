@@ -366,9 +366,7 @@ namespace simpl
 			// because all expressions, leave a value on the stack.
 			// evaluating the expression puts it on the stack.
 			for (const auto &expr : exp.expressions())
-				expr->evaluate(*this);
-
-			detail::scope s{ vm_ };
+				expr->evaluate(*this);			
 			call_def cd{ exp.function(), make_arg_list(vm, exp.expressions().size()) };
 			vm_.call(cd);
 			vm_.decrement_stack(exp.expressions().size());

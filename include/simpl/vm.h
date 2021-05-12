@@ -39,7 +39,7 @@ namespace simpl
         struct fn_def
         {
             std::string name;
-            size_t arity;
+            size_t arity=0;
             std::function<void()> fn;
         };
         class dispatch_table
@@ -111,9 +111,34 @@ namespace simpl
     {
         class var_scope
         {
-            std::map<std::string, value_t *> variables_;
         public:
-            var_scope() = default;
+            var_scope() :vm_(nullptr) {}
+            var_scope(vm &vm)
+                :vm_(&vm)
+            {
+            }
+            var_scope(const var_scope &) = delete;
+            var_scope(var_scope &&rhs) noexcept
+                :vm_(nullptr)
+            {
+                std::swap(vm_, rhs.vm_);
+                std::swap(variables_, rhs.variables_);
+            }
+            var_scope &operator=(const var_scope &) = delete;
+            var_scope &operator=(var_scope &&rhs) noexcept
+            {
+                std::swap(vm_, rhs.vm_);
+                std::swap(variables_, rhs.variables_);
+                return *this;
+            }
+            ~var_scope()
+            {
+                if (vm_ == nullptr)
+                    return;
+                for (size_t i = 0; i < variables_.size(); ++i)
+                    vm_->pop_stack();
+
+            }
             void track(const std::string &name, value_t *v)
             {
                 if (variables_.find(name) != variables_.end())
@@ -140,6 +165,10 @@ namespace simpl
             {
                 return variables_.find(name) != variables_.end();
             }
+
+        private:
+            vm *vm_;
+            std::map<std::string, value_t *> variables_;
         };
 
         struct activation_record
@@ -189,7 +218,7 @@ namespace simpl
 
         vm()
         {
-            locals_.push(var_scope{}); // global scope.
+            locals_.push(var_scope{*this}); // global scope.
             callstack_.push(activation_record{}); // main..
         }
 
@@ -238,6 +267,7 @@ namespace simpl
 
         void activate_function(const std::string &fn, size_t retval_offset)
         {
+            enter_scope();
             callstack_.push(activation_record{ fn, &stack_.offset(retval_offset) });
         }
 
@@ -249,6 +279,7 @@ namespace simpl
             *ar.retval = stack_.top();
             stack_.pop();
             callstack_.pop();
+            exit_scope();
         }
 
         template <typename CallableT>
@@ -302,7 +333,7 @@ namespace simpl
             size_t stack = 0;
             while (stack < locals_.size())
             {
-                auto scope = locals_.offset(stack);
+                auto &scope = locals_.offset(stack);
                 if (scope.has_value(name))
                 {
                     return scope.set_value(name, stack_offset(offset));
@@ -318,7 +349,7 @@ namespace simpl
             size_t offset = 0;
             while (offset < locals_.size())
             {
-                auto scope = locals_.offset(offset);
+                auto &scope = locals_.offset(offset);
                 if (scope.has_value(name))
                 {
                     return scope.get_value(name);
@@ -330,7 +361,7 @@ namespace simpl
 
         void enter_scope()
         {
-            locals_.push(var_scope{});
+            locals_.push(var_scope{*this});
         }
 
         void exit_scope()

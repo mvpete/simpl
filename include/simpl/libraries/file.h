@@ -6,6 +6,7 @@
 
 #include <fstream>
 
+
 namespace simpl
 {
 	// This is so we can use the compile time type. i.e. binding
@@ -53,6 +54,12 @@ namespace simpl
 			vm.reg_fn("writeln", [](file &fs, const std::string &s) -> void
 			{
 				fs << s << '\n';
+			});
+			vm.reg_fn("getln", [](file &f)
+			{
+				std::string line;
+				std::getline(f, line);
+				return line;
 			});
 
 		}

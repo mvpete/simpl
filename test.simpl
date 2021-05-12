@@ -9,7 +9,6 @@ let x = new [1, 2, 3];
 print(size(x));
 
 
-
 println("### Comments ###");
 println("# this is a comment");
 println("");

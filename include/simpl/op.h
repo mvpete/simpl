@@ -33,6 +33,8 @@ namespace simpl
 		switch (op)
 		{
 		default:
+		case op_type::log_and:
+		case op_type::log_or:
 			return 1;
 		case op_type::add:
 		case op_type::sub:
@@ -49,8 +51,6 @@ namespace simpl
 		case op_type::lteq:
 		case op_type::eqeq:
 		case op_type::neq:
-		case op_type::log_and:
-		case op_type::log_or:
 			return 7;
 		}
 	}

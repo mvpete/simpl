@@ -156,14 +156,14 @@ namespace detail
     template<typename T>
     typename std::enable_if<std::is_same_v<T, blob_t>, blob_t>::type &get_value(value_t &v)
     {
-        auto blobref = std::get<blobref_t>(v);
+        auto &blobref = std::get<blobref_t>(v);
         return *blobref;
     }
 
     template<typename T>
     typename std::enable_if<std::is_same_v<T, array_t>, array_t>::type &get_value(value_t &v)
     {
-        auto arrayref = std::get<arrayref_t>(v);
+        auto &arrayref = std::get<arrayref_t>(v);
         return *arrayref;
     }
 
@@ -176,7 +176,12 @@ namespace detail
         auto objref = std::get<objectref_t>(v);
         return convert_to<T>(objref)->value();
     }
+
+
 }
+
+
+
 }
 
 #endif //__simpl_value_h__

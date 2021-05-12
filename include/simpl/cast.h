@@ -106,6 +106,20 @@ To to(const From &f)\
     INVALID_CAST(empty_t, blobref_t);
     INVALID_CAST(arrayref_t, blobref_t);
 
+    CAST(bool, arrayref_t)
+    {
+        return from != nullptr;
+    }
+
+    CAST(arrayref_t, arrayref_t)
+    {
+        return from;
+    }
+
+    INVALID_CAST(double, arrayref_t);
+    INVALID_CAST(empty_t, arrayref_t);
+    INVALID_CAST(blobref_t, arrayref_t);
+
     template <typename T>
     struct cast_
     {
@@ -122,7 +136,7 @@ To to(const From &f)\
 
         void operator()(const arrayref_t &v)
         {
-            throw invalid_cast("cannot cast empty_t");
+           value = to<T>(v);
         }
 
         void operator()(double lv)
@@ -152,8 +166,6 @@ To to(const From &f)\
         
     CAST(std::string, blobref_t)
     {
-        if (from == nullptr)
-            return "null";
         std::stringstream ss;
         size_t count = 0;
         size_t size = from->values.size();
@@ -168,7 +180,26 @@ To to(const From &f)\
         ss << " }";
         return ss.str();
     }
-    
+
+    CAST(std::string, arrayref_t)
+    {
+        if (from == nullptr)
+            return "null";
+        std::stringstream ss;
+        size_t count = 0;
+        size_t size = from->values.size();
+        ss << "[ ";
+        for (const auto &i : from->values)
+        {
+            ss << cast<std::string>(i);
+            ++count;
+            if (count != size)
+                ss << ", ";
+        }
+        ss << " ]";
+        return ss.str();
+    }
+
 }
 
 

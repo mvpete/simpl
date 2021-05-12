@@ -15,6 +15,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simpl.test", "simpl.test\simpl.test.vcxproj", "{9B3425CE-BD42-4140-9001-CA5D3B460102}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{300DD6A0-FFD4-4013-9608-812755C335B7}"
+	ProjectSection(SolutionItems) = preProject
+		array.sl = array.sl
+		hello_world.sl = hello_world.sl
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
