@@ -417,12 +417,27 @@ namespace simpl
 				return array->values.at(std::get<size_t>(at));
 			}
 
-			// check that the variable is a blob.
+			auto &name = std::get<std::string>(at);
+
+			// if the item is in scope we'll use that first.
+			if (vm_.in_scope(name))
+			{
+				int idx = (int)cast<double>(vm_.load_var(name));
+
+				if (!std::holds_alternative<arrayref_t>(val))
+					throw std::runtime_error("not an array");
+
+				auto array = std::get<arrayref_t>(val);
+				return array->values.at(idx);
+			}
+
+			// check that the variable is a blob, and see if the value is a 
+			// key on him.
 			if (!std::holds_alternative<blobref_t>(val))
 				throw std::runtime_error("not an object");
 
 			auto blob = std::get<blobref_t>(val);
-			return blob->values.at(std::get<std::string>(at));
+			return blob->values.at(name);
 
 		}
 		

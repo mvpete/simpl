@@ -41,6 +41,15 @@ namespace simpl
     template<typename T>
     using ref_t = std::shared_ptr<ref<T>>;
 
+    template<typename T>
+    ref_t<T> convert_to(objectref_t &base)
+    {
+        if (typeid(T).name() != base->type())
+            throw std::runtime_error("type mismatch");
+        return std::dynamic_pointer_cast<ref<T>>(base);
+    }
+
+
     template <typename T, typename ...Args>
     objectref_t make_ref(Args&&...args)
     {

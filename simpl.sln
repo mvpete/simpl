@@ -17,6 +17,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{300DD6A0-FFD4-4013-9608-812755C335B7}"
 	ProjectSection(SolutionItems) = preProject
 		array.sl = array.sl
+		blob.sl = blob.sl
 		hello_world.sl = hello_world.sl
 	EndProjectSection
 EndProject

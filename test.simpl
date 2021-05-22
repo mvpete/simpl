@@ -158,3 +158,24 @@ writeln(f, "test test test");
 write(f, "not a new line");
 close_f(f);
 
+#object basic_card 
+#{
+#   name = 1+2;
+#   face = get_faced();
+#};
+
+#object card is-a basic_card
+#{
+#};
+
+#let c = new card{};
+
+# base function
+#def play(a is basic_card, b is number)
+#{
+#}
+
+#override
+#def play(a is card, b is number)
+#{
+#}

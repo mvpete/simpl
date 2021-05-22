@@ -47,7 +47,7 @@ namespace simpl
 		position pos_;
 	};
 
-	enum token_types
+	enum class token_types
 	{
 		identifier_token,
 		literal,
@@ -97,7 +97,7 @@ namespace simpl
 
 		token_t peek()
 		{
-			if (next_.type != empty_token)
+			if (next_.type != token_types::empty_token)
 				return next_;
 
 			auto start = cur_;
@@ -190,17 +190,17 @@ namespace simpl
 
 		token_t next()
 		{
-			if (next_.type == empty_token)
+			if (next_.type == token_types::empty_token)
 				peek();
 			auto tkn = next_;
-			next_.type = empty_token;
+			next_.type = token_types::empty_token;
 			return tkn;
 		}
 
 		void reverse(token_t &t)
 		{
 			cur_ = t.begin;
-			next_.type = empty_token;
+			next_.type = token_types::empty_token;
 		}
 
 		const position &pos() const

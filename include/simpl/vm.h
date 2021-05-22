@@ -359,6 +359,21 @@ namespace simpl
             throw std::runtime_error(detail::format("undefined variable '{0}'", name));
         }
 
+        bool in_scope(const std::string &name)
+        {
+            size_t offset = 0;
+            while (offset < locals_.size())
+            {
+                auto &scope = locals_.offset(offset);
+                if (scope.has_value(name))
+                {
+                    return true;
+                }
+                ++offset;
+            }
+            return false;
+        }
+
         void enter_scope()
         {
             locals_.push(var_scope{*this});

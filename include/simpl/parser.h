@@ -15,7 +15,7 @@
 */
 namespace simpl
 {
-	enum keywords
+	enum class keywords
 	{
 		if_keyword,
 		keyword_is,

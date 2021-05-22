@@ -24,14 +24,27 @@ namespace simpl
 	}
 
 	using arrayref_t = std::shared_ptr<array_t>;
+
+	using value_t = std::variant<empty_t, bool, double, std::string, blobref_t, arrayref_t, objectref_t>;
+	struct blob_t { std::map<std::string, value_t> values; };
+	struct array_t 
+    {
+        array_t() = default;
+        array_t(std::vector<value_t> &&v)
+            :values(std::move(v))
+        {
+        }
+        std::vector<value_t> values; 
+    };
 	arrayref_t new_array()
 	{
 		return std::make_shared<array_t>();
 	}
 
-	using value_t = std::variant<empty_t, bool, double, std::string, blobref_t, arrayref_t, objectref_t>;
-	struct blob_t { std::map<std::string, value_t> values; };
-	struct array_t { std::vector<value_t> values; };
+    arrayref_t make_array(std::vector<value_t> &&v)
+    {
+        return std::make_shared<array_t>(std::move(v));
+    }
 
 namespace detail
 {
@@ -133,13 +146,6 @@ namespace detail
     template <typename T>
     struct simple_type_info;
 
-    template<typename T>
-    ref_t<T> convert_to(objectref_t &base)
-    {
-        if (typeid(T).name() != base->type())
-            throw std::runtime_error("type mismatch");
-        return std::dynamic_pointer_cast<ref<T>>(base);
-    }
 
     template <typename T>
     typename std::enable_if<is_one_of<T, empty_t, bool, double, std::string, objectref_t>::value, T>::type& get_value(value_t &v)
