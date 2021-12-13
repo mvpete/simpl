@@ -116,6 +116,6 @@ Examples
 
  ### References
 
- https://ruslanspivak.com/lsbasi-part18/
- https://craftinginterpreters.com/
- https://github.com/ChaiScript
+ - https://ruslanspivak.com/lsbasi-part18/
+ - https://craftinginterpreters.com/
+ - https://github.com/ChaiScript
