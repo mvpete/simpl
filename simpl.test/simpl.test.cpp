@@ -82,6 +82,58 @@ namespace simpltest
 			Assert::IsNotNull(expr);
 		}
 
+		TEST_METHOD(TestParseSimplObjectEmpty)
+		{
+			auto ast = simpl::parse("object obj{}");
+			Assert::AreEqual(size_t{ 1 }, ast.size());
+			const auto &stmt = ast[0];
+
+			auto expr = dynamic_cast<simpl::object_definition_statement *>(stmt.get());
+			Assert::IsNotNull(expr);
+
+			Assert::AreEqual(std::string("obj"), expr->type_name());
+			Assert::AreEqual(size_t{ 0 }, expr->members().size());
+
+		}
+
+		TEST_METHOD(TestParseSimpleObjectWMembers)
+		{
+			auto ast = simpl::parse("object obj { mem1; mem2; }");
+			Assert::AreEqual(size_t{ 1 }, ast.size());
+			const auto &stmt = ast[0];
+
+			const auto expr = dynamic_cast<const simpl::object_definition_statement *>(stmt.get());
+			Assert::IsNotNull(expr);
+			Assert::AreEqual(std::string("obj"), expr->type_name());
+			Assert::AreEqual(size_t{ 2 }, expr->members().size());
+		}
+
+		TEST_METHOD(TestParseSimplObjectWInitializer)
+		{
+			auto ast = simpl::parse("object obj { mem1=1; mem2=\"king\"; }");
+			Assert::AreEqual(size_t{ 1 }, ast.size());
+			const auto &stmt = ast[0];
+
+			const auto expr = dynamic_cast<const simpl::object_definition_statement *>(stmt.get());
+			Assert::IsNotNull(expr);
+
+			Assert::AreEqual(std::string("obj"), expr->type_name());
+			Assert::AreEqual(size_t{ 2 }, expr->members().size());
+		}
+
+		TEST_METHOD(TestParseSimpleObjectInherits)
+		{
+			auto ast = simpl::parse("object obj inherits obj2 { }");
+			Assert::AreEqual(size_t{ 1 }, ast.size());
+			const auto &stmt = ast[0];
+
+			const auto expr = dynamic_cast<const simpl::object_definition_statement *>(stmt.get());
+			Assert::IsNotNull(expr);
+
+			Assert::AreEqual(std::string("obj"), expr->type_name());
+			Assert::IsTrue(expr->inherits().has_value());
+			Assert::AreEqual(std::string("obj2"), expr->inherits().value());
+		}
 
 	};
 }

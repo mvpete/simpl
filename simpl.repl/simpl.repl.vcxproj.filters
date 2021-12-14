@@ -13,10 +13,27 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Examples">
+      <UniqueIdentifier>{7e0c84e1-0cfb-4e3c-985e-301a04d4d0e1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\examples\array.sl">
+      <Filter>Examples</Filter>
+    </None>
+    <None Include="..\examples\blob.sl">
+      <Filter>Examples</Filter>
+    </None>
+    <None Include="..\examples\hello_world.sl">
+      <Filter>Examples</Filter>
+    </None>
+    <None Include="..\examples\object.sl">
+      <Filter>Examples</Filter>
+    </None>
   </ItemGroup>
 </Project>

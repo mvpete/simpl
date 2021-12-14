@@ -158,17 +158,18 @@ writeln(f, "test test test");
 write(f, "not a new line");
 close_f(f);
 
-#object basic_card 
+object basic_card 
+{
+   name = "king";
+   face;
+};
+
+#object card inherits basic_card
 #{
-#   name = 1+2;
-#   face = get_faced();
+#   color;
 #};
 
-#object card is-a basic_card
-#{
-#};
-
-#let c = new card{};
+#let c = new card{name="king"};
 
 # base function
 #def play(a is basic_card, b is number)

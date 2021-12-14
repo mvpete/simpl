@@ -93,6 +93,8 @@ namespace simpl
 	{
 		if (builtins::compare(begin, end, "+"))
 			return op_type::add;
+		else if (builtins::compare(begin, end, "="))
+			return op_type::eq;
 		else if (builtins::compare(begin, end, "-"))
 			return op_type::sub;
 		else if (builtins::compare(begin, end, "/"))

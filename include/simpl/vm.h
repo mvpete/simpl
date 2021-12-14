@@ -2,8 +2,9 @@
 #define __simpl_vm_h__
 
 #include <simpl/detail/signature.h>
-#include <simpl/value.h>
+#include <simpl/expression.h>
 #include <simpl/static_stack.h>
+#include <simpl/value.h>
 
 #include <iostream>
 #include <functional>
@@ -19,6 +20,7 @@ namespace simpl
         std::string name;
         std::vector<std::string> arguments;
     };
+
 
     namespace detail
     {
@@ -42,6 +44,7 @@ namespace simpl
             size_t arity=0;
             std::function<void()> fn;
         };
+
         class dispatch_table
         {
         public:
@@ -102,7 +105,97 @@ namespace simpl
             }
 
         private:
+            
+            ////
+            /*
+            *    fn_name@{arity} -> [[args(heirarchy-order),...],...]
+            * 
+            * 
+            * 
+            * 
+            */
+            ///
             std::map<std::string, fn_def> functions_;
+        };
+
+        struct type_def
+        {
+            type_def()
+                :inherits(nullptr)
+            {
+            }
+
+            type_def(const std::string &name)
+                :name(name), inherits(nullptr)
+            {
+            }
+
+            type_def(const std::string &name, const type_def *inherits, std::vector<object_definition::member> &&members)
+                :name(name), inherits(inherits), members(std::move(members))
+            {
+            }
+
+            type_def(type_def &&td)
+                :name(std::move(td.name)), inherits(std::move(td.inherits)), members(std::move(td.members))
+            {
+            }
+
+            type_def &operator=(type_def &&td)
+            {
+                std::swap(td.name, name);
+                std::swap(td.inherits, inherits);
+                std::swap(td.members, members);
+                return *this;
+            }
+
+            std::string name;
+            const type_def* inherits;
+            std::vector<simpl::object_definition::member> members;
+        };
+
+        class type_table
+        {
+
+        public:
+
+            void register_type(const std::string &name, const std::optional<std::string> &inherits, std::vector<object_definition::member> &&members)
+            {
+                const type_def *super = nullptr;
+                if (inherits.has_value())
+                {
+                    super = get_type(inherits.value());
+                    if (super == nullptr)
+                        throw std::runtime_error("type does not exist");
+                }
+               
+                register_type(type_def{ name,super,std::move(members) });
+            }
+
+            void register_type(type_def &&def)
+            {
+                auto t = get_type(def.name);
+                if (t != nullptr)
+                    throw std::runtime_error("type exists");
+
+                types_[next_] = std::move(def);
+                ++next_;
+            }
+
+            const type_def *get_type(const std::string &name)
+            {
+                for (size_t i = 0; i < next_; ++i)
+                {
+                    const auto &t = types_[i];
+                    if (t.name == name)
+                        return &t;
+                }
+                return nullptr;
+            }
+
+        private:
+            std::array<type_def,256> types_;
+            size_t next_;
+
         };
 
     }
@@ -310,17 +403,41 @@ namespace simpl
         template<typename T>
         void register_type(const std::string &simpl_name)
         {
-            if (types_.find(simpl_name) != types_.end())
+            if (has_type(simpl_name))
                 throw std::runtime_error(detail::format("type '{0}' already registered", simpl_name));
-            types_[simpl_name] = typeid(T).name();
+
+            types_.register_type(detail::type_def{ simpl_name });
         }
 
-        std::optional<std::string> lookup_type(const std::string &simpl_name)
+        void register_type(const std::string &type, const std::optional<std::string> &inherits, std::vector<object_definition::member> &&members)
         {
-            auto t = types_.find(simpl_name);
-            if (t == types_.end())
-                return std::optional<std::string>{};
-            return t->second;
+            if (has_type(type))
+                throw std::runtime_error(detail::format("type '{0}' already registered", type));
+
+            const detail::type_def *parent_type=nullptr;
+            if (inherits.has_value())
+            {
+                const auto parent = lookup_type(inherits.value());
+                if(!parent.has_value())
+                    throw std::runtime_error(detail::format("cannot inherit '{0}' type does not exist.", inherits.value()));
+                parent_type = parent.value();
+            }
+
+            types_.register_type(detail::type_def{ type, parent_type, std::move(members) });
+        }
+
+        bool has_type(const std::string &simpl_type)
+        {
+            auto td = types_.get_type(simpl_type);
+            return td != nullptr;
+        }
+
+        std::optional<const detail::type_def*> lookup_type(const std::string &simpl_name)
+        {
+            auto td = types_.get_type(simpl_name);            
+            if (td == nullptr)
+                return std::optional<detail::type_def*>{};
+            return td;           
         }
 
         void create_var(const std::string &name, size_t offset = 0)
@@ -385,6 +502,8 @@ namespace simpl
                 locals_.pop();
         }
 
+
+
     private:
         template <typename CallableT>
         void reg_fn(const std::string &id, size_t arity, CallableT &&fn)
@@ -407,7 +526,8 @@ namespace simpl
         detail::static_stack<value_t, Stack_Size> stack_;
         detail::static_stack<var_scope, Stack_Size> locals_;
         callstack_t callstack_;
-        std::map<std::string, std::string> types_;
+        detail::type_table types_;
+        //std::map<std::string, std::string> types_;
 
     };
 

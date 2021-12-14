@@ -24,6 +24,7 @@ namespace simpl
 	class for_statement;
 	class block_statement;
 	class assignment_statement;
+	class object_definition_statement;
 
 	class statement_visitor
 	{
@@ -38,6 +39,7 @@ namespace simpl
 		virtual void visit(for_statement &fs) = 0;
 		virtual void visit(block_statement &bs) = 0;
 		virtual void visit(assignment_statement &ws) = 0;
+		virtual void visit(object_definition_statement &os) = 0;
 	};
 
 	struct statement
@@ -305,6 +307,52 @@ namespace simpl
 		expression_ptr cond_;
 		statement_ptr incr_;
 		statement_ptr block_;
+	};
+
+	class object_definition_statement : public statement
+	{
+	public:
+
+		object_definition_statement(const std::string &type, std::vector<object_definition::member> members)
+			:type_(type), members_(std::move(members))
+		{
+		}
+
+		object_definition_statement(const std::string &type, const std::optional<std::string> &inherits, std::vector<object_definition::member> members)
+			:type_(type), inherits_(inherits), members_(std::move(members))
+		{
+		}
+
+		virtual void evaluate(statement_visitor &v) override
+		{
+			v.visit(*this);
+		}
+
+		const std::string &type_name() const
+		{
+			return type_;
+		}
+
+		const std::optional<std::string> &inherits() const
+		{
+			return inherits_;
+		}
+
+		const std::vector<object_definition::member>& members() const
+		{
+			return members_;
+		}
+
+		std::vector<object_definition::member> move_members()
+		{
+			return std::move(members_);
+		}
+
+	private:
+		std::string type_;
+		std::optional<std::string> inherits_;
+
+		std::vector<object_definition::member> members_;
 	};
 }
 

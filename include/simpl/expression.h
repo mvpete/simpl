@@ -45,6 +45,30 @@ namespace simpl
 		std::optional<std::string> type;
 	};
 
+	using expression_ptr = std::unique_ptr<expression>;
+
+	struct object_definition
+	{
+		struct member
+		{
+			member(const std::string &name)
+				:name(name)
+			{
+			}
+			member(const std::string &name, expression_ptr init)
+				:name(name), initializer(std::move(init))
+			{
+			}
+
+
+			std::string name;
+			expression_ptr initializer;
+		};
+
+		std::string name;
+		std::optional<std::string> is_a;
+	};
+
 	class expression_visitor
 	{
 	public:
@@ -55,7 +79,6 @@ namespace simpl
 		virtual void visit(new_array_expression &nas) = 0;
 	};
 
-	using expression_ptr = std::unique_ptr<expression>;
 
 	struct initializer 
 	{ 

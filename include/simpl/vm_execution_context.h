@@ -14,24 +14,24 @@ namespace simpl
 	namespace detail
 	{
 		class scope
-	{
-	public:
-		scope(vm &vm)
-			:vm_(vm)
 		{
-			vm_.enter_scope();
-		}
-		~scope()
-		{
-			vm_.exit_scope();
-		}
-		void reg_var(const std::string &name, size_t offset)
-		{
-			vm_.create_var(name, offset);
-		}
-	private:
-		vm &vm_;
-	};
+		public:
+			scope(vm &vm)
+				:vm_(vm)
+			{
+				vm_.enter_scope();
+			}
+			~scope()
+			{
+				vm_.exit_scope();
+			}
+			void reg_var(const std::string &name, size_t offset)
+			{
+				vm_.create_var(name, offset);
+			}
+		private:
+			vm &vm_;
+		};
 
 		std::string format_name(vm& vm, const std::string &name, const std::vector<argument> &arguments)
 		{
@@ -39,12 +39,12 @@ namespace simpl
 			ss << name << "(";
 			for (size_t i = 0; i < arguments.size(); ++i)
 			{
-				auto simpl_type = arguments[i].type;
+				const auto &simpl_type = arguments[i].type;
 				auto type_str = simpl_type.has_value() ? detail::to_builtin_type_string(simpl_type.value()) : detail::to_string<value_t>::value();
+				if (!type_str.has_value() && vm.has_type(simpl_type.value()))
+					type_str = vm.lookup_type(simpl_type.value()).value()->name;
 				if (!type_str.has_value())
-					type_str = vm.lookup_type(simpl_type.value());
-				if (!type_str.has_value())
-					throw std::runtime_error("unknown type");
+					throw std::runtime_error(detail::format("unknown type {0}", (simpl_type.has_value() ? simpl_type.value() : "<t>")));
 				ss << type_str.value();
 				if (i != arguments.size() - 1)
 					ss << ",";
@@ -72,6 +72,11 @@ namespace simpl
 			if (cs.expr())
 				cs.expr()->evaluate(*this);
 			vm_.pop_stack(); // an expression leaves a value on the top of the stack.			
+		}
+
+		virtual void visit(object_definition_statement &os)
+		{
+			vm_.register_type(os.type_name(), os.inherits(), os.move_members());
 		}
 
 		virtual void visit(let_statement &cs)

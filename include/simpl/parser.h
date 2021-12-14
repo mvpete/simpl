@@ -27,6 +27,7 @@ namespace simpl
 		new_keyword,
 		while_keyword,
 		return_keyword,
+		object_keyword,
 		unknown_keyword,
 	};
 
@@ -49,11 +50,12 @@ namespace simpl
 		using statement_t = statement;
 		
 	private:
-		enum class scopes { main, function, while_, for_ };
+		enum class scopes { main, function, while_, for_, object_ };
 		void scope(scopes scope)
 		{
 			scope_ = scope;
 		}
+
 		scopes scope()
 		{
 			return scope_;
@@ -115,6 +117,8 @@ namespace simpl
 				return parse_for_statement(t);
 			case keywords::return_keyword:
 				return parse_return_statement(t);
+			case keywords::object_keyword:
+				return parse_object_statement(t);
 			}
 			// peek the next token
 			auto nxt = tokenizer_.peek();
@@ -403,8 +407,6 @@ namespace simpl
 
 		}
 
-
-
 		statement_ptr parse_while_statement(token_t &t)
 		{
 			expect(token_types::lparen);
@@ -445,7 +447,62 @@ namespace simpl
 			return std::make_unique<return_statement>(std::move(expr));
 		}
 
-		statement_ptr parse_def_statement(token_t &t)
+		/*
+		* object <object_name> <lbrack> <members ...> <rbrack>
+		* object is a collection of members + initializers.
+		*/
+		statement_ptr parse_object_statement(const token_t &t)
+		{
+			auto name = expect(token_types::identifier_token);
+
+			std::optional<std::string> inherits;
+			auto nxt = tokenizer_.peek();
+			if (nxt.type == token_types::identifier_token && nxt.to_string() == "inherits")
+			{
+				tokenizer_.next(); // consume is-a
+				nxt = expect(token_types::identifier_token);
+				inherits = nxt.to_string();
+			}
+
+			expect(token_types::lbrack);
+			change_scope sp(*this, scopes::object_);
+			auto members = parse_object_members();
+			expect(token_types::rbrack);
+
+			return std::make_unique<object_definition_statement>(name.to_string(),inherits,std::move(members));
+		}
+
+		std::vector<object_definition::member> parse_object_members()
+		{
+			// member variable or initializer statement.
+			std::vector<object_definition::member> members;
+			while (tokenizer_.peek().type != token_types::rbrack)
+			{
+				if (tokenizer_.peek().type == token_types::eof)
+					return std::vector<object_definition::member>{};
+
+				auto tkn = tokenizer_.next();
+				if (tkn.type != token_types::identifier_token)
+					throw parse_error(tokenizer_.pos(), "expected an identifier");
+
+				auto nxt = tokenizer_.peek();
+				if (nxt.type == token_types::op && to_op_type(nxt.begin, nxt.end) == op_type::eq)
+				{
+					tokenizer_.next();
+					auto init = parse_expression();
+					members.emplace_back(tkn.to_string(),std::move(init));
+				}
+				else
+				{
+					// no initializer.
+					members.emplace_back(tkn.to_string());
+				}
+				close_statement();
+			}
+			return members;
+		}
+
+		statement_ptr parse_def_statement(const token_t &t)
 		{
 			if (scope_ != scopes::main)
 				throw parse_error(tokenizer_.pos(), "cannot define a function here");
@@ -671,6 +728,8 @@ namespace simpl
 				return keywords::for_keyword;
 			else if (builtins::compare(begin, end, "return"))
 				return keywords::return_keyword;
+			else if (builtins::compare(begin, end, "object"))
+				return keywords::object_keyword;
 			return keywords::unknown_keyword;
 		}
 
@@ -722,7 +781,9 @@ namespace simpl
 		scopes scope_;
 	};
 
-	std::vector<statement_ptr> parse(const std::string &s)
+	using syntax_tree = std::vector<statement_ptr>;
+
+	syntax_tree parse(const std::string &s)
 	{
 		parser p(s);
 		std::vector<statement_ptr> ast;
