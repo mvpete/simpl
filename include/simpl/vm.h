@@ -1,7 +1,10 @@
 #ifndef __simpl_vm_h__
 #define __simpl_vm_h__
 
+#include <simpl/detail/functional.h>
 #include <simpl/detail/signature.h>
+#include <simpl/detail/types.h>
+
 #include <simpl/expression.h>
 #include <simpl/static_stack.h>
 #include <simpl/value.h>
@@ -15,256 +18,6 @@
 
 namespace simpl
 {
-    struct call_def
-    {
-        std::string name;
-        std::vector<std::string> arguments;
-    };
-
-
-    namespace detail
-    {
-        std::string format_name(const std::string &name, const std::vector<std::string> &arguments)
-        {
-            std::stringstream ss;
-            ss << name << "(";
-            for (size_t i = 0; i < arguments.size(); ++i)
-            {
-                ss << arguments[i];
-                if (i != arguments.size() - 1)
-                    ss << ",";
-            }
-            ss << ")";
-            return ss.str();
-        }
-
-        struct fn_def
-        {
-            std::string id;
-            std::string name;
-            std::vector<std::string> args;
-            std::function<void()> fn;
-        };
-
-        struct type_def
-        {
-            type_def()
-                :inherits(nullptr)
-            {
-            }
-
-            type_def(const std::string &name, const std::string &native)
-                :name(name), native(native), inherits(nullptr)
-            {
-            }
-
-            type_def(const std::string &name)
-                :name(name), inherits(nullptr)
-            {
-            }
-
-            type_def(const std::string &name, const type_def *inherits, std::vector<object_definition::member> &&members)
-                :name(name), inherits(inherits), members(std::move(members))
-            {
-            }
-
-            type_def(type_def &&td) noexcept
-                :name(std::move(td.name)), inherits(std::move(td.inherits)), members(std::move(td.members))
-            {
-            }
-
-            type_def &operator=(type_def &&td) noexcept
-            {
-                std::swap(td.name, name);
-                std::swap(td.native, native);
-                std::swap(td.inherits, inherits);
-                std::swap(td.members, members);
-                return *this;
-            }
-
-            std::string name;
-            std::optional<std::string> native;
-            const type_def* inherits;
-            std::vector<simpl::object_definition::member> members;
-        };
-
-        class type_table
-        {
-
-        public:
-
-            void register_type(const std::string &name, const std::optional<std::string> &inherits, std::vector<object_definition::member> &&members)
-            {
-                const type_def *super = nullptr;
-                if (inherits.has_value())
-                {
-                    super = get_type(inherits.value());
-                    if (super == nullptr)
-                        throw std::runtime_error("type does not exist");
-                }
-               
-                register_type(type_def{ name,super,std::move(members) });
-            }
-
-            void register_type(type_def &&def)
-            {
-                auto t = get_type(def.name);
-                if (t != nullptr)
-                    throw std::runtime_error("type exists");
-
-                types_[next_] = std::move(def);
-                ++next_;
-            }
-
-            const type_def *get_type(const std::string &name)
-            {
-                for (size_t i = 0; i < next_; ++i)
-                {
-                    const auto &t = types_[i];
-                    if (t.name == name)
-                        return &t;
-                }
-                return nullptr;
-            }
-
-            // checks if t1, is in the lineage of t2
-            // bike is-a vehicle -> true
-            // car  is-a vehicle -> true
-            // bike is-a car     -> false
-            bool is_a(const std::string &t1, const std::string &t2)
-            {
-                // first, find t1
-                // then walk its lineage until you find t2
-                const type_def *t1_p = nullptr;
-                for (const auto &td : types_)
-                {
-                    if (td.name == t1)
-                        t1_p = &td;
-                }
-                if (t1_p == nullptr)
-                    throw std::runtime_error(detail::format("unrecognized type '{0}'", t1));
-                if (t2 == "any")
-                    return true; // this is a hack...
-                while (t1_p != nullptr)
-                {
-                    if (t1_p->name == t2)
-                        return true;
-                    t1_p = t1_p->inherits;
-                }
-                return false;
-
-            }
-
-            std::string translate_type(const std::string &nt)
-            {
-                auto i = std::find_if(types_.begin(), types_.end(), [&](const auto &td)
-                {
-                    return td.native == nt;
-                });
-                if (i == types_.end())
-                    throw std::runtime_error(detail::format("type '{0}' not registered", nt));
-                return i->name;
-            }
-
-            std::vector<std::string> translate_types(const std::vector<std::string> &native_types)
-            {
-                std::vector<std::string> simpl_types;
-                for (const std::string &nt : native_types)
-                {
-                    simpl_types.push_back(translate_type(nt));
-                }
-                return simpl_types;
-            }
-
-        private:
-            std::array<type_def,256> types_;
-            size_t next_=0;
-        };
-
-        class dispatch_table
-        {
-        public:
-            dispatch_table(type_table &types)
-                :types_(types)
-            {
-            }
-
-            const fn_def *lookup(const call_def &cd)
-            {
-                // 1. argument specific lookup.
-                // 2. backoff generic lookup.
-                std::vector<std::string> args = cd.arguments;
-                const fn_def *match = find_exact_match(cd.name, args);
-
-                if (match != nullptr)
-                    return match;
-
-                // find all candidate functions w/ first arg in-tree
-                auto candidates = find_candidate_functions(cd.name, args);
-                
-                if (candidates.size() > 1)
-                    throw std::runtime_error("ambiguous function call"); 
-
-                if (candidates.size() == 0)
-                    throw std::runtime_error("no matching function found");               
-
-                return candidates[0];
-            }
-            void register_function(fn_def &&df)
-            {
-                auto name = df.id;
-                if (functions_.find(name) != functions_.end())
-                {
-                    throw std::runtime_error(detail::format("function '{0}' already defined", name));
-                }
-                functions_[name] = std::move(df);
-
-            }
-
-        private:
-
-            std::vector<const fn_def *> find_candidate_functions(const std::string &name, const std::vector<std::string> &args_t)
-            {
-                // build the inheritance tree
-                std::vector<const fn_def *> candidates;
-                for (const auto &fn : functions_)
-                {
-                    const auto &fn_d = fn.second;
-                    const auto &args = fn.second.args;
-                    if(fn_d.name == name && fn_d.args.size() == args_t.size() && (args_t.size() == 0 || types_.is_a(args_t[0],args[0])))
-                        candidates.push_back(&fn.second);
-                }
-
-                candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
-                [&](const fn_def *fn) 
-                { 
-                    for (size_t i = 1; i < args_t.size(); ++i)
-                    {
-                        if (!types_.is_a(args_t[i], fn->args[i]))
-                            return true;
-                    }
-                    return false;
-                }), candidates.end());
-                
-
-                return candidates;
-            }
-
-            const fn_def *find_exact_match(const std::string &name, const std::vector<std::string> &args)
-            {
-                auto call_id = detail::format_name(name, args);
-                auto match = functions_.find(call_id);
-                if (match == functions_.end())
-                    return nullptr;
-                return &match->second;
-            }
-
-        private:
-            type_table &types_;
-            std::map<std::string, fn_def> functions_;
-        };
-    }
-
     class vm
     {
         class var_scope
@@ -372,6 +125,9 @@ namespace simpl
     public:
         static constexpr size_t Stack_Size = 128;
         using callstack_t = detail::static_stack<activation_record, Stack_Size>;
+        using stack_t = detail::static_stack<value_t, Stack_Size>;
+        using locals_t = detail::static_stack<var_scope, Stack_Size>;
+
 
     public:
 
@@ -382,16 +138,11 @@ namespace simpl
             callstack_.push(activation_record{}); // main..
 
             // builtins?
-            register_type<value_t>("any");
-            register_type<std::string>("string");
-            register_type<bool>("bool");
-            register_type<double>("number");
-            register_type<blob_t>("blob");
-            register_type<array_t>("array");
+      
 
         }
 
-        void call(const call_def &cd)
+        void call(const detail::call_def &cd)
         {
             auto fn = functions_.lookup(cd);
             activate_function(fn->name, fn->args.size());
@@ -582,6 +333,21 @@ namespace simpl
                 locals_.pop();
         }
 
+    public:
+        const callstack_t &callstack() const
+        {
+            return callstack_;
+        }
+
+        const stack_t &stack() const
+        {
+            return stack_;
+        }
+
+        const locals_t &scopes() const
+        {
+            return locals_;
+        }
 
 
     private:
@@ -605,15 +371,11 @@ namespace simpl
 
         detail::type_table types_;
         detail::dispatch_table functions_;
-        detail::static_stack<value_t, Stack_Size> stack_;
-        detail::static_stack<var_scope, Stack_Size> locals_;
+        stack_t stack_;
+        locals_t locals_;
         callstack_t callstack_;
 
     };
-
-
-
 }
-
 
 #endif //__simpl_vm_h__

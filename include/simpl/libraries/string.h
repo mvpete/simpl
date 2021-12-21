@@ -11,7 +11,7 @@ namespace simpl
 
 		const char *name() const override
 		{
-			return "string";
+			return "string_lib";
 		}
 
 		void load(vm &vm) override

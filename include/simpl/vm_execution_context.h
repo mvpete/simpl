@@ -10,7 +10,6 @@
 
 namespace simpl
 {
-
 	namespace detail
 	{
 		class scope
@@ -33,18 +32,18 @@ namespace simpl
 			vm &vm_;
 		};
 
-		std::string to_simpl_type_string(vm &vm, const simpl::argument &a)
+		inline std::string to_simpl_type_string(vm &vm, const simpl::argument &a)
 		{
 			const auto &simpl_type = a.type;
 			auto type_str = simpl_type.has_value() ? detail::to_builtin_type_string(simpl_type.value()) : "any";
 			if (!type_str.has_value() && vm.has_type(simpl_type.value()))
 				type_str = vm.lookup_type(simpl_type.value())->name;
 			if (!type_str.has_value())
-				throw std::runtime_error(detail::format("unknown type {0}", (simpl_type.has_value() ? simpl_type.value() : "<t>")));
+				throw std::runtime_error(detail::format("unknown type '{0}'", (simpl_type.has_value() ? simpl_type.value() : "<t>")));
 			return type_str.value();
 		}
 
-		std::string format_name(vm& vm, const std::string &name, const std::vector<argument> &arguments)
+		inline std::string format_name(vm& vm, const std::string &name, const std::vector<argument> &arguments)
 		{
 			std::stringstream ss;
 			ss << name << "(";
@@ -59,7 +58,7 @@ namespace simpl
 			return ss.str();
 		}
 
-		std::vector<std::string> to_arg_types(vm &vm, const std::vector<simpl::argument> &args)
+		inline std::vector<std::string> to_arg_types(vm &vm, const std::vector<simpl::argument> &args)
 		{
 			std::vector<std::string> ret;
 			for (const simpl::argument &a : args)
@@ -76,6 +75,13 @@ namespace simpl
 		vm_execution_context(simpl::vm &vm)
 			:vm_(vm)
 		{
+			vm_.register_type<value_t>("any");
+			vm_.register_type<std::string>("string");
+			vm_.register_type<bool>("bool");
+			vm_.register_type<double>("number");
+			vm_.register_type<blob_t>("blob");
+			vm_.register_type<array_t>("array");
+
 			vm_.reg_fn("is_empty", [](const value_t &v)
 			{
 				return std::holds_alternative<empty_t>(v);
@@ -274,12 +280,20 @@ namespace simpl
 			auto object = new_simpl_object(nos.type());
 			vm_.push_stack(object);
 
-			// initialize the members based on hierarchy
+			// TODO: initialize the members based on hierarchy
 
-			// run the type initializers
+			// TODO: run the type initializers
+			
 
 			// run the expression initializers
-
+			for (const auto &init : nos.initializers())
+			{
+				if (init.expr)
+				{
+					init.expr->evaluate(*this);
+					object->members[init.identifier] = vm_.pop_stack();
+				}
+			}
 
 		}
 
@@ -373,7 +387,6 @@ namespace simpl
 
 			vm.push_stack(apply<OpT>(lvalue, rvalue));
 		}
-
 		
 		void do_and(const nary_expression &exp, vm &vm)
 		{
@@ -410,7 +423,7 @@ namespace simpl
 			// evaluating the expression puts it on the stack.
 			for (const auto &expr : exp.expressions())
 				expr->evaluate(*this);			
-			call_def cd{ exp.function(), make_arg_list(vm, exp.expressions().size()) };
+			detail::call_def cd{ exp.function(), make_arg_list(vm, exp.expressions().size()) };
 			vm_.call(cd);
 			vm_.decrement_stack(exp.expressions().size());
 		}
@@ -484,7 +497,6 @@ namespace simpl
 
 		}
 		
-
 	public:
 		vm &vm_;
 

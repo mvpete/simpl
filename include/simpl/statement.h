@@ -47,7 +47,9 @@ namespace simpl
 		virtual ~statement() {};
 		virtual void evaluate(statement_visitor &v) = 0;
 	};
+
 	using statement_ptr = std::unique_ptr<statement>;
+	using syntax_tree = std::vector<statement_ptr>;
 
 	class expr_statement : public statement
 	{

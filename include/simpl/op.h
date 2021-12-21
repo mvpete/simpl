@@ -5,8 +5,6 @@ namespace simpl
 {
 	namespace builtins
 	{
-		const char *print_fn = "print";
-
 		template <typename IteratorT, typename Iterator2T>
 		bool compare(IteratorT begin, IteratorT end, Iterator2T val)
 		{
@@ -23,12 +21,11 @@ namespace simpl
 			}
 			return true;
 		}
-
 	}
 
 	enum class op_type { add, sub, mult, div, mod, eq, eqeq, neq, exp, gt, lt, gteq, lteq, log_and, log_or, func, none };
 
-	int get_precendence(op_type op)
+	inline int get_precendence(op_type op)
 	{
 		switch (op)
 		{
@@ -55,7 +52,7 @@ namespace simpl
 		}
 	}
 
-	size_t get_arity(op_type op)
+	inline size_t get_arity(op_type op)
 	{
 		switch (op)
 		{
@@ -79,7 +76,7 @@ namespace simpl
 		}
 	}
 
-	bool is_op(char c)
+	inline bool is_op(char c)
 	{
 		return c == '+' || c == '-' || c == '*' 
 						|| c == '/' || c == '=' 

@@ -1,13 +1,14 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 
+#define SIMPL_DEFINES
 #include <simpl/simpl.h>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-namespace simpltest
+namespace simpl_test
 {
-	TEST_CLASS(simpltest)
+	TEST_CLASS(simpl_parser_test)
 	{
 	public:
 		

@@ -9,7 +9,7 @@
 
 namespace simpl
 {
-	bool is_eol(char c)
+	inline bool is_eol(char c)
 	{
 		return c == '\r' || c == '\n';
 	}
@@ -25,7 +25,7 @@ namespace simpl
 		}
 	};
 
-	std::ostream &operator<<(std::ostream &os, const position &p)
+	inline std::ostream &operator<<(std::ostream &os, const position &p)
 	{
 		os << p.line << ":" << p.col;
 		return os;

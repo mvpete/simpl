@@ -790,9 +790,7 @@ namespace simpl
 		scopes scope_;
 	};
 
-	using syntax_tree = std::vector<statement_ptr>;
-
-	syntax_tree parse(const std::string &s)
+	inline syntax_tree parse(const std::string &s)
 	{
 		parser p(s);
 		std::vector<statement_ptr> ast;

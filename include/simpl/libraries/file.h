@@ -31,7 +31,7 @@ namespace simpl
 
 		const char *name() const override
 		{
-			return "file";
+			return "file_lib";
 		}
 
 		void load(vm &vm) override

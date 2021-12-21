@@ -26,7 +26,7 @@ namespace simpl
 
 		const char *name() const override
 		{
-			return "array";
+			return "array_lib";
 		}
 
 		void load(vm &vm) override

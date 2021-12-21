@@ -18,7 +18,7 @@ namespace simpl
 	struct array_t;
 	
 	using blobref_t = std::shared_ptr<blob_t>;
-	blobref_t new_blob()
+	inline blobref_t new_blob()
 	{
 		return std::make_shared<blob_t>();
 	}
@@ -52,18 +52,19 @@ namespace simpl
         const std::string type_id;
         std::map<std::string, value_t> members;
     };
+    using instanceref_t = std::shared_ptr<object_t>;
 
-	arrayref_t new_array()
+	inline arrayref_t new_array()
 	{
 		return std::make_shared<array_t>();
 	}
 
-    arrayref_t make_array(std::vector<value_t> &&v)
+    inline arrayref_t make_array(std::vector<value_t> &&v)
     {
         return std::make_shared<array_t>(std::move(v));
     }
 
-    objectref_t new_simpl_object(const std::string &type)
+    inline instanceref_t new_simpl_object(const std::string &type)
     {
         return std::make_shared<object_t>(type);
     }
@@ -118,7 +119,7 @@ namespace detail
     struct is_valid_return_type<objectref_t> : std::true_type {};
 
     // TODO: Use variadics for this, and just used the value_t
-    std::string get_type_string(const value_t &v)
+    inline std::string get_type_string(const value_t &v)
     {
         if (std::holds_alternative<empty_t>(v))
             return "empty";
@@ -140,14 +141,13 @@ namespace detail
         throw std::runtime_error("unknown type");
     }
 
-    std::optional<std::string> to_builtin_type_string(const std::string &simpl_type)
+    inline std::optional<std::string> to_builtin_type_string(const std::string &simpl_type)
     {
         return simpl_type;
     }
 
     template <typename T>
     struct simple_type_info;
-
 
     template <typename T>
     typename std::enable_if<is_one_of<T, empty_t, bool, double, std::string, objectref_t>::value, T>::type& get_value(value_t &v)

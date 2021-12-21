@@ -1,6 +1,7 @@
 #include <string>
 #include <fstream>
 
+#define SIMPL_DEFINES
 #include <simpl/simpl.h>
 
 struct exit_ {};
@@ -76,6 +77,7 @@ int run_string(const std::string &s)
 	try
 	{
 		simpl::engine e;
+		std::cout << sizeof(e) << std::endl;
 		simpl::parser parser(s.c_str(), s.c_str() + s.length());
 		while (1)
 		{

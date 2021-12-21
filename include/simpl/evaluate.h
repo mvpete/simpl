@@ -5,10 +5,18 @@
 
 namespace simpl
 {
-	void evaluate(statement_ptr statement, engine &e)
+	inline void evaluate(statement_ptr statement, engine &e)
 	{
 		if(statement)
 			statement->evaluate(e.context());
+	}
+
+	inline void evaluate(syntax_tree &ast, engine &e)
+	{
+		for (auto &stmt : ast)
+		{
+			evaluate(std::move(stmt), e);
+		}
 	}
 }
 
