@@ -33,24 +33,40 @@ namespace simpl
 			vm &vm_;
 		};
 
+		std::string to_simpl_type_string(vm &vm, const simpl::argument &a)
+		{
+			const auto &simpl_type = a.type;
+			auto type_str = simpl_type.has_value() ? detail::to_builtin_type_string(simpl_type.value()) : "any";
+			if (!type_str.has_value() && vm.has_type(simpl_type.value()))
+				type_str = vm.lookup_type(simpl_type.value())->name;
+			if (!type_str.has_value())
+				throw std::runtime_error(detail::format("unknown type {0}", (simpl_type.has_value() ? simpl_type.value() : "<t>")));
+			return type_str.value();
+		}
+
 		std::string format_name(vm& vm, const std::string &name, const std::vector<argument> &arguments)
 		{
 			std::stringstream ss;
 			ss << name << "(";
 			for (size_t i = 0; i < arguments.size(); ++i)
 			{
-				const auto &simpl_type = arguments[i].type;
-				auto type_str = simpl_type.has_value() ? detail::to_builtin_type_string(simpl_type.value()) : detail::to_string<value_t>::value();
-				if (!type_str.has_value() && vm.has_type(simpl_type.value()))
-					type_str = vm.lookup_type(simpl_type.value()).value()->name;
-				if (!type_str.has_value())
-					throw std::runtime_error(detail::format("unknown type {0}", (simpl_type.has_value() ? simpl_type.value() : "<t>")));
-				ss << type_str.value();
+				const auto type_str = to_simpl_type_string(vm, arguments[i]);
+				ss << type_str;
 				if (i != arguments.size() - 1)
 					ss << ",";
 			}
 			ss << ")";
 			return ss.str();
+		}
+
+		std::vector<std::string> to_arg_types(vm &vm, const std::vector<simpl::argument> &args)
+		{
+			std::vector<std::string> ret;
+			for (const simpl::argument &a : args)
+			{
+				ret.push_back(to_simpl_type_string(vm,a));
+			}
+			return ret;
 		}
 	}
 
@@ -120,19 +136,20 @@ namespace simpl
 
 		virtual void visit(def_statement &ds)
 		{
-			auto name = detail::format_name(vm_, ds.name(), ds.arguments());
+			auto id = detail::format_name(vm_, ds.name(), ds.arguments());
 			auto arity = ds.arguments().size();
 			auto stmt = std::move(ds.release_statement());
 			detail::fn_def fn
-			{ 
-				name,
-				arity,
-				[this, arity, ids=ds.arguments(), stmt=std::shared_ptr<statement>(stmt.release())]() 
+			{
+				id,
+				ds.name(),
+				detail::to_arg_types(vm_, ds.arguments()),
+				[this, arity, ids = ds.arguments(), stmt = std::shared_ptr<statement>(stmt.release())]()
 				{
 					int offset = arity - 1;
 					for (; offset >= 0; --offset)
-						vm_.create_var(ids[ids.size()-(offset+1)].name, offset);
-					stmt->evaluate(*this);					
+						vm_.create_var(ids[ids.size() - (offset + 1)].name, offset);
+					stmt->evaluate(*this);
 				}
 			};
 			vm_.reg_fn(std::move(fn));
@@ -165,15 +182,15 @@ namespace simpl
 			for (const auto &stmt : bs.statements())
 			{
 				stmt->evaluate(*this);
-				if(depth > vm_.depth())
+				if (depth > vm_.depth())
 					return;
 			}
 		}
 
 		virtual void visit(while_statement &ws)
-		{			
+		{
 			// don't mind this little goto trick...
-			run_cond:
+		run_cond:
 			ws.cond()->evaluate(*this);
 			const auto &val = vm_.pop_stack();
 			if (!is_true(val))
@@ -188,7 +205,7 @@ namespace simpl
 			// we need to add the loop scope.
 			detail::scope loop{ vm_ };
 			fs.init()->evaluate(*this);
-			run_for_cond:
+		run_for_cond:
 			fs.cond()->evaluate(*this);
 			const auto &val = vm_.pop_stack();
 			if (!is_true(val))
@@ -243,6 +260,27 @@ namespace simpl
 				expr->evaluate(*this);
 				array->values.push_back(vm_.pop_stack());
 			}
+		}
+
+		virtual void visit(new_object_expression &nos)
+		{
+			// lookup the type
+			auto type = vm_.lookup_type(nos.type());
+
+			if (type == nullptr)
+				throw std::runtime_error("unknown type");
+
+
+			auto object = new_simpl_object(nos.type());
+			vm_.push_stack(object);
+
+			// initialize the members based on hierarchy
+
+			// run the type initializers
+
+			// run the expression initializers
+
+
 		}
 
 		virtual void visit(nary_expression &cs)

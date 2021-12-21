@@ -33,9 +33,17 @@ namespace simpl
                 return to_string<Args...>::value();
             }
 
-            std::vector<std::string> arguments()
+            template <typename TranslatorT>
+            std::string arguments_string(TranslatorT &t) const
             {
-                return to_vector<Args...>::value();
+                return to_string<Args...>::value(t);
+            }            
+
+            std::vector<std::string> arguments() const
+            {
+                std::vector<std::string> args;
+                to_vector<Args...>::values(args);
+                return args;
             }
 
         };

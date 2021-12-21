@@ -91,7 +91,7 @@ namespace simpl
 	public:
 		template<typename IteratorT>
 		tokenizer(IteratorT begin,  IteratorT end)
-			:begin_(begin), end_(end), cur_(begin),position_(0,0)
+			:begin_(begin), end_(end), cur_(begin),position_(1,1)
 		{
 		}
 
@@ -106,6 +106,11 @@ namespace simpl
 				char c = *cur_;
 				if (isspace(c))
 				{
+					if (is_eol(c) && scan_eol())
+					{
+						++position_.line;
+						position_.col = 1;
+					}
 					continue;
 				}
 				else if (isalpha(c) && scan_identifier(next_))
@@ -127,12 +132,6 @@ namespace simpl
 				else if (c == '\"' && scan_literal(next_))
 				{
 					return next_;
-				}
-				else if (is_eol(c) && scan_eol())
-				{
-					++position_.line;
-					position_.col=0;
-					continue;
 				}
 				else if (c == ';')
 				{
@@ -289,12 +288,11 @@ namespace simpl
 		{
 			if (*cur_ == '\r' && cur_ + 1 != end_ && *(cur_ + 1) == '\n')
 			{
-				cur_ += 2;
+				cur_++;
 				return true;
 			}
 			else if(*cur_ == '\r' || *cur_ == '\n')
 			{
-				cur_++;
 				return true;
 			}
 			return false;

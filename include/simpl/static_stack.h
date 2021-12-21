@@ -20,6 +20,14 @@ namespace simpl
             {
             }
 
+            ~static_stack()
+            {
+                while (sptr_ > 0)
+                {
+                    pop();
+                }
+            }
+
             T& push(const T &v)
             {
                 if (sptr_ >= Size)

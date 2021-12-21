@@ -643,6 +643,8 @@ namespace simpl
 			{
 				if (tokenizer_.peek().type == token_types::sqlbrack)
 					return parse_new_array_expression();
+				else if (tokenizer_.peek().type == token_types::identifier_token)
+					return parse_new_object_expression();
 				else
 					return parse_new_blob_expression();
 			}
@@ -663,6 +665,13 @@ namespace simpl
 			auto expr = parse_expression_list(token_types::sqrbrack);
 			expect(token_types::sqrbrack);
 			return std::make_unique<new_array_expression>(std::move(expr));
+		}
+
+		expression_ptr parse_new_object_expression()
+		{
+			auto id = tokenizer_.next();
+			auto initializers = parse_initializer_list();
+			return std::make_unique<new_object_expression>(id.to_string(), std::move(initializers));
 		}
 
 		initializer_list_t parse_initializer_list()

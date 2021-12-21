@@ -49,14 +49,17 @@ int run_interpreter(InStream &s)
 			}
 			catch (const simpl::token_error &t)
 			{
+				std::cout << "\r\n";
 				std::cout << "failed to parse - " << t.what() << std::endl;
 			}
 			catch (const simpl::parse_error &p)
 			{
+				std::cout << "\r\n";
 				std::cout << "failed to parse - " << p.what() << std::endl;
 			}
 			catch (const std::exception &e)
 			{
+				std::cout << "\r\n";
 				std::cout << e.what() << std::endl;
 			}
 		}
@@ -84,14 +87,17 @@ int run_string(const std::string &s)
 	}
 	catch (const simpl::token_error &t)
 	{
+		std::cout << "\r\n";
 		std::cout << "failed to parse - " << t.what() << std::endl;
 	}
 	catch (const simpl::parse_error &p)
 	{
+		std::cout << "\r\n";
 		std::cout << "failed to parse - " << p.what() << std::endl;
 	}
 	catch (const std::exception &e)
 	{
+		std::cout << "\r\n";
 		std::cout << e.what() << std::endl;
 	}
 	return 0;

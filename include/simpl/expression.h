@@ -15,6 +15,7 @@ namespace simpl
 	class nary_expression;
 	class new_blob_expression;
 	class new_array_expression;
+	class new_object_expression;
 
 	using indexor = std::variant<std::string, size_t>;
 	struct identifier 
@@ -73,10 +74,11 @@ namespace simpl
 	{
 	public:
 		virtual ~expression_visitor() = default;
-		virtual void visit(expression &cs) = 0;
+		virtual void visit(expression &cs) = 0; // this needs a rework
 		virtual void visit(nary_expression &cs) = 0;
 		virtual void visit(new_blob_expression &ns) = 0;
 		virtual void visit(new_array_expression &nas) = 0;
+		virtual void visit(new_object_expression &nos) = 0;
 	};
 
 
@@ -200,6 +202,35 @@ namespace simpl
 
 	private:
 		initializer_list_t initializers_;
+	};
+
+	class new_object_expression : public expression
+	{
+	public:
+		new_object_expression(const std::string &type, initializer_list_t &&init)
+			:type_(type), initializers_(std::move(init))
+		{
+		}
+
+		const std::string &type() const
+		{
+			return type_;
+		}
+
+		const initializer_list_t &initializers()
+		{
+			return initializers_;
+		}
+
+		virtual void evaluate(expression_visitor &v) override
+		{
+			v.visit(*this);
+		}
+
+	private:
+		std::string type_;
+		initializer_list_t initializers_;
+
 	};
 
 	class new_array_expression : public expression

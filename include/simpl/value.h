@@ -36,6 +36,23 @@ namespace simpl
         }
         std::vector<value_t> values; 
     };
+
+    struct object_t : simpl::object
+    {
+        object_t(const std::string &type)
+            :type_id(type)
+        {
+        }
+
+        virtual std::string type() const
+        {
+            return type_id;
+        }
+
+        const std::string type_id;
+        std::map<std::string, value_t> members;
+    };
+
 	arrayref_t new_array()
 	{
 		return std::make_shared<array_t>();
@@ -44,6 +61,11 @@ namespace simpl
     arrayref_t make_array(std::vector<value_t> &&v)
     {
         return std::make_shared<array_t>(std::move(v));
+    }
+
+    objectref_t new_simpl_object(const std::string &type)
+    {
+        return std::make_shared<object_t>(type);
     }
 
 namespace detail
@@ -99,17 +121,17 @@ namespace detail
     std::string get_type_string(const value_t &v)
     {
         if (std::holds_alternative<empty_t>(v))
-            return typeid(empty_t{}).name();
+            return "empty";
         else if (std::holds_alternative<bool>(v))
-            return typeid(bool{}).name();
+            return "bool";
         else if (std::holds_alternative<double>(v))
-            return typeid(double{}).name();
+            return "number";
         else if (std::holds_alternative<std::string>(v))
-            return typeid(std::string{}).name();
+            return "string";
         else if (std::holds_alternative<blobref_t>(v))
-            return typeid(blob_t{}).name();
+            return "blob";
         else if (std::holds_alternative<arrayref_t>(v))
-            return typeid(array_t{}).name();
+            return "array";
         else if (std::holds_alternative<objectref_t>(v))
         {
             return std::get<objectref_t>(v)->type();
@@ -120,27 +142,7 @@ namespace detail
 
     std::optional<std::string> to_builtin_type_string(const std::string &simpl_type)
     {
-        if (simpl_type == "string")
-        {
-            return typeid(std::string).name();
-        }
-        else if (simpl_type == "bool")
-        {
-            return typeid(bool).name();
-        }
-        else if (simpl_type == "number")
-        {
-            return typeid(double).name();
-        }
-        else if (simpl_type == "blob")
-        {
-            return typeid(blob_t).name();
-        }
-        else if (simpl_type == "array")
-        {
-            return typeid(array_t).name();
-        }
-        return std::optional<std::string>{};
+        return simpl_type;
     }
 
     template <typename T>

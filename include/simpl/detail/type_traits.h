@@ -15,6 +15,12 @@ namespace detail
         {
             return "";
         }
+
+        template <typename TranslatorT>
+        static std::string value(TranslatorT &&t)
+        {
+            return "";
+        }
     };
 
     template <typename T, typename ...Ts>
@@ -24,6 +30,13 @@ namespace detail
         {
             return std::string(typeid(T).name()) + "," + to_string<Ts...>::value();
         }
+
+        template <typename TranslatorT>
+        static std::string value(TranslatorT &&t)
+        {
+            return t.translate_type(std::string(typeid(T).name())) + "," + to_string<Ts...>::value(t);
+        }
+
     };
 
     template <typename T>
@@ -33,25 +46,29 @@ namespace detail
         {
             return std::string(typeid(T).name());
         }
+
+        template <typename TranslatorT>
+        static std::string value(TranslatorT &&t)
+        {
+            return t.translate_type(std::string(typeid(T).name()));
+        }
     };
 
     template <typename ...>
     struct to_vector
     {
-        static std::vector<std::string> &value()
+        static void values(std::vector<std::string> &v)
         {
-            static std::vector<std::string> values;
-            return values;
-
         }
     };
 
     template <typename T, typename ...Ts>
     struct to_vector<T, Ts...>
     {
-        static std::string value()
+        static void values(std::vector<std::string> &v)
         {
-            return to_vector<Ts...>::value().push_back(std::string(typeid(T).name()));
+            v.push_back(std::string(typeid(T).name()));
+            to_vector<Ts...>::values(v);
         }
     };
            

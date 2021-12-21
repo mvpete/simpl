@@ -35,7 +35,7 @@ To to(const From &f)\
     template <typename To, typename From>
     To to(const From &value)
     {
-        static_assert(false, "you shall not pass");
+        static_assert(false, "you shall not pass; in other words, you have a bad typecast");
     }
 
     // specialize casts here. to<to,from>
@@ -126,7 +126,7 @@ To to(const From &f)\
         T value;
         void operator()(const empty_t &v)
         {
-            throw invalid_cast("cannot cast empty_t");
+            throw invalid_cast("value is undefined; did you forget to return?");
         }
 
         void operator()(const blobref_t &v)
