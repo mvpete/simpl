@@ -55,6 +55,7 @@ def drive(t is truck, m is mud)
     println("Truck on mud");
 }
 
+drive("car", "dirt");
 
 let vh = new vehicle {};
 let tr = new terrain {};

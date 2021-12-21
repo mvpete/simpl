@@ -143,7 +143,8 @@ namespace simpl
                 }
                 if (t1_p == nullptr)
                     throw std::runtime_error(detail::format("unrecognized type '{0}'", t1));
-
+                if (t2 == "any")
+                    return true; // this is a hack...
                 while (t1_p != nullptr)
                 {
                     if (t1_p->name == t2)
@@ -202,10 +203,10 @@ namespace simpl
                 auto candidates = find_candidate_functions(cd.name, args);
                 
                 if (candidates.size() > 1)
-                    throw std::runtime_error("multiple matches for function"); // remember this word...
+                    throw std::runtime_error("ambiguous function call"); 
 
                 if (candidates.size() == 0)
-                    throw std::runtime_error("no function match");               
+                    throw std::runtime_error("no matching function found");               
 
                 return candidates[0];
             }
@@ -230,7 +231,7 @@ namespace simpl
                 {
                     const auto &fn_d = fn.second;
                     const auto &args = fn.second.args;
-                    if(fn_d.name == name && fn_d.args.size() == args_t.size() && (args_t.size() == 0 || types_.is_a(args_t[0],args[0]) || args[0] == "any"))
+                    if(fn_d.name == name && fn_d.args.size() == args_t.size() && (args_t.size() == 0 || types_.is_a(args_t[0],args[0])))
                         candidates.push_back(&fn.second);
                 }
 
@@ -239,7 +240,7 @@ namespace simpl
                 { 
                     for (size_t i = 1; i < args_t.size(); ++i)
                     {
-                        if (!types_.is_a(args_t[i], fn->args[i]) || fn->args[i] == "any")
+                        if (!types_.is_a(args_t[i], fn->args[i]))
                             return true;
                     }
                     return false;
