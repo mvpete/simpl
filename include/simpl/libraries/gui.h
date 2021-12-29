@@ -6,6 +6,7 @@
 
 #include <simpl/libraries/gui.window.h>
 #include <simpl/libraries/gui.button.h>
+#include <simpl/libraries/gui.text.h>
 
 #include <Windows.h>
 
@@ -31,6 +32,7 @@ namespace simpl
 			// This is to participate w/ function def pattern matching.
 			vm.register_type<window>();
 			vm.register_type<button>();
+			vm.register_type<text>();
 
 			vm.reg_fn("create_wnd", [&vm](const std::string &name, number x, number y, number width, number height)
 			{
@@ -41,6 +43,11 @@ namespace simpl
 			{
 				return make_ref<button>(w, name, x, y, width, height);
 			});
+			vm.reg_fn("create_text", [](window &w, const std::string &name, number x, number y, number width, number height)
+			{
+				return make_ref<text>(w, name, x, y, width, height);
+			});
+
 
 			vm.reg_fn("show", [](window &w)
 			{

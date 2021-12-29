@@ -122,6 +122,8 @@ namespace simpl
             return args;
         }
 
+        
+
     public:
         static constexpr size_t Stack_Size = 128;
         using callstack_t = detail::static_stack<activation_record, Stack_Size>;

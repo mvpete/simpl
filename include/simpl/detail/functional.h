@@ -61,10 +61,10 @@ namespace simpl
                 auto candidates = find_candidate_functions(cd.name, args);
 
                 if (candidates.size() > 1)
-                    throw std::runtime_error("ambiguous function call");
+                    throw std::runtime_error(detail::format("ambiguous function call: '{0}'", cd.name));
 
                 if (candidates.size() == 0)
-                    throw std::runtime_error("no matching function found");
+                    throw std::runtime_error(detail::format("no matching function found: '{0}'", cd.name));
 
                 return candidates[0];
             }

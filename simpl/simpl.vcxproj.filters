@@ -108,5 +108,8 @@
     <ClInclude Include="..\include\simpl\libraries\gui.button.h">
       <Filter>Header Files\libraries\gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\simpl\libraries\gui.text.h">
+      <Filter>Header Files\libraries\gui</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
