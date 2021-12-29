@@ -154,6 +154,9 @@
     <ClInclude Include="..\include\simpl\expression.h" />
     <ClInclude Include="..\include\simpl\libraries\array.h" />
     <ClInclude Include="..\include\simpl\libraries\file.h" />
+    <ClInclude Include="..\include\simpl\libraries\gui.button.h" />
+    <ClInclude Include="..\include\simpl\libraries\gui.h" />
+    <ClInclude Include="..\include\simpl\libraries\gui.window.h" />
     <ClInclude Include="..\include\simpl\libraries\io.h" />
     <ClInclude Include="..\include\simpl\libraries\string.h" />
     <ClInclude Include="..\include\simpl\library.h" />

@@ -22,7 +22,7 @@ namespace simpl
     template <typename To, typename From>
     To to(const From &value)
     {
-        static_assert(false, "you shall not pass; in other words, you have a bad typecast");
+        throw invalid_cast();
     }
 
     template <typename T>
@@ -31,7 +31,7 @@ namespace simpl
         T value;
         void operator()(const empty_t &v)
         {
-            throw invalid_cast("value is undefined; did you forget to return?");
+            value = to<T>(v);
         }
 
         void operator()(const blobref_t &v)
@@ -75,14 +75,12 @@ template<>\
 To to(const From &from)\
 
 
-#define INVALID_CAST(To, From) \
-template<>\
-To to(const From &f)\
-{\
-    throw invalid_cast(); \
-}\
-
     // specialize casts here. to<to,from>
+    CAST(std::string, empty_t)
+    {
+        return "undefined";
+    }
+    
     CAST(std::string, double)
     {
         std::stringstream ss;
@@ -185,13 +183,6 @@ To to(const From &f)\
         return ss.str();
     }
 
-    INVALID_CAST(double, blobref_t)
-    INVALID_CAST(empty_t, blobref_t)
-    INVALID_CAST(arrayref_t, blobref_t)
-
-    INVALID_CAST(double, arrayref_t)
-    INVALID_CAST(empty_t, arrayref_t)
-    INVALID_CAST(blobref_t, arrayref_t)
       
 #else
 
@@ -205,6 +196,7 @@ template<>\
 To to(const From &f);
 
 // specialize casts here. to<to,from>
+CAST(std::string, empty_t)
 CAST(std::string, double)
 CAST(std::string, std::string)
 CAST(double, std::string)
@@ -219,13 +211,6 @@ CAST(arrayref_t, arrayref_t)
 CAST(std::string, blobref_t)
 CAST(std::string, arrayref_t)
 
-INVALID_CAST(double, blobref_t)
-INVALID_CAST(empty_t, blobref_t)
-INVALID_CAST(arrayref_t, blobref_t)
-
-INVALID_CAST(double, arrayref_t)
-INVALID_CAST(empty_t, arrayref_t)
-INVALID_CAST(blobref_t, arrayref_t)
 
 #endif
 

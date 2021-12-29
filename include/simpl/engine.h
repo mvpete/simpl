@@ -3,9 +3,11 @@
 
 #include <simpl/vm.h>
 #include <simpl/vm_execution_context.h>
+
 #include <simpl/libraries/io.h>
 #include <simpl/libraries/file.h>
 #include <simpl/libraries/array.h>
+#include <simpl/libraries/gui.h>
 
 namespace simpl
 {
@@ -18,6 +20,7 @@ namespace simpl
             io_lib{}.load(vm_);
             file_lib{}.load(vm_);
             array_lib{}.load(vm_);
+            gui_lib{}.load(vm_);
         }
 
         vm_execution_context &context()

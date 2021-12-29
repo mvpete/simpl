@@ -13,6 +13,7 @@
 
 namespace simpl
 {
+    using number = double;
 	struct empty_t {};
 	struct blob_t;
 	struct array_t;
@@ -37,9 +38,9 @@ namespace simpl
         std::vector<value_t> values; 
     };
 
-    struct object_t : simpl::object
+    struct simpl_object_t : simpl::object
     {
-        object_t(const std::string &type)
+        simpl_object_t(const std::string &type)
             :type_id(type)
         {
         }
@@ -49,10 +50,21 @@ namespace simpl
             return type_id;
         }
 
+        virtual bool is_convertible(const std::string &t)
+        {
+            return false;
+        }
+
+        void *value()
+        {
+            return nullptr;
+        }
+
         const std::string type_id;
         std::map<std::string, value_t> members;
     };
-    using instanceref_t = std::shared_ptr<object_t>;
+
+    using instanceref_t = std::shared_ptr<simpl_object_t>;
 
 	inline arrayref_t new_array()
 	{
@@ -66,7 +78,7 @@ namespace simpl
 
     inline instanceref_t new_simpl_object(const std::string &type)
     {
-        return std::make_shared<object_t>(type);
+        return std::make_shared<simpl_object_t>(type);
     }
 
 namespace detail
@@ -147,9 +159,6 @@ namespace detail
     }
 
     template <typename T>
-    struct simple_type_info;
-
-    template <typename T>
     typename std::enable_if<is_one_of<T, empty_t, bool, double, std::string, objectref_t>::value, T>::type& get_value(value_t &v)
     {
         return std::get<T>(v);
@@ -182,11 +191,55 @@ namespace detail
             throw std::runtime_error("not an object");
 
         auto objref = std::get<objectref_t>(v);
-        return convert_to<T>(objref)->value();
+        if(detail::simple_type_info<T>::name() == objref->type() || objref->is_convertible(detail::simple_type_info<T>::name()))
+            return (*reinterpret_cast<T*>(objref->value()));
+
+        throw std::runtime_error("bad type conversion");
     }
 
-
 }
+    struct member_visitor
+    {
+    public:
+        member_visitor(const std::string &member)
+            :member(member), value(nullptr)
+        {
+        }
+        // empty_t, bool, double, std::string, blobref_t, arrayref_t, objectref_t
+        void operator()(empty_t &)
+        {
+            throw std::runtime_error("invalid access");
+        }
+        void operator()(bool &)
+        {
+            throw std::runtime_error("invalid access");
+        }
+        void operator()(double &)
+        {
+            throw std::runtime_error("invalid access");
+        }
+        void operator()(std::string &)
+        {
+            throw std::runtime_error("invalid access");
+        }
+        void operator()(arrayref_t &)
+        {
+            throw std::runtime_error("invalid access");
+        }
+        void operator()(blobref_t &blob)
+        {
+            value = &blob->values.at(member);
+        }
+        void operator()(objectref_t &obj)
+        {
+            auto inst = std::dynamic_pointer_cast<simpl_object_t>(obj);
+            if(inst == nullptr)
+                throw std::runtime_error("invalid access on type");
+            value = &inst->members.at(member);
+        }
+        const std::string member;
+        value_t *value;
+    };
 
 
 

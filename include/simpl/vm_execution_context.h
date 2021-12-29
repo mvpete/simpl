@@ -76,6 +76,7 @@ namespace simpl
 			:vm_(vm)
 		{
 			vm_.register_type<value_t>("any");
+			vm_.register_type<empty_t>("empty");
 			vm_.register_type<std::string>("string");
 			vm_.register_type<bool>("bool");
 			vm_.register_type<double>("number");
@@ -280,10 +281,39 @@ namespace simpl
 			auto object = new_simpl_object(nos.type());
 			vm_.push_stack(object);
 
-			// TODO: initialize the members based on hierarchy
+			// Initialize the members based on hierarchy
+			// TODO: Optimize this based on each levels initializers.
+			// TODO: Also, really need to look at identifiers and whether 
+			// they're defined or not. But, this could be done in the 
+			// parser, if the parser knows about the types.
+			std::stack<const detail::type_def *> types;
+			while (type != nullptr)
+			{
+				types.push(type);
+				type = type->inherits;
+			}
+			// run the type initializers
+			while (types.size() > 0)
+			{
+				type = types.top();
+				for (const auto &mi : type->members)
+				{
+					// Again -- this could be a parse time thing...
+					if (object->members.find(mi.name) != object->members.end() && mi.initializer == nullptr)
+						throw std::runtime_error(detail::format("redfinition of member '{0}' in type '{1}'", mi.name, nos.type()));
 
-			// TODO: run the type initializers
-			
+					if (mi.initializer)
+					{
+						mi.initializer->evaluate(*this);
+						object->members[mi.name] = vm_.pop_stack();
+					}
+					else
+					{
+						object->members[mi.name] = value_t{};
+					}
+				}
+				types.pop();
+			}
 
 			// run the expression initializers
 			for (const auto &init : nos.initializers())
@@ -489,12 +519,13 @@ namespace simpl
 
 			// check that the variable is a blob, and see if the value is a 
 			// key on him.
-			if (!std::holds_alternative<blobref_t>(val))
-				throw std::runtime_error("not an object");
 
-			auto blob = std::get<blobref_t>(val);
-			return blob->values.at(name);
+			member_visitor mv(name);
+			std::visit(mv,val);
 
+			if (mv.value == nullptr)
+				throw std::runtime_error("bad access");
+			return *mv.value;
 		}
 		
 	public:

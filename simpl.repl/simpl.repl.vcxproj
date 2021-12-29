@@ -159,6 +159,7 @@
     <None Include="..\examples\blob.sl" />
     <None Include="..\examples\hello_world.sl" />
     <None Include="..\examples\object.sl" />
+    <None Include="..\examples\gui.sl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

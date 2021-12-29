@@ -8,7 +8,7 @@ object vehicle
 
 object car inherits vehicle
 {
-    color="blue";
+    color="Blue";
 }
 
 object truck inherits vehicle
@@ -24,38 +24,35 @@ object terrain
 
 object pavement inherits terrain
 {
+
 }
 
 object mud inherits terrain
 {
 }
 
-def drive(v,t)
-{
-    println("Generic drive!");
-}
-
 def drive(v is vehicle, t is terrain)
 {
-    println("Vehicle on terrain");
+    print(v.color);
+    println(" Vehicle on terrain");
 }
 
 def drive(v is truck, t is pavement)
 {
-    println("Truck on pavement");
+    print(v.color);
+    println(" Truck on pavement");
 }
 
 def drive(c is car, p is pavement)
 {
-    println("Car on pavement");
+    print(c.color);
+    println(" Car on pavement");
 }
 
 def drive(t is truck, m is mud)
 {
     println("Truck on mud");
 }
-
-drive("car", "dirt");
 
 let vh = new vehicle {};
 let tr = new terrain {};
@@ -74,5 +71,7 @@ vh = new vehicle {};
 
 drive(vh, tr);
 
+vh = new truck {};
 
-dbg_break();
+drive(vh, tr);
+

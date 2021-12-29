@@ -17,10 +17,15 @@ namespace simpl
 	template<>
 	struct detail::simple_type_info<std::fstream>
 	{
-		const char* name() const noexcept
+		static const char* name() noexcept
 		{
 			return "file";
 		};
+
+		static bool is_convertible(const std::string &t)
+		{
+			return false;
+		}
 	};
 
 	using file = std::fstream;

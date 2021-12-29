@@ -77,7 +77,6 @@ int run_string(const std::string &s)
 	try
 	{
 		simpl::engine e;
-		std::cout << sizeof(e) << std::endl;
 		simpl::parser parser(s.c_str(), s.c_str() + s.length());
 		while (1)
 		{

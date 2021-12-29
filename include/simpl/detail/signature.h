@@ -30,19 +30,19 @@ namespace simpl
 
             std::string arguments_string() const
             {
-                return to_string<Args...>::value();
+                return to_string<Args...>::types();
             }
 
             template <typename TranslatorT>
             std::string arguments_string(TranslatorT &t) const
             {
-                return to_string<Args...>::value(t);
+                return to_string<Args...>::types(t);
             }            
 
             std::vector<std::string> arguments() const
             {
                 std::vector<std::string> args;
-                to_vector<Args...>::values(args);
+                to_vector<Args...>::types(args);
                 return args;
             }
 

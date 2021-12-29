@@ -1,6 +1,8 @@
 #ifndef __simpl_object_h__
 #define __simpl_object_h__
 
+#include <simpl/detail/type_traits.h>
+
 #include <memory>
 
 namespace simpl
@@ -10,6 +12,9 @@ namespace simpl
     public:
         virtual ~object() = default;
         virtual std::string type() const = 0;
+
+        virtual bool is_convertible(const std::string &t) = 0;
+        virtual void *value() = 0;
     };
 
     template <typename T>
@@ -24,12 +29,17 @@ namespace simpl
         }
         std::string type() const
         {
-            return typeid(T).name();
+            return detail::simple_type_info<T>::name();
         }
 
-        T &value()
+        bool is_convertible(const std::string &t)
         {
-            return val_;
+            return detail::simple_type_info<T>::is_convertible(t);
+        }
+
+        void *value()
+        {
+            return &val_;
         }
 
     private:
@@ -40,15 +50,6 @@ namespace simpl
 
     template<typename T>
     using ref_t = std::shared_ptr<ref<T>>;
-
-    template<typename T>
-    ref_t<T> convert_to(objectref_t &base)
-    {
-        if (typeid(T).name() != base->type())
-            throw std::runtime_error("type mismatch");
-        return std::dynamic_pointer_cast<ref<T>>(base);
-    }
-
 
     template <typename T, typename ...Args>
     objectref_t make_ref(Args&&...args)

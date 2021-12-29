@@ -2,7 +2,6 @@
 #define __simpl_type_traits_h__
 
 #include <optional>
-#
 
 namespace simpl
 {
@@ -11,13 +10,13 @@ namespace detail
     template <typename ...>
     struct to_string
     {
-        static std::string value()
+        static std::string types()
         {
             return "";
         }
 
         template <typename TranslatorT>
-        static std::string value(TranslatorT &&t)
+        static std::string types(TranslatorT &&t)
         {
             return "";
         }
@@ -26,15 +25,15 @@ namespace detail
     template <typename T, typename ...Ts>
     struct to_string<T, Ts...>
     {
-        static std::string value()
+        static std::string types()
         {
-            return std::string(typeid(T).name()) + "," + to_string<Ts...>::value();
+            return std::string(typeid(T).name()) + "," + to_string<Ts...>::types();
         }
 
         template <typename TranslatorT>
-        static std::string value(TranslatorT &&t)
+        static std::string types(TranslatorT &&t)
         {
-            return t.translate_type(std::string(typeid(T).name())) + "," + to_string<Ts...>::value(t);
+            return t.translate_type(std::string(typeid(T).name())) + "," + to_string<Ts...>::types(t);
         }
 
     };
@@ -42,13 +41,13 @@ namespace detail
     template <typename T>
     struct to_string<T>
     {
-        static std::string value()
+        static std::string types()
         {
             return std::string(typeid(T).name());
         }
 
         template <typename TranslatorT>
-        static std::string value(TranslatorT &&t)
+        static std::string types(TranslatorT &&t)
         {
             return t.translate_type(std::string(typeid(T).name()));
         }
@@ -57,7 +56,12 @@ namespace detail
     template <typename ...>
     struct to_vector
     {
-        static void values(std::vector<std::string> &v)
+        static void types(std::vector<std::string> &v)
+        {
+        }
+
+        template <typename TranslatorT>
+        static void types(TranslatorT &&t, std::vector<std::string> &v)
         {
         }
     };
@@ -65,10 +69,18 @@ namespace detail
     template <typename T, typename ...Ts>
     struct to_vector<T, Ts...>
     {
-        static void values(std::vector<std::string> &v)
+
+        static void types(std::vector<std::string> &v)
         {
             v.push_back(std::string(typeid(T).name()));
-            to_vector<Ts...>::values(v);
+            to_vector<Ts...>::types(v);
+        }
+
+        template <typename TranslatorT>
+        static void types(TranslatorT &&t, std::vector<std::string> &v)
+        {
+            v.push_back(t.translate_type(std::string(typeid(T).name())));
+            to_vector<Ts...>::types(t,v);
         }
     };
            
@@ -102,6 +114,9 @@ namespace detail
     struct are_valid_return_types<T, Ts...>
         : std::conditional_t<is_valid_return_type<typename std::decay<T>::type>::value, are_valid_return_types<Ts...>, std::false_type> {};
 
+    template <typename T>
+    struct simple_type_info;
+
     template<typename ...>
     struct decay_tuple
     {
@@ -113,6 +128,17 @@ namespace detail
     {
         using type = std::tuple<typename std::decay_t<T>, typename std::decay_t<Args>...>;
     };
+
+
+    template <typename Cb>
+    void unpack_values(Cb &&cb) {}
+
+    template <typename Cb, typename T, typename ...Ts>
+    void unpack_values(Cb &&cb, const T &t, const Ts &...ts)
+    {
+        cb(t);
+        unpack_values(cb, ts...);
+    }
 
 }
 }

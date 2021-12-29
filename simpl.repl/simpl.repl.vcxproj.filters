@@ -35,5 +35,8 @@
     <None Include="..\examples\object.sl">
       <Filter>Examples</Filter>
     </None>
+    <None Include="..\examples\gui.sl">
+      <Filter>Examples</Filter>
+    </None>
   </ItemGroup>
 </Project>

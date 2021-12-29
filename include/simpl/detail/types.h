@@ -23,6 +23,11 @@ namespace simpl
             {
             }
 
+            type_def(const std::string &name, const std::string &native, const type_def *inherits)
+                :name(name), native(native), inherits(inherits)
+            {
+            }
+
             type_def(const std::string &name)
                 :name(name), inherits(nullptr)
             {
@@ -109,8 +114,10 @@ namespace simpl
                 }
                 if (t1_p == nullptr)
                     throw std::runtime_error(detail::format("unrecognized type '{0}'", t1));
+
                 if (t2 == "any")
                     return true; // this is a hack...
+
                 while (t1_p != nullptr)
                 {
                     if (t1_p->name == t2)

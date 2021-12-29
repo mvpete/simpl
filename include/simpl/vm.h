@@ -136,10 +136,6 @@ namespace simpl
         {
             locals_.push(var_scope{*this}); // global scope.
             callstack_.push(activation_record{}); // main..
-
-            // builtins?
-      
-
         }
 
         void call(const detail::call_def &cd)
@@ -154,6 +150,22 @@ namespace simpl
                 stack_.push(value_t{}); // undefined.
                 return_(); // implicit return...
             }
+        }
+
+        template<typename ...Args>
+        void invoke(const std::string &method, Args &&...args)
+        {
+            detail::call_def cd;
+            cd.name = method;
+            detail::to_vector<Args...>::types(types_, cd.arguments);
+
+            stack_.push(value_t{}); // retvall
+            detail::unpack_values([this](auto t)
+            {
+                push_stack(value_t{ t });
+            }, args...);
+
+            call(cd);
         }
 
         void push_stack(const value_t &v)
@@ -237,8 +249,32 @@ namespace simpl
         template<typename T>
         void register_type(const std::string &simpl_name)
         {
+
             if (has_type(simpl_name))
                 throw std::runtime_error(detail::format("type '{0}' already registered", simpl_name));
+
+            types_.register_type(detail::type_def{ simpl_name, typeid(T).name() });
+        }
+
+        template<typename T>
+        void register_type()
+        {
+            const auto simpl_name = detail::simple_type_info<T>::name();
+
+            if (has_type(simpl_name))
+                throw std::runtime_error(detail::format("type '{0}' already registered", simpl_name));
+
+
+            const auto inherits = detail::simple_type_info<T>::inherits();
+            if (inherits != nullptr)
+            {
+                const auto parent = types_.get_type(inherits);
+                if (parent != nullptr)
+                {
+                    types_.register_type(detail::type_def{ simpl_name, typeid(T).name(), parent });
+                    return;
+                }
+            }
 
             types_.register_type(detail::type_def{ simpl_name, typeid(T).name() });
         }

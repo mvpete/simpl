@@ -19,6 +19,9 @@
     <Filter Include="Header Files\libraries">
       <UniqueIdentifier>{6e714341-3075-4427-b4d7-ad797381986e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\libraries\gui">
+      <UniqueIdentifier>{72df1b4a-6d60-449f-8ec2-3205e8acc47a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\simpl\cast.h">
@@ -95,6 +98,15 @@
     </ClInclude>
     <ClInclude Include="..\include\simpl\detail\types.h">
       <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\simpl\libraries\gui.h">
+      <Filter>Header Files\libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\simpl\libraries\gui.window.h">
+      <Filter>Header Files\libraries\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\simpl\libraries\gui.button.h">
+      <Filter>Header Files\libraries\gui</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
