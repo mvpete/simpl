@@ -14,21 +14,21 @@ namespace simpl_test
 	{
 	private:
 		simpl::engine e;
-		std::optional<std::function<void()>> trap;
+		std::function<void()> trap;
 
 	public:
 		simpl_vm_test()
 		{
 			e.machine().reg_fn("dbg_break", [this]()
 			{
-				if(trap.has_value())
-					trap.value()();
+				if(trap != nullptr)
+					trap();
 			});
 		}
 
 		TEST_METHOD_INITIALIZE(TestInit)
 		{
-			trap.reset();
+			trap = nullptr;
 		}
 		
 		TEST_METHOD(TestObjectTypeRegistration)

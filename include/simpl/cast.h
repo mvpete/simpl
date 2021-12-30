@@ -108,14 +108,21 @@ To to(const From &from)\
         return from;
     }
 
+    CAST(bool, empty_t)
+    {
+        return false;
+    }
+
     CAST(bool, double)
     {
-        return from > 0;
+        return from != 0;
     }
 
     CAST(bool, std::string)
     {
-        return from == "true" || from == "1" || from == "t" || from == "TRUE" || from == "T";
+        if (from == "0" || from == "false" || from.empty())
+            return false;
+        return true;
     }
 
     CAST(size_t, std::string)
@@ -190,17 +197,13 @@ To to(const From &from)\
 template<>\
 To to(const From &from);
 
-
-#define INVALID_CAST(To, From) \
-template<>\
-To to(const From &f);
-
 // specialize casts here. to<to,from>
 CAST(std::string, empty_t)
 CAST(std::string, double)
 CAST(std::string, std::string)
 CAST(double, std::string)
 CAST(double, double)
+CAST(bool, empty_t)
 CAST(bool, double)
 CAST(bool, std::string)
 CAST(size_t, std::string)

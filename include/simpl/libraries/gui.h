@@ -10,9 +10,6 @@
 
 #include <Windows.h>
 
-
-const char *SIMPL_WND_CLASS = "simpl_window_class";
-
 namespace simpl
 {
 

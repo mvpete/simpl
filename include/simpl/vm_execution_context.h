@@ -277,7 +277,6 @@ namespace simpl
 			if (type == nullptr)
 				throw std::runtime_error("unknown type");
 
-
 			auto object = new_simpl_object(nos.type());
 			vm_.push_stack(object);
 

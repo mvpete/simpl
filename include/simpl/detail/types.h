@@ -84,7 +84,6 @@ namespace simpl
 
                 types_.emplace_back(std::move(def));
                 
-                //types_[next_] = std::move(def);
                 ++next_;
             }
 
@@ -153,8 +152,6 @@ namespace simpl
             std::list<detail::type_def> types_;
             size_t next_ = 0;
         };
-
-
     }
 }
 
