@@ -168,6 +168,7 @@
     </ClCompile>
     <ClCompile Include="simpl.parser.test.cpp" />
     <ClCompile Include="simpl.engine.test.cpp" />
+    <ClCompile Include="simpl.tokenizer.test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

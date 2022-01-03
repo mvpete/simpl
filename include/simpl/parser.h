@@ -45,7 +45,7 @@ namespace simpl
 	class parser
 	{
 	public:
-		using tokenizer_t = tokenizer<char>;
+		using tokenizer_t = basic_tokenizer<char>;
 		using token_t = typename tokenizer_t::token_t;
 		using statement_t = statement;
 		

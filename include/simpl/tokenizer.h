@@ -83,14 +83,21 @@ namespace simpl
 	};
 
 	template <typename CharT>
-	class tokenizer
+	class basic_tokenizer
 	{
 	public:
 		using token_t = token<CharT>;
 
 	public:
+
+		basic_tokenizer(const std::basic_string<CharT> &text)
+			:begin_(&text[0]), end_(&text[text.length()]), cur_(begin_), position_(1, 1)
+		{
+		}
+
+
 		template<typename IteratorT>
-		tokenizer(IteratorT begin,  IteratorT end)
+		basic_tokenizer(IteratorT begin,  IteratorT end)
 			:begin_(begin), end_(end), cur_(begin),position_(1,1)
 		{
 		}
@@ -305,6 +312,9 @@ namespace simpl
 
 	};
 
+
+	using tokenizer = basic_tokenizer<char>;
+	using wtokenizer = basic_tokenizer<wchar_t>;
 }
 
 
