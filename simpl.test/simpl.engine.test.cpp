@@ -10,14 +10,14 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace simpl_test
 {
-	TEST_CLASS(simpl_vm_test)
+	TEST_CLASS(simpl_engine_test)
 	{
 	private:
 		simpl::engine e;
 		std::function<void()> trap;
 
 	public:
-		simpl_vm_test()
+		simpl_engine_test()
 		{
 			e.machine().reg_fn("dbg_break", [this]()
 			{

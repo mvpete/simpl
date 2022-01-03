@@ -43,14 +43,7 @@ namespace simpl
                 std::swap(variables_, rhs.variables_);
                 return *this;
             }
-            ~var_scope()
-            {
-                if (vm_ == nullptr)
-                    return;
-                //for (size_t i = 0; i < variables_.size(); ++i)
-                //    vm_->pop_stack();
 
-            }
             void track(const std::string &name, value_t *v)
             {
                 if (variables_.find(name) != variables_.end())
@@ -121,8 +114,6 @@ namespace simpl
             auto args = arg_list<sizeof...(Args), Args...>::next(vm);
             return args;
         }
-
-        
 
     public:
         static constexpr size_t Stack_Size = 128;

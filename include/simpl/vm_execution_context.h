@@ -507,18 +507,15 @@ namespace simpl
 			// if the item is in scope we'll use that first.
 			if (vm_.in_scope(name))
 			{
-				int idx = (int)cast<double>(vm_.load_var(name));
-
 				if (!std::holds_alternative<arrayref_t>(val))
 					throw std::runtime_error("not an array");
 
+				int idx = (int)cast<double>(vm_.load_var(name));
 				auto array = std::get<arrayref_t>(val);
 				return array->values.at(idx);
 			}
 
-			// check that the variable is a blob, and see if the value is a 
-			// key on him.
-
+			// otherwise, we visit 			
 			member_visitor mv(name);
 			std::visit(mv,val);
 

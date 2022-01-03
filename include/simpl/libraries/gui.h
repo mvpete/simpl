@@ -45,7 +45,6 @@ namespace simpl
 				return make_ref<text>(w, name, x, y, width, height);
 			});
 
-
 			vm.reg_fn("show", [](window &w)
 			{
 				w.show();
