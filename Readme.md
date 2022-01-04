@@ -1,5 +1,5 @@
 
-SIMPL - Simple Intuative Micro Programming Language
+SIMPL - Simple Intuitive Micro Programming Language
 ===
 
 A simple language, with not much functionality. More of a tool for learning, than anything else.
