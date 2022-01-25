@@ -136,5 +136,12 @@ namespace simpl_test
 			Assert::AreEqual(std::string("obj2"), expr->inherits().value());
 		}
 
+		TEST_METHOD(TestParseSimplExplosionOperator)
+		{
+			auto ast = simpl::parse("foo...;");
+			const auto expr = dynamic_cast<const simpl::expr_statement *>(ast[0].get());
+			Assert::IsNotNull(expr);
+		}
+
 	};
 }

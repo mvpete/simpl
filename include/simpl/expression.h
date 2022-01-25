@@ -23,6 +23,12 @@ namespace simpl
 		std::string name; 
 		std::vector<indexor> path; 
 
+		identifier() = default;
+		identifier(const std::string &name)
+			:name(name)
+		{
+		}
+
 		template <typename T>
 		void push_path(T &&val)
 		{
@@ -139,20 +145,20 @@ namespace simpl
 	class nary_expression : public expression
 	{
 		op_type op_;
-		const std::string fn_name_;
+		const identifier identifier_;
 		std::vector<expression_ptr> expressions_;
 	public:
-		nary_expression(const std::string &name, std::vector<expression_ptr> expr)
-			:op_(op_type::func), fn_name_(name), expressions_(std::move(expr))
+		nary_expression(const identifier &id, std::vector<expression_ptr> expr)
+			:op_(op_type::func), identifier_(id), expressions_(std::move(expr))
 		{
 		}
 		nary_expression(op_type op)
 			:op_(op)
 		{
 		}
-		const std::string &function() const
+		const identifier &identifier() const
 		{
-			return fn_name_;
+			return identifier_;
 		}
 		void add(expression_ptr exp)
 		{

@@ -242,7 +242,6 @@ namespace detail
     };
 
 
-
 }
 
 #endif //__simpl_value_h__

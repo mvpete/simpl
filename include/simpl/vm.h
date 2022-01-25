@@ -5,6 +5,7 @@
 #include <simpl/detail/signature.h>
 #include <simpl/detail/types.h>
 
+#include <simpl/cast.h>
 #include <simpl/expression.h>
 #include <simpl/static_stack.h>
 #include <simpl/value.h>
@@ -55,6 +56,19 @@ namespace simpl
                 if (variables_.find(name) == variables_.end())
                     throw std::runtime_error("undefined variable");
                 (*variables_[name]) = value;
+            }
+            void set_value(const identifier &id, value_t &v)
+            {
+                if (variables_.find(id.name) == variables_.end())
+                    throw std::runtime_error("undefined variable");
+   
+                value_t *val = &(*variables_[id.name]);
+                for (const auto &indexor : id.path)
+                {
+                    val = &vm_->value_at(*val, indexor);
+                }
+                *val = v;
+               
             }
             value_t &get_value(const std::string &name)
             {
@@ -321,6 +335,22 @@ namespace simpl
             locals_.top().set_value(name, stack_.offset(offset));
         }
 
+        void set_val(const identifier &id, size_t offset)
+        {
+            size_t stack = 0;
+            while (stack < locals_.size())
+            {
+                auto &scope = locals_.offset(stack);
+                if (scope.has_value(id.name))
+                {
+                    return scope.set_value(id, stack_offset(offset));
+                }
+                ++stack;
+            }
+
+            locals_.top().set_value(id, stack_.offset(offset));
+        }
+
         value_t &load_var(const std::string &name)
         {
             size_t offset = 0;
@@ -334,6 +364,51 @@ namespace simpl
                 ++offset;
             }
             throw std::runtime_error(detail::format("undefined variable '{0}'", name));
+        }
+
+        value_t &load_var(const identifier &id)
+        {
+            value_t *val = &load_var(id.name);
+            for (const auto &indexor : id.path)
+            {
+                val = &value_at(*val, indexor);
+            }            
+            return *val;
+        }
+
+
+        value_t &value_at(value_t &val, indexor at)
+        {
+            if (std::holds_alternative<size_t>(at))
+            {
+                // check that the variable is an array
+                if (!std::holds_alternative<arrayref_t>(val))
+                    throw std::runtime_error("not an array");
+
+                auto array = std::get<arrayref_t>(val);
+                return array->values.at(std::get<size_t>(at));
+            }
+
+            auto &name = std::get<std::string>(at);
+
+            // if the item is in scope we'll use that first.
+            if (in_scope(name))
+            {
+                if (!std::holds_alternative<arrayref_t>(val))
+                    throw std::runtime_error("not an array");
+
+                int idx = (int)cast<double>(load_var(name));
+                auto array = std::get<arrayref_t>(val);
+                return array->values.at(idx);
+            }
+
+            // otherwise, we visit 			
+            member_visitor mv(name);
+            std::visit(mv, val);
+
+            if (mv.value == nullptr)
+                throw std::runtime_error("bad access");
+            return *mv.value;
         }
 
         bool in_scope(const std::string &name)

@@ -5,6 +5,9 @@
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
+/// <summary>
+/// This is to enable the CPPUnitTestFramework to use token_types in assertions
+/// </summary>
 namespace Microsoft {
 namespace VisualStudio {
 namespace CppUnitTestFramework
@@ -26,6 +29,9 @@ namespace simpl_test
 	{
 	public:
 
+		/// <summary>
+		/// Assert that tokenizer::peek returns the same token.
+		/// </summary>
 		TEST_METHOD(TestTokenizerPeek)
 		{
 			std::string text("foo + bar");
@@ -39,6 +45,9 @@ namespace simpl_test
 			Assert::AreEqual(t1.end, t2.end);
 		}
 
+		/// <summary>
+		/// Assert that the tokenizer will tokenize a simple expression
+		/// </summary>
 		TEST_METHOD(TestTokenizerSimpleExpression)
 		{
 			std::string text("foo + bar");
@@ -51,6 +60,26 @@ namespace simpl_test
 			Assert::AreEqual(simpl::token_types::identifier_token, t1.type);
 			Assert::AreEqual(simpl::token_types::op, t2.type);
 			Assert::AreEqual(simpl::token_types::identifier_token, t3.type);
+		}
+
+		TEST_METHOD(TestTokenizerExplosionOperator)
+		{
+			std::string text("...");
+			simpl::tokenizer t{ text };
+			auto t1 = t.next();
+
+			Assert::AreEqual(simpl::token_types::op, t1.type);
+		}
+
+		TEST_METHOD(TestTokenizerExplosionOperatorIndentifier)
+		{
+			std::string text{ "foo..." };
+			simpl::tokenizer t{ text };
+			auto t1 = t.next();
+			auto t2 = t.next();
+
+			Assert::AreEqual(simpl::token_types::identifier_token, t1.type);
+			Assert::AreEqual(simpl::token_types::op, t2.type);
 		}
 
 

@@ -148,7 +148,7 @@ namespace simpl
 			if (tkn.type == token_types::literal)
 			{
 				tokenizer_.next();
-				return std::string(tkn.begin, tkn.end);
+				return value_t{ tkn.to_string() };
 			}
 			if (tkn.type == token_types::identifier_token)
 			{
@@ -163,7 +163,7 @@ namespace simpl
 			if (tkn.type == token_types::number)
 			{
 				tokenizer_.next();
-				return std::stod(std::string(tkn.begin, tkn.end));
+				return value_t{ std::stod(tkn.to_string()) };
 			}
 			if (tkn.type == token_types::op)
 			{
@@ -248,7 +248,7 @@ namespace simpl
 							auto close = tokenizer_.next();
 							if (close.type != token_types::rparen)
 								throw parse_error(tokenizer_.pos(), "expected a ')'");
-							ostack.push(std::make_unique<nary_expression>(id.name, std::move(expr_list)));
+							ostack.push(std::make_unique<nary_expression>(id, std::move(expr_list)));
 						}
 						else
 							ostack.push(std::make_unique<expression>(std::get<identifier>(val)));
@@ -793,7 +793,7 @@ namespace simpl
 	inline syntax_tree parse(const std::string &s)
 	{
 		parser p(s);
-		std::vector<statement_ptr> ast;
+		syntax_tree ast;
 		while (1)
 		{
 			auto stmt = p.next();

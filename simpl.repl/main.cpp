@@ -28,7 +28,7 @@ int run_interpreter(InStream &s)
 				std::getline(s, line);
 				if (line.empty())
 					continue;
-
+				ss.clear();
 				ss << line;
 				line = ss.str();
 				simpl::parser parser(line);
@@ -52,16 +52,22 @@ int run_interpreter(InStream &s)
 			{
 				std::cout << "\r\n";
 				std::cout << "failed to parse - " << t.what() << std::endl;
+				ss.str("");
+				ss.clear();
 			}
 			catch (const simpl::parse_error &p)
 			{
 				std::cout << "\r\n";
 				std::cout << "failed to parse - " << p.what() << std::endl;
+				ss.str("");
+				ss.clear();
 			}
 			catch (const std::exception &e)
 			{
 				std::cout << "\r\n";
 				std::cout << e.what() << std::endl;
+				ss.str("");
+				ss.clear();
 			}
 		}
 

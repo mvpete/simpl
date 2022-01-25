@@ -74,6 +74,14 @@ namespace simpl
                 return stack_[sptr_ - idx];
             }
 
+            const T &offset(size_t s) const
+            {
+                auto idx = s + 1;
+                if (idx > sptr_)
+                    throw std::runtime_error("stack underflow");
+                return stack_[sptr_ - idx];
+            }
+
             bool empty() const
             {
                 return sptr_ == 0;

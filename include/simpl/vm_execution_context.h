@@ -202,8 +202,10 @@ namespace simpl
 			const auto &val = vm_.pop_stack();
 			if (!is_true(val))
 				return;
-			detail::scope s{ vm_ };
-			ws.block()->evaluate(*this);
+			{
+				detail::scope s{ vm_ };
+				ws.block()->evaluate(*this);
+			}
 			goto run_cond;
 		}
 
@@ -355,6 +357,11 @@ namespace simpl
 				do_binary<eqeq_op>(cs, vm_);
 				break;
 			}
+			case op_type::eq:
+			{
+				do_assignment(cs, vm_);
+				break;
+			}
 			case op_type::neq:
 			{
 				do_binary<neq_op>(cs, vm_);
@@ -395,6 +402,13 @@ namespace simpl
 				do_func(cs, vm_);
 				break;
 			}
+			case op_type::expand:
+			{
+				do_expand(cs, vm_);
+				break;
+			}
+			default:
+				throw std::runtime_error("invalid operation.");
 			}
 		}
 
@@ -450,11 +464,35 @@ namespace simpl
 			vm_.push_stack(value_t{}); // we put an empty value on the stack -- this is the retval;
 			// because all expressions, leave a value on the stack.
 			// evaluating the expression puts it on the stack.
+			auto s1 = vm_.stack_size();
 			for (const auto &expr : exp.expressions())
 				expr->evaluate(*this);			
-			detail::call_def cd{ exp.function(), make_arg_list(vm, exp.expressions().size()) };
+			size_t arity = vm_.stack_size() - s1;
+			detail::call_def cd{ exp.identifier().name, make_arg_list(vm, arity) };
 			vm_.call(cd);
-			vm_.decrement_stack(exp.expressions().size());
+			vm_.decrement_stack(arity);
+		}
+
+		void do_expand(nary_expression &exp, vm &vm)
+		{
+			exp.expressions()[0]->evaluate(*this);
+			// top of the stack should be an array, now we'll expand it.
+			auto top = vm_.pop_stack();
+			if (!std::holds_alternative<arrayref_t>(top))
+				throw std::runtime_error("invalid expansion.");
+			arrayref_t arr = std::get<arrayref_t>(top);
+			for (const auto &v : arr->values)
+			{
+				vm.push_stack(v);
+			}
+		}
+
+		void do_assignment(nary_expression &exp, vm &vm)
+		{
+			exp.expressions()[0]->evaluate(*this);
+			
+			const auto &id = std::get<identifier>(exp.expressions()[1]->value());
+			vm_.set_val(id, 0);
 		}
  
 		std::vector<std::string> make_arg_list(vm& vm, size_t s)
@@ -474,55 +512,11 @@ namespace simpl
 
 		void load_identifier(const identifier &id)
 		{
-			auto &val = vm_.load_var(id.name);
-			if (id.path.size() == 0)
-			{
-				vm_.push_stack(val);
-			}
-			else
-			{
-				auto next_val = val;
-				for (const auto &indexor : id.path)
-				{
-					next_val = at(next_val, indexor);
-				}
-				vm_.push_stack(next_val);
-			}
+			auto &val = vm_.load_var(id);
+			vm_.push_stack(val);
 		}
 
-		value_t &at(value_t &val, indexor at)
-		{
-			if (std::holds_alternative<size_t>(at))
-			{
-				// check that the variable is an array
-				if (!std::holds_alternative<arrayref_t>(val))
-					throw std::runtime_error("not an array");
-
-				auto array = std::get<arrayref_t>(val);
-				return array->values.at(std::get<size_t>(at));
-			}
-
-			auto &name = std::get<std::string>(at);
-
-			// if the item is in scope we'll use that first.
-			if (vm_.in_scope(name))
-			{
-				if (!std::holds_alternative<arrayref_t>(val))
-					throw std::runtime_error("not an array");
-
-				int idx = (int)cast<double>(vm_.load_var(name));
-				auto array = std::get<arrayref_t>(val);
-				return array->values.at(idx);
-			}
-
-			// otherwise, we visit 			
-			member_visitor mv(name);
-			std::visit(mv,val);
-
-			if (mv.value == nullptr)
-				throw std::runtime_error("bad access");
-			return *mv.value;
-		}
+		
 		
 	public:
 		vm &vm_;
