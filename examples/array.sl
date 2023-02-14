@@ -18,9 +18,19 @@ def get_item() {
 
 let names = new [];
 let line = "y";
-while(line=="yes" || line=="y")
-{
+while(line=="yes" || line=="y") {
     line = get_item();
 }
 
 print(names);
+
+
+let foo = new [ "foo", 42, line ];
+
+def call_me(text, num, bool) {
+    println(text);
+    println(num);
+    println(bool);
+}
+
+call_me(foo...);

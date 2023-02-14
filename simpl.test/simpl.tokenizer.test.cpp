@@ -62,6 +62,9 @@ namespace simpl_test
 			Assert::AreEqual(simpl::token_types::identifier_token, t3.type);
 		}
 
+		/// <summary>
+		/// Assert the explosion operator is detected.
+		/// </summary>
 		TEST_METHOD(TestTokenizerExplosionOperator)
 		{
 			std::string text("...");
@@ -71,6 +74,9 @@ namespace simpl_test
 			Assert::AreEqual(simpl::token_types::op, t1.type);
 		}
 
+		/// <summary>
+		/// Tests the explosion operator on an identifier.
+		/// </summary>
 		TEST_METHOD(TestTokenizerExplosionOperatorIndentifier)
 		{
 			std::string text{ "foo..." };
@@ -79,8 +85,58 @@ namespace simpl_test
 			auto t2 = t.next();
 
 			Assert::AreEqual(simpl::token_types::identifier_token, t1.type);
+			Assert::AreEqual(std::string{ "foo" }, t1.to_string());
 			Assert::AreEqual(simpl::token_types::op, t2.type);
+			Assert::AreEqual(std::string{ "..." }, t2.to_string());
 		}
+
+		TEST_METHOD(TestTokenIdentifier)
+		{
+			std::string text{ "identifier" };
+			simpl::tokenizer t{ text };
+			auto t1 = t.next();
+
+			Assert::AreEqual(simpl::token_types::identifier_token, t1.type);
+			Assert::AreEqual(text, t1.to_string());
+
+		}
+
+		TEST_METHOD(TestTokenStringLiteral)
+		{
+			std::string text{ "\"string literal\"" };
+			simpl::tokenizer t{ text };
+			auto t1 = t.next();
+
+			Assert::AreEqual(simpl::token_types::literal, t1.type);
+			Assert::AreEqual(std::string { "string literal" }, t1.to_string());
+		}
+
+		TEST_METHOD(TestTokenNumber)
+		{
+			std::string text{ "42" };
+			simpl::tokenizer t{ text };
+			auto t1 = t.next();
+
+			Assert::AreEqual(simpl::token_types::number, t1.type);
+			Assert::AreEqual(text, t1.to_string());
+		}
+
+		TEST_METHOD(TestTokenParenthesis)
+		{
+		}
+
+		TEST_METHOD(TestTokenSqBracket)
+		{
+		}
+
+		TEST_METHOD(TestTokenBracket)
+		{
+		}
+
+		TEST_METHOD(TestTokenComma)
+		{
+		}
+
 
 
 

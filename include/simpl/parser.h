@@ -38,6 +38,11 @@ namespace simpl
 			:std::exception(detail::format("parser error '{0}'. ({1})", msg, p).c_str())
 		{
 		}
+
+		parse_error(const position &p, const std::string &msg)
+			:std::exception(detail::format("parser error '{0}'. ({1})", msg, p).c_str())
+		{
+		}
 	};
 
 	using parse_val = std::variant<empty_t, op_type, identifier, keywords, value_t>;
@@ -575,7 +580,7 @@ namespace simpl
 
 				if (pk.type != token_types::comma)
 				{
-					throw parse_error(tokenizer_.pos(), "expected a comma");
+					throw parse_error(tokenizer_.pos(), detail::format("argument list, expected a comma. ({0})", pk.to_string()));
 				}
 				tokenizer_.next();
 			}
@@ -602,7 +607,7 @@ namespace simpl
 
 				if (pk.type != token_types::comma)
 				{
-					throw parse_error(tokenizer_.pos(), "expected a comma");
+					throw parse_error(tokenizer_.pos(), detail::format("identifier list, expected a comma. ({0})", pk.to_string()));
 				}
 				tokenizer_.next();
 			}
@@ -628,7 +633,7 @@ namespace simpl
 
 				if (pk.type != token_types::comma)
 				{
-					throw parse_error(tokenizer_.pos(), "expected a comma");
+					throw parse_error(tokenizer_.pos(), detail::format("expression list, expected a comma. ({0})", pk.to_string()));
 				}
 				tokenizer_.next();
 			}

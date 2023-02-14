@@ -63,5 +63,63 @@ namespace simpl_test
 
 		}
 
+		TEST_METHOD(TestArrayExplosionSimple)
+		{
+			bool called = false;
+			e.machine().reg_fn("kaboom", [&](const std::string& text, simpl::number number)
+			{
+				called = true;
+
+				Assert::AreEqual(std::string{ "foo" }, text);
+				Assert::AreEqual(42.0, number);
+
+			});
+
+			auto ast = simpl::parse("let arr = new [ \"foo\", 42 ]; kaboom(arr...);");
+
+			simpl::evaluate(ast, e);
+
+			Assert::IsTrue(called);
+		}
+
+		TEST_METHOD(TestArrayExplosionTypeMismatch)
+		{
+			Assert::ExpectException<std::runtime_error>([&]()
+			{
+				bool called = false;
+				e.machine().reg_fn("kaboom", [&](const std::string& text, simpl::number number)
+				{
+					called = true;
+
+					Assert::AreEqual(std::string{ "foo" }, text);
+					Assert::AreEqual(42.0, number);
+
+				});
+
+				auto ast = simpl::parse("let arr = new [ 13, 42 ]; kaboom(arr...);");
+
+				simpl::evaluate(ast, e);
+			});
+		}
+
+		TEST_METHOD(TestNonArrayExplosion)
+		{
+			Assert::ExpectException<std::runtime_error>([&]()
+			{
+				bool called = false;
+				e.machine().reg_fn("kaboom", [&](simpl::number number)
+				{
+					called = true;
+
+					Assert::AreEqual(42.0, number);
+
+				});
+
+				auto ast = simpl::parse("let arr = 13; kaboom(arr...);");
+
+				simpl::evaluate(ast, e);
+			});
+		}
+
 	};
 }

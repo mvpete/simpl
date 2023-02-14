@@ -37,7 +37,8 @@ namespace simpl
 		}
 
 	public:
-		enum actions { on_click_action };
+		enum class actions { on_click_action };
+
 		void set_action_method(actions a, const std::string &method)
 		{
 			action_map_[a] = method;
@@ -46,8 +47,8 @@ namespace simpl
 	private:
 		void on_click()
 		{
-			if(action_map_.find(on_click_action) != action_map_.end())
-				machine().invoke(action_map_.at(on_click_action));
+			if(action_map_.find(actions::on_click_action) != action_map_.end())
+				machine().invoke(action_map_.at(actions::on_click_action));
 		}
 
 

@@ -1,20 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
-  <Metadata>
-    <Identity Id="simpl.syntax.5707b04b-05f0-4936-8352-5e4a2799f4ed" Version="1.0" Language="en-US" Publisher="lorim" />
-    <DisplayName>simpl.syntax</DisplayName>
-    <Description xml:space="preserve">Empty VSIX project.</Description>
-    <Icon>Resources\Icon128x128.png</Icon>
-    <PreviewImage>Resources\Icon128x128.png</PreviewImage>
-  </Metadata>
-  <Installation>
-    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0, 17.0)" />
-    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 18.0)" />
-  </Installation>
-  <Prerequisites>
-    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,)" DisplayName="Visual Studio core editor" />
-  </Prerequisites>
-  <Assets>
-    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="File" Path="Grammars.pkgdef" />
-  </Assets>
+    <Metadata>
+        <Identity Id="simpl.syntax.5707b04b-05f0-4936-8352-5e4a2799f4ed" Version="1.0" Language="en-US" Publisher="lorim" />
+        <DisplayName>simpl.syntax</DisplayName>
+        <Description xml:space="preserve">Empty VSIX project.</Description>
+        <Icon>Resources\Icon128x128.png</Icon>
+        <PreviewImage>Resources\Icon128x128.png</PreviewImage>
+    </Metadata>
+    <Installation>
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0, 17.0)">
+            <ProductArchitecture>x86</ProductArchitecture>
+        </InstallationTarget>
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 18.0)">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+    </Installation>
+    <Prerequisites>
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,)" DisplayName="Visual Studio core editor" />
+    </Prerequisites>
+    <Assets>
+        <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="File" Path="Grammars.pkgdef" />
+    </Assets>
 </PackageManifest>
