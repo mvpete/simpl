@@ -99,9 +99,6 @@
     <ClInclude Include="..\include\simpl\detail\types.h">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\simpl\libraries\gui.h">
-      <Filter>Header Files\libraries</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\simpl\libraries\gui.window.h">
       <Filter>Header Files\libraries\gui</Filter>
     </ClInclude>
@@ -109,6 +106,9 @@
       <Filter>Header Files\libraries\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\include\simpl\libraries\gui.text.h">
+      <Filter>Header Files\libraries\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\simpl\libraries\gui.h">
       <Filter>Header Files\libraries\gui</Filter>
     </ClInclude>
   </ItemGroup>

@@ -17,10 +17,10 @@ namespace simpl
         engine()
             :ctx_(vm_)
         {
-            io_lib{}.load(vm_);
-            file_lib{}.load(vm_);
-            array_lib{}.load(vm_);
-            gui_lib{}.load(vm_);
+            vm_.register_library(std::make_unique<gui_lib>());
+            vm_.register_library(std::make_unique<io_lib>());
+            vm_.register_library(std::make_unique<file_lib>());
+            vm_.register_library(std::make_unique<array_lib>());
         }
 
         vm_execution_context &context()

@@ -19,7 +19,7 @@ namespace simpl
 
 		const char *name() const override
 		{
-			return "gui_lib";
+			return "gui";
 		}
 
 		void load(vm &vm) override
@@ -59,6 +59,22 @@ namespace simpl
 			vm.reg_fn("set_text", [](window &w, const value_t &val)
 			{
 				w.set_text(val);
+			});
+
+			vm.reg_fn("set_pos", [](window& w, number x, number y, number cx, number cy)
+			{
+				w.set_pos(x, y, cx, cy);
+			});
+
+			vm.reg_fn("get_pos", [](window& w)
+			{
+				auto pos = new_blob();
+				auto wpos = w.get_pos();
+				pos->values["x"] = number{ (double) wpos.x };
+				pos->values["y"] = number{ (double) wpos.y };
+				pos->values["width"] = number{ (double)wpos.width };
+				pos->values["height"] = number{ (double)wpos.height };
+				return pos;
 			});
 
 			vm.reg_fn("on_click", [](button &b, const std::string &method)

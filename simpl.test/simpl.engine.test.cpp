@@ -121,5 +121,21 @@ namespace simpl_test
 			});
 		}
 
+		TEST_METHOD(TestFunctionAddress)
+		{
+			bool called = false;
+			e.machine().reg_fn("kaboom", [&](const std::string &name)
+			{
+				called = true;
+
+				Assert::AreEqual(std::string{ "foo" }, name);
+
+			});
+
+			auto ast = simpl::parse("def foo() {} kaboom(&foo);");
+
+			simpl::evaluate(ast, e);
+		}
+
 	};
 }

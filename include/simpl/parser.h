@@ -45,7 +45,9 @@ namespace simpl
 		}
 	};
 
-	using parse_val = std::variant<empty_t, op_type, identifier, keywords, value_t>;
+	struct address_identifier_t { std::string name;  };
+
+	using parse_val = std::variant<empty_t, op_type, identifier, keywords, value_t, address_identifier_t>;
 
 	class parser
 	{
@@ -125,6 +127,12 @@ namespace simpl
 			case keywords::object_keyword:
 				return parse_object_statement(t);
 			}
+
+			if (t.type == token_types::directive)
+			{
+				return parse_directive_statement(t);
+			}
+
 			// peek the next token
 			auto nxt = tokenizer_.peek();
 
@@ -170,6 +178,12 @@ namespace simpl
 				tokenizer_.next();
 				return value_t{ std::stod(tkn.to_string()) };
 			}
+			if (tkn.type == token_types::op && builtins::compare(tkn.begin, tkn.end, "&"))
+			{
+				tokenizer_.next();
+
+				return address_identifier_t{ tokenizer_.next().to_string() };
+			}
 			if (tkn.type == token_types::op)
 			{
 				tokenizer_.next();
@@ -183,8 +197,9 @@ namespace simpl
 			identifier id{ tkn.to_string() };
 			while (1)
 			{
-				auto nt = tokenizer_.peek().type;
-				if (nt == token_types::period)
+				auto n = tokenizer_.peek();
+				auto nt = n.type;
+				if (nt == token_types::op && builtins::compare(n.begin, n.end, "."))
 				{
 					tokenizer_.next();
 					if (tokenizer_.peek().type != token_types::identifier_token)
@@ -262,6 +277,11 @@ namespace simpl
 					{
 						auto keyword = std::get<keywords>(val);
 						ostack.push(parse_keyword_expression(keyword));
+					}
+					else if (std::holds_alternative<address_identifier_t>(val))
+					{
+						auto address = std::get<address_identifier_t>(val);
+						ostack.push(std::make_unique<function_address_expression>(address.name));
 					}
 					else
 						throw parse_error(tokenizer_.pos(), "undefined parse_val");
@@ -450,6 +470,26 @@ namespace simpl
 			auto expr = parse_expression();
 			close_statement();
 			return std::make_unique<return_statement>(std::move(expr));
+		}
+
+		statement_ptr parse_directive_statement(token_t& t)
+		{
+			auto directive = tokenizer_.next();
+			if (directive.type != token_types::identifier_token)
+				throw parse_error(tokenizer_.pos(), "expected a directive.");
+
+			if (builtins::compare(directive.begin, directive.end, "import"))
+			{
+				auto libtkn = tokenizer_.next();
+				if (libtkn.type != token_types::identifier_token)
+					throw parse_error(tokenizer_.pos(), detail::format("import expected an identifier: {0}", libtkn.to_string()));
+				
+				return std::make_unique<import_statement>(libtkn.to_string());
+			}
+			else
+				throw parse_error(tokenizer_.pos(), detail::format("invalid directive: {0}", directive.to_string()));
+
+
 		}
 
 		/*

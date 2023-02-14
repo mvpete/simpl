@@ -12,7 +12,7 @@ namespace simpl
 
 		const char *name() const override 
 		{
-			return "io_lib";
+			return "io";
 		}
 
         void load(vm &vm) override

@@ -137,8 +137,34 @@ namespace simpl_test
 		{
 		}
 
+		TEST_METHOD(TestTokenDirective)
+		{
+			std::string text{ "@" };
+			simpl::tokenizer tknzr{ text };
+			auto t = tknzr.next();
+			Assert::AreEqual(simpl::token_types::directive, t.type);
+		}
+		TEST_METHOD(TestTokenAmpersand)
+		{
+			std::string text{ "&" };
+			simpl::tokenizer t{ text };
+			auto t1 = t.next();
 
+			Assert::AreEqual(simpl::token_types::op, t1.type);
+			Assert::AreEqual(text, t1.to_string());
+		}
 
+		TEST_METHOD(TestTokenAddressFunction)
+		{
+			std::string text{ "&foo" };
+			simpl::tokenizer t{ text };
+			auto t1 = t.next();
+			auto t2 = t.next();
 
+			Assert::AreEqual(simpl::token_types::op, t1.type);
+			Assert::AreEqual(simpl::token_types::identifier_token, t2.type);
+			Assert::AreEqual(std::string{ "foo" }, t2.to_string());
+		}
+		
 	};
 }

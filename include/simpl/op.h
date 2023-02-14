@@ -23,7 +23,7 @@ namespace simpl
 		}
 	}
 
-	enum class op_type { add, sub, mult, div, mod, eq, eqeq, neq, exp, gt, lt, gteq, lteq, log_and, log_or, func, expand, none };
+	enum class op_type { add, sub, mult, div, mod, eq, eqeq, neq, exp, gt, lt, gteq, lteq, log_and, log_or, func, expand, bin_and, none };
 
 	inline int get_precendence(op_type op)
 	{
@@ -32,6 +32,7 @@ namespace simpl
 		default:
 		case op_type::log_and:
 		case op_type::log_or:
+		case op_type::bin_and:
 			return 1;
 		case op_type::add:
 		case op_type::sub:
@@ -72,6 +73,7 @@ namespace simpl
 		case op_type::eq:
 		case op_type::neq:
 		case op_type::log_and:
+		case op_type::bin_and:
 		case op_type::log_or:
 			return 2;
 		}
@@ -111,6 +113,8 @@ namespace simpl
 			return op_type::gt;
 		else if (builtins::compare(begin, end, ">="))
 			return op_type::gteq;
+		else if (builtins::compare(begin, end, "&"))
+			return op_type::bin_and;
 		else if (builtins::compare(begin, end, "&&"))
 			return op_type::log_and;
 		else if (builtins::compare(begin, end, "||"))

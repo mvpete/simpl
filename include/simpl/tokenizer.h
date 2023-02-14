@@ -63,8 +63,8 @@ namespace simpl
 		eof,
 		eos,
 		comment,
-		period,
-		empty_token
+		empty_token,
+		directive
 	};
 
 	template<typename CharT>
@@ -180,9 +180,9 @@ namespace simpl
 					next_ = token_t(token_types::comma, start, cur_++);
 					return next_;
 				}
-				else if (c == '.')
+				else if (c == '@')
 				{
-					next_ = token_t(token_types::period, start, cur_++);
+					next_ = token_t(token_types::directive, start, cur_++);
 					return next_;
 				}
 				else

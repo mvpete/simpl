@@ -16,6 +16,7 @@ namespace simpl
 	class new_blob_expression;
 	class new_array_expression;
 	class new_object_expression;
+	class function_address_expression;
 
 	using indexor = std::variant<std::string, size_t>;
 	struct identifier 
@@ -85,6 +86,7 @@ namespace simpl
 		virtual void visit(new_blob_expression &ns) = 0;
 		virtual void visit(new_array_expression &nas) = 0;
 		virtual void visit(new_object_expression &nos) = 0;
+		virtual void visit(function_address_expression& fae) = 0;
 	};
 
 
@@ -259,6 +261,28 @@ namespace simpl
 
 	private:
 		expression_list_t expressions_;
+	};
+
+	class function_address_expression : public expression
+	{
+	public:
+		function_address_expression(const std::string& name)
+			:name_(name)
+		{
+		}
+
+		const std::string& name() const
+		{
+			return name_;
+		}
+
+		virtual void evaluate(expression_visitor& v) override
+		{
+			v.visit(*this);
+		}
+
+	private:
+		std::string name_;
 	};
 
 }

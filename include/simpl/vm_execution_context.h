@@ -227,6 +227,18 @@ namespace simpl
 			goto run_for_cond;
 		}
 
+		virtual void visit(import_statement& is)
+		{
+			if (!vm_.load_library(is.libname()))
+				throw std::runtime_error(detail::format("library '{0}' not found.", is.libname()));
+			// Search for a file in the working directory for a .sl file with the same name.
+
+		}
+
+		virtual void visit(load_library_statement& lls)
+		{
+		}
+
 		virtual void visit(expression &ex)
 		{
 			if (std::holds_alternative<empty_t>(ex.value()))
@@ -410,6 +422,12 @@ namespace simpl
 			default:
 				throw std::runtime_error("invalid operation.");
 			}
+		}
+
+		virtual void visit(function_address_expression& fae)
+		{
+			// For now, we just push the function name on the stack.
+			vm_.push_stack(fae.name());
 		}
 
 	private:

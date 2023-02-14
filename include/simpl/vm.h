@@ -7,6 +7,7 @@
 
 #include <simpl/cast.h>
 #include <simpl/expression.h>
+#include <simpl/library.h>
 #include <simpl/static_stack.h>
 #include <simpl/value.h>
 
@@ -453,6 +454,22 @@ namespace simpl
             return locals_;
         }
 
+    public:
+
+        void register_library(std::unique_ptr<library> &&lib)
+        {
+            libraries_[lib->name()] = std::move(lib);
+        }
+
+        bool load_library(const std::string& name)
+        {
+
+            auto &lib = libraries_[name];
+            if (lib == nullptr)
+                return false;
+            lib->load(*this);
+            return true;
+        }
 
     private:
         template <typename CallableT>
@@ -478,6 +495,7 @@ namespace simpl
         stack_t stack_;
         locals_t locals_;
         callstack_t callstack_;
+        std::map<std::string, std::unique_ptr<simpl::library>> libraries_;
 
     };
 }

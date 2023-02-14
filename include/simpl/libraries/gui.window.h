@@ -10,6 +10,8 @@
 
 namespace simpl
 {
+	struct rect { int x; int y; int width; int height; };
+
 	class window
 	{
 	public:
@@ -61,6 +63,20 @@ namespace simpl
 		{
 			const auto text = cast<std::string>(value);
 			::SendMessage(hwnd_, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(text.c_str()));
+		}
+
+		void set_pos(number x, number y, number cx, number cy)
+		{
+			int xp = (int)x;
+			::SetWindowPos(hwnd_, nullptr, (int)x, (int)y, (int)cx, (int)cy, 0);
+		}
+
+		rect get_pos() const
+		{
+			RECT r = {0};
+			::GetWindowRect(hwnd_, &r);
+			MapWindowPoints(HWND_DESKTOP, GetParent(hwnd_), (LPPOINT)&r, 2);
+			return rect{ r.left, r.top, r.right-r.left, r.bottom-r.top };
 		}
 
 	protected:

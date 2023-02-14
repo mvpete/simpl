@@ -1,10 +1,9 @@
 #ifndef __simpl_library_h__
 #define __simpl_library_h__
 
-#include <simpl/vm.h>
-
 namespace simpl
 {
+    class vm;
     class library
     {
     public:

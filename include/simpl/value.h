@@ -17,7 +17,7 @@ namespace simpl
 	struct empty_t {};
 	struct blob_t;
 	struct array_t;
-	
+
 	using blobref_t = std::shared_ptr<blob_t>;
 	inline blobref_t new_blob()
 	{
