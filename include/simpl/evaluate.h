@@ -18,6 +18,7 @@ namespace simpl
 			evaluate(std::move(stmt), e);
 		}
 	}
+
 }
 
 #endif //__simpl_evaluate_h__

@@ -35,14 +35,23 @@ namespace simpl
 	{
 	public:
 		parse_error(const position &p, const char *msg)
-			:std::exception(detail::format("parser error '{0}'. ({1})", msg, p).c_str())
+			:std::exception(detail::format("syntax error {0}. ({1})", msg, p).c_str()), pos_(p)
 		{
 		}
 
 		parse_error(const position &p, const std::string &msg)
-			:std::exception(detail::format("parser error '{0}'. ({1})", msg, p).c_str())
+			:std::exception(detail::format("syntax error {0}. ({1})", msg, p).c_str()), pos_(p)
 		{
 		}
+
+	public:
+		const position& pos() const
+		{
+			return pos_;
+		}
+
+	private:
+		const position pos_;
 	};
 
 	struct address_identifier_t { std::string name;  };

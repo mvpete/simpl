@@ -2,6 +2,8 @@
 @import io
 @import gui
 
+@import hello_world
+
 let main = create_wnd("Hello Windows", 100, 100, 600, 480);
 let btn  = create_btn(main, "Click me", 10, 10, 75, 30);
 let text = create_text(main, "Blink", 85,10, 100, 30);

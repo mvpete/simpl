@@ -3,10 +3,12 @@
 
 #include <simpl/expression.h>
 #include <simpl/operations.h>
+#include <simpl/parser.h>
 #include <simpl/statement.h>
 #include <simpl/vm.h>
 
 #include <functional>
+#include <filesystem>
 
 namespace simpl
 {
@@ -229,10 +231,16 @@ namespace simpl
 
 		virtual void visit(import_statement& is)
 		{
-			if (!vm_.load_library(is.libname()))
-				throw std::runtime_error(detail::format("library '{0}' not found.", is.libname()));
-			// Search for a file in the working directory for a .sl file with the same name.
-
+			auto ctx = std::find(import_ctx_.begin(), import_ctx_.end(), is.libname());
+			if (ctx != import_ctx_.end())
+				throw std::runtime_error("cyclical import detected.");
+			import_ctx_.emplace_back(is.libname());
+			if (!vm_.load_library(is.libname()) &&
+				!load_from_directory(".", is.libname()))
+			{
+				throw std::runtime_error(detail::format("module '{0}' not found.", is.libname()));
+			}
+			import_ctx_.pop_back();
 		}
 
 		virtual void visit(load_library_statement& lls)
@@ -430,7 +438,48 @@ namespace simpl
 			vm_.push_stack(fae.name());
 		}
 
+		void evaluate(syntax_tree& ast)
+		{
+			for (auto& stmt : ast)
+			{
+				evaluate(std::move(stmt));
+			}
+		}
+
+		void evaluate(statement_ptr statement)
+		{
+			statement->evaluate(*this);
+		}
+
 	private:
+
+		bool load_from_directory(const std::filesystem::path &p, const std::string &libname)
+		{
+			for (const auto& i : std::filesystem::directory_iterator(p))
+			{
+				const auto& path = i.path();
+				if (path.extension() != ".sl" || path.stem() != libname)
+					continue;
+				std::ifstream t(path);
+				std::stringstream buffer;
+				buffer << t.rdbuf();
+				try
+				{
+					auto ast = simpl::parse(buffer.str());
+					evaluate(ast);
+				}
+				catch (const token_error& te)
+				{
+					throw std::runtime_error(detail::format("{0}: error: {1}", std::filesystem::absolute(path), te.what()));
+				}
+				catch (const parse_error& pe)
+				{
+					throw std::runtime_error(detail::format("{0}: error: {1}", std::filesystem::absolute(path), pe.what()));
+				}
+				return true;;
+			}
+			return false;
+		}
 
 		template <typename OpT>
 		void do_binary(const nary_expression &exp, vm &vm)
@@ -538,7 +587,7 @@ namespace simpl
 		
 	public:
 		vm &vm_;
-
+		std::vector<std::string> import_ctx_;
 	};
 }
 

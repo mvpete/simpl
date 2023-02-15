@@ -143,46 +143,55 @@ namespace simpl
 				else if (c == ';')
 				{
 					next_ = token_t(token_types::eos, start, cur_++);
+					++position_.col;
 					return next_;
 				}
 				else if (c == '(')
 				{
 					next_ = token_t(token_types::lparen, start, cur_++);
+					++position_.col;
 					return next_;
 				}
 				else if (c == ')')
 				{
 					next_ = token_t(token_types::rparen, start, cur_++);
+					++position_.col;
 					return next_;
 				}
 				else if (c == '{')
 				{
 					next_ = token_t(token_types::lbrack, start, cur_++);
+					++position_.col;
 					return next_;
 				}
 				else if (c == '}')
 				{
 					next_ = token_t(token_types::rbrack, start, cur_++);
+					++position_.col;
 					return next_;
 				}
 				else if (c == '[')
 				{
 					next_ = token_t(token_types::sqlbrack, start, cur_++);
+					++position_.col;
 					return next_;
 				}
 				else if (c == ']')
 				{
 					next_ = token_t(token_types::sqrbrack, start, cur_++);
+					++position_.col;
 					return next_;
 				}
 				else if (c == ',')
 				{
 					next_ = token_t(token_types::comma, start, cur_++);
+					++position_.col;
 					return next_;
 				}
 				else if (c == '@')
 				{
 					next_ = token_t(token_types::directive, start, cur_++);
+					++position_.col;
 					return next_;
 				}
 				else
