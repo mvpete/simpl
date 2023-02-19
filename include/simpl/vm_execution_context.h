@@ -176,14 +176,6 @@ namespace simpl
 			vm_.return_();
 		}
 
-		virtual void visit(assignment_statement &as)
-		{
-			if (as.expr())
-				as.expr()->evaluate(*this); // places value on stack.
-			vm_.set_val(as.identifier(), 0); // set the value of the identifier, to the value at the top.
-			vm_.pop_stack(); // take the value off the top.
-		}
-
 		virtual void visit(block_statement &bs)
 		{
 			// we need to capture the current activation ctx.

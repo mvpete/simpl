@@ -7,7 +7,6 @@
 @import io
 @import array
 
-
 def get_item() {
 
     print("Enter a item: ");

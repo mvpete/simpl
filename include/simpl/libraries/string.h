@@ -23,7 +23,22 @@ namespace simpl
 			});
 			vm.reg_fn("split", [](const std::string &s, const std::string &delim)
 			{
-
+				char d = delim[0];
+				std::vector<simpl::value_t> res;
+				res.emplace_back(std::string{});
+				for (const auto& c : s)
+				{
+					if (c == d)
+					{
+						res.emplace_back(std::string{});
+						continue;
+					}
+					std::get<std::string>(res.back()).push_back(c);
+				}
+				return make_array(std::move(res));
+			});
+			vm.reg_fn("join", [](const array_t& arr, const std::string& delim)
+			{
 			});
 			vm.reg_fn("at", [](const std::string& s, number i)
 			{
@@ -36,6 +51,10 @@ namespace simpl
 			vm.reg_fn("substr", [](const std::string& s, number offset, number count)
 			{
 				return s.substr((int)offset, (int)count);
+			});
+			vm.reg_fn("concat", [](const std::string& s1, const std::string& s2)
+			{
+				return detail::format("{0}{1}", s1, s2);
 			});
 
 		}

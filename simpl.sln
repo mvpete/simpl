@@ -22,6 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{70
 		examples\blob.sl = examples\blob.sl
 		examples\gui.sl = examples\gui.sl
 		examples\hello_world.sl = examples\hello_world.sl
+		examples\json.sl = examples\json.sl
 		examples\object.sl = examples\object.sl
 		examples\strings.sl = examples\strings.sl
 	EndProjectSection

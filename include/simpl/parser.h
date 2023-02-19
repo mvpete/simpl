@@ -141,17 +141,7 @@ namespace simpl
 			{
 				return parse_directive_statement(t);
 			}
-
-			// peek the next token
-			auto nxt = tokenizer_.peek();
-
-			// hmm. descent.
-			if (nxt.type == token_types::op && builtins::compare(nxt.begin, nxt.end, "="))
-			{
-				tokenizer_.next();
-				return parse_assignment_statement(t);
-			}
-
+			// back up one because it's an expression.
 			tokenizer_.reverse(t);
 			auto expr = parse_expression();
 			if (expr == nullptr)
@@ -303,7 +293,7 @@ namespace simpl
 					{
 						ostack.push(std::make_unique<expression>(empty_t{}));
 					}
-					auto pr = get_precendence(std::get<op_type>(val));
+					auto pr = get_precendence(op);
 					if (!opstack.empty() && pr <= get_precendence(std::get<op_type>(opstack.top())))
 					{
 						make_op_expression(ostack, opstack);
@@ -467,11 +457,7 @@ namespace simpl
 			auto init = parse_let_statement(lt);
 			auto cond = parse_expression();
 			close_statement();
-			auto id = tokenizer_.next();
-			if (id.type != token_types::identifier_token)
-				throw std::runtime_error("expected an identifier");
-			tokenizer_.next(); // skip =
-			auto incr = parse_assignment_expression(id);
+			auto incr = parse_expression();
 			expect(token_types::rparen);
 			change_scope sp(*this, scopes::for_);
 			auto block = parse_block_statement();
@@ -589,22 +575,6 @@ namespace simpl
 			if (block == nullptr) return nullptr;
 
 			return std::make_unique<def_statement>(identifier.to_string(), std::move(id_list), std::move(block));
-		}
-
-		// TODO: Sort this out, technically an assignment can be an expression. We also 
-		// have to parse the identifier path... Blah.
-		statement_ptr parse_assignment_expression(token_t &identifier)
-		{
-			auto expr = parse_expression();
-			return std::make_unique<assignment_statement>(identifier.to_string(), std::move(expr));
-		}
-
-		// {identifier} = {expression};
-		statement_ptr parse_assignment_statement(token_t &identifier)
-		{
-			auto expr = parse_assignment_expression(identifier);
-			close_statement();
-			return expr;
 		}
 
 		std::vector<argument> parse_argument_list()

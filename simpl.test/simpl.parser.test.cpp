@@ -217,6 +217,28 @@ namespace simpl_test
 		{
 			auto ast = simpl::parse("@loadlib \"path/to/lib.dll\"");
 			const auto lls = dynamic_cast<const simpl::load_library_statement*>(ast[0].get());
+			Assert::IsNotNull(lls);
+		}
+
+		TEST_METHOD(TestParseEqualLiteralValue)
+		{
+			auto ast = simpl::parse("if(i==\"foo\") { i=1; }");
+			const auto ifs = dynamic_cast<const simpl::if_statement*>(ast[0].get());
+			Assert::IsNotNull(ifs);
+		}
+
+		TEST_METHOD(TestParseEqualNumberValue)
+		{
+			auto ast = simpl::parse("if(i==42) { i=1; }");
+			const auto ifs = dynamic_cast<const simpl::if_statement*>(ast[0].get());
+			Assert::IsNotNull(ifs);
+		}
+
+		TEST_METHOD(TestParseAssignmentStatement)
+		{
+			auto ast = simpl::parse("i=i+1;");
+			const auto as = dynamic_cast<const simpl::expr_statement*>(ast[0].get());
+			Assert::IsNotNull(as);
 		}
 
 	};

@@ -23,7 +23,6 @@ namespace simpl
 	class while_statement;
 	class for_statement;
 	class block_statement;
-	class assignment_statement;
 	class object_definition_statement;
 	class import_statement;
 	class load_library_statement;
@@ -40,7 +39,6 @@ namespace simpl
 		virtual void visit(while_statement &ws) = 0;
 		virtual void visit(for_statement &fs) = 0;
 		virtual void visit(block_statement &bs) = 0;
-		virtual void visit(assignment_statement &ws) = 0;
 		virtual void visit(object_definition_statement &os) = 0;
 		virtual void visit(import_statement& is) = 0;
 		virtual void visit(load_library_statement& lls) = 0;
@@ -231,32 +229,6 @@ namespace simpl
 		statement_ptr block_;
 	};
 
-	class assignment_statement : public statement
-	{
-	public:
-		assignment_statement(const std::string &id, expression_ptr expr)
-			:identifier_(id), expression_(std::move(expr))
-		{
-		}
-		virtual void evaluate(statement_visitor &v) override
-		{
-			v.visit(*this);
-		}
-
-		const std::string &identifier() const
-		{
-			return identifier_;
-		}
-		const expression_ptr &expr() const
-		{
-			return expression_;
-		}
-
-	private:
-		std::string identifier_;
-		expression_ptr expression_;
-	};
-
 	class return_statement : public statement
 	{
 	public:
@@ -280,7 +252,7 @@ namespace simpl
 	class for_statement : public statement
 	{
 	public:
-		for_statement(statement_ptr init, expression_ptr cond, statement_ptr incr, statement_ptr block)
+		for_statement(statement_ptr init, expression_ptr cond, expression_ptr incr, statement_ptr block)
 			:init_(std::move(init)), cond_(std::move(cond)), incr_(std::move(incr)), block_(std::move(block))
 		{
 		}
@@ -298,7 +270,7 @@ namespace simpl
 			return cond_;
 		}
 
-		const statement_ptr &incr() const
+		const expression_ptr &incr() const
 		{
 			return incr_;
 		}
@@ -311,7 +283,7 @@ namespace simpl
 	private:
 		statement_ptr init_;
 		expression_ptr cond_;
-		statement_ptr incr_;
+		expression_ptr incr_;
 		statement_ptr block_;
 	};
 

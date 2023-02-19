@@ -30,6 +30,7 @@ namespace simpl
 		switch (op)
 		{
 		default:
+		case op_type::eq:
 		case op_type::log_and:
 		case op_type::log_or:
 		case op_type::bin_and:
@@ -143,6 +144,7 @@ namespace simpl
 			builtins::compare(begin, end, "&") ||
 			builtins::compare(begin, end, "<") ||
 			builtins::compare(begin, end, ">") ||
+			builtins::compare(begin, end, "=") ||
 			builtins::compare(begin, end, ".") ||
 			builtins::compare(begin, end, "..");
 	}
