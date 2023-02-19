@@ -500,6 +500,15 @@ namespace simpl
 				
 				return std::make_unique<import_statement>(libtkn.to_string());
 			}
+			else if (builtins::compare(directive.begin, directive.end, "loadlib"))
+			{
+				auto pathtkn = tokenizer_.next();
+				if (pathtkn.type != token_types::literal)
+					throw parse_error(tokenizer_.pos(), detail::format("expected a path, got: {0}", pathtkn.to_string()));
+
+				return std::make_unique<load_library_statement>(pathtkn.to_string());
+
+			}
 			else
 				throw parse_error(tokenizer_.pos(), detail::format("invalid directive: {0}", directive.to_string()));
 

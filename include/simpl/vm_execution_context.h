@@ -438,6 +438,11 @@ namespace simpl
 				do_increment(cs, vm_);
 				break;
 			}
+			case op_type::decrement:
+			{
+				do_decrement(cs, vm_);
+				break;
+			}
 			default:
 				throw std::runtime_error("invalid operation.");
 			}
@@ -565,6 +570,7 @@ namespace simpl
 			}
 		}
 
+		/// TODO: Refactor to use apply<op> pattern.
 		void do_increment(nary_expression& exp, vm& vm)
 		{
 			if (std::holds_alternative<identifier>(exp.expressions()[0]->value()))
@@ -583,6 +589,28 @@ namespace simpl
 				auto value = std::get<number>(vm_.load_var(id));
 				vm_.push_stack(value_t{ value });
 				++value;
+				vm_.set_val(id, value_t{ value });
+			}
+		}
+
+		void do_decrement(nary_expression& exp, vm& vm)
+		{
+			if (std::holds_alternative<identifier>(exp.expressions()[0]->value()))
+			{
+				// pre
+				const auto& id = std::get<identifier>(exp.expressions()[0]->value());
+				auto& value = std::get<number>(vm_.load_var(id));
+				--value;
+				vm_.set_val(id, value_t{ value });
+				vm_.push_stack(value_t{ value });
+			}
+			else
+			{
+				// post-increment; i=i++;
+				const auto& id = std::get<identifier>(exp.expressions()[1]->value());
+				auto value = std::get<number>(vm_.load_var(id));
+				vm_.push_stack(value_t{ value });
+				--value;
 				vm_.set_val(id, value_t{ value });
 			}
 		}

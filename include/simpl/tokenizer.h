@@ -264,6 +264,7 @@ namespace simpl
 			{
 				if (is_op_maybe(start, cur_))
 					continue;
+				// If it's not an op, we went one too far ahead so we need to backtrack.
 				if (!is_op(start, cur_))
 					--cur_;
 				break;					

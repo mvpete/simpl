@@ -393,6 +393,11 @@ namespace simpl
 		{
 		}
 
+		virtual void evaluate(statement_visitor& v) override
+		{
+			v.visit(*this);
+		}
+
 		const std::string& path() const
 		{
 			return path_;

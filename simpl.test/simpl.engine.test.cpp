@@ -173,6 +173,20 @@ namespace simpl_test
 			Assert::IsTrue(called);
 		}
 
+		TEST_METHOD(TestPostDecrement)
+		{
+			bool called = false;
+			check = [&](const simpl::value_t& v)
+			{
+				called = true;
+				Assert::IsTrue(std::holds_alternative<simpl::number>(v));
+				Assert::AreEqual(-1.00, std::get<simpl::number>(v));
+			};
+			auto ast = simpl::parse("let i =0; i--; assert(i);");
+			simpl::evaluate(ast, e);
+			Assert::IsTrue(called);
+		}
+
 		TEST_METHOD(TestPreIncrement)
 		{
 			bool called = false;
@@ -187,5 +201,18 @@ namespace simpl_test
 			Assert::IsTrue(called);
 		}
 
+		TEST_METHOD(TestPreDecrement)
+		{
+			bool called = false;
+			check = [&](const simpl::value_t& v)
+			{
+				called = true;
+				Assert::IsTrue(std::holds_alternative<simpl::number>(v));
+				Assert::AreEqual(-1.00, std::get<simpl::number>(v));
+			};
+			auto ast = simpl::parse("let i=0; --i; assert(i);");
+			simpl::evaluate(ast, e);
+			Assert::IsTrue(called);
+		}
 	};
 }
