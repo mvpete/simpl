@@ -260,11 +260,13 @@ namespace simpl
 		bool scan_op(token_t &t)
 		{
 			auto start = cur_;
-			for (; cur_ != end_; ++cur_)
+			for (++cur_; cur_ != end_; ++cur_)
 			{
-				char c = *cur_;
-				if (!is_op(c))
-					break;
+				if (is_op_maybe(start, cur_))
+					continue;
+				if (!is_op(start, cur_))
+					--cur_;
+				break;					
 			}
 
 			t.type = token_types::op;

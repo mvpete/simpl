@@ -52,13 +52,13 @@ namespace simpl
                     throw std::runtime_error("already defined");
                 variables_[name] = v;
             }
-            void set_value(const std::string &name, value_t &value)
+            void set_value(const std::string &name, const value_t &value)
             {
                 if (variables_.find(name) == variables_.end())
                     throw std::runtime_error("undefined variable");
                 (*variables_[name]) = value;
             }
-            void set_value(const identifier &id, value_t &v)
+            void set_value(const identifier &id, const value_t &v)
             {
                 if (variables_.find(id.name) == variables_.end())
                     throw std::runtime_error("undefined variable");
@@ -338,18 +338,23 @@ namespace simpl
 
         void set_val(const identifier &id, size_t offset)
         {
+            set_val(id, stack_offset(offset));
+        }
+
+        void set_val(const identifier& id, const value_t &v)
+        {
             size_t stack = 0;
             while (stack < locals_.size())
             {
-                auto &scope = locals_.offset(stack);
+                auto& scope = locals_.offset(stack);
                 if (scope.has_value(id.name))
                 {
-                    return scope.set_value(id, stack_offset(offset));
+                    return scope.set_value(id, v);
                 }
                 ++stack;
             }
 
-            locals_.top().set_value(id, stack_.offset(offset));
+            locals_.top().set_value(id, v);
         }
 
         value_t &load_var(const std::string &name)

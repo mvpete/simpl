@@ -23,7 +23,7 @@ namespace simpl
 		}
 	}
 
-	enum class op_type { add, sub, mult, div, mod, eq, eqeq, neq, exp, gt, lt, gteq, lteq, log_and, log_or, func, expand, bin_and, none };
+	enum class op_type { add, sub, mult, div, mod, eq, eqeq, neq, exp, gt, lt, gteq, lteq, log_and, log_or, func, expand, bin_and, bin_or, increment, decrement, none };
 
 	inline int get_precendence(op_type op)
 	{
@@ -35,7 +35,9 @@ namespace simpl
 		case op_type::bin_and:
 			return 1;
 		case op_type::add:
+		case op_type::increment:
 		case op_type::sub:
+		case op_type::decrement:
 			return 2;
 		case op_type::mult:
 		case op_type::div:
@@ -59,6 +61,9 @@ namespace simpl
 		{
 		default:
 			return 1;
+		case op_type::increment:
+		case op_type::decrement:
+			return 2; // Yes, this seems silly. But I use the second argument to indicate pre/post.
 		case op_type::add:
 		case op_type::sub:
 		case op_type::mult:
@@ -93,6 +98,10 @@ namespace simpl
 	{
 		if (builtins::compare(begin, end, "+"))
 			return op_type::add;
+		else if (builtins::compare(begin, end, "++"))
+			return op_type::increment;
+		else if (builtins::compare(begin, end, "--"))
+			return op_type::decrement;
 		else if (builtins::compare(begin, end, "="))
 			return op_type::eq;
 		else if (builtins::compare(begin, end, "-"))
@@ -122,6 +131,26 @@ namespace simpl
 		else if (builtins::compare(begin, end, "..."))
 			return op_type::expand;
 		return op_type::none;
+	}
+
+	template <typename IteratorT>
+	inline bool is_op_maybe(IteratorT begin, IteratorT end)
+	{
+		return 
+			builtins::compare(begin, end, "+") ||
+			builtins::compare(begin, end, "-") ||
+			builtins::compare(begin, end, "|") ||
+			builtins::compare(begin, end, "&") ||
+			builtins::compare(begin, end, "<") ||
+			builtins::compare(begin, end, ">") ||
+			builtins::compare(begin, end, ".") ||
+			builtins::compare(begin, end, "..");
+	}
+
+	template <typename IteratorT>
+	inline bool is_op(IteratorT begin, IteratorT end)
+	{
+		return to_op_type(begin, end) != op_type::none;
 	}
 
 

@@ -2,17 +2,16 @@
 @import io
 @import gui
 
-@import hello_world
-
 let main = create_wnd("Hello Windows", 100, 100, 600, 480);
 let btn  = create_btn(main, "Click me", 10, 10, 75, 30);
-let text = create_text(main, "Blink", 85,10, 100, 30);
+let text = create_text(main, "Start", 85,10, 100, 30);
 
 let clicks = 0;
 
 def do_foo() 
 {
     let p = get_pos(text);
+    p.x=p.x+1;
     set_pos(text, p.x+1, p.y, p.width, p.height);
     set_text(text, clicks);
     clicks=clicks+1;

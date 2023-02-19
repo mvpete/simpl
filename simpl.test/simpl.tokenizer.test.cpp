@@ -165,6 +165,57 @@ namespace simpl_test
 			Assert::AreEqual(simpl::token_types::identifier_token, t2.type);
 			Assert::AreEqual(std::string{ "foo" }, t2.to_string());
 		}
+
+		TEST_METHOD(TestTokenPostIncrement)
+		{
+			std::string text{ "i++;" };
+			simpl::tokenizer tknzer{ text };
+			auto t1 = tknzer.next();
+			auto t2 = tknzer.next();
+
+			Assert::AreEqual(simpl::token_types::identifier_token, t1.type);
+			Assert::AreEqual(std::string{ "i" }, t1.to_string());
+			Assert::AreEqual(simpl::token_types::op, t2.type);
+			Assert::AreEqual(std::string{ "++" }, t2.to_string());
+		}
+
+		TEST_METHOD(TestTokenPreIncrement)
+		{
+			std::string text{ "++i;" };
+			simpl::tokenizer tknzer{ text };
+			auto t1 = tknzer.next();
+			auto t2 = tknzer.next();
+
+			Assert::AreEqual(simpl::token_types::op, t1.type);
+			Assert::AreEqual(std::string{ "++" }, t1.to_string());
+			Assert::AreEqual(simpl::token_types::identifier_token, t2.type);
+			Assert::AreEqual(std::string{ "i" }, t2.to_string());
+		}
 		
+		TEST_METHOD(TestTokenPostDecrement)
+		{
+			std::string text{ "i--;" };
+			simpl::tokenizer tknzer{ text };
+			auto t1 = tknzer.next();
+			auto t2 = tknzer.next();
+
+			Assert::AreEqual(simpl::token_types::identifier_token, t1.type);
+			Assert::AreEqual(std::string{ "i" }, t1.to_string());
+			Assert::AreEqual(simpl::token_types::op, t2.type);
+			Assert::AreEqual(std::string{ "--" }, t2.to_string());
+		}
+
+		TEST_METHOD(TestTokenPreDecrement)
+		{
+			std::string text{ "--i;" };
+			simpl::tokenizer tknzer{ text };
+			auto t1 = tknzer.next();
+			auto t2 = tknzer.next();
+
+			Assert::AreEqual(simpl::token_types::op, t1.type);
+			Assert::AreEqual(std::string{ "--" }, t1.to_string());
+			Assert::AreEqual(simpl::token_types::identifier_token, t2.type);
+			Assert::AreEqual(std::string{ "i" }, t2.to_string());
+		}
 	};
 }

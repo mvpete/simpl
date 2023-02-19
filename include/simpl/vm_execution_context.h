@@ -7,6 +7,7 @@
 #include <simpl/statement.h>
 #include <simpl/vm.h>
 
+#include <fstream>
 #include <functional>
 #include <filesystem>
 
@@ -231,16 +232,21 @@ namespace simpl
 
 		virtual void visit(import_statement& is)
 		{
-			auto ctx = std::find(import_ctx_.begin(), import_ctx_.end(), is.libname());
-			if (ctx != import_ctx_.end())
+			auto done = std::find(imported_.begin(), imported_.end(), is.libname());
+			if (done != imported_.end())
+				return; // already imported.
+
+			auto ctx = std::find(importing_.begin(), importing_.end(), is.libname());
+			if (ctx != importing_.end())
 				throw std::runtime_error("cyclical import detected.");
-			import_ctx_.emplace_back(is.libname());
+			importing_.emplace_back(is.libname());
 			if (!vm_.load_library(is.libname()) &&
 				!load_from_directory(".", is.libname()))
 			{
 				throw std::runtime_error(detail::format("module '{0}' not found.", is.libname()));
 			}
-			import_ctx_.pop_back();
+			imported_.emplace_back(is.libname());
+			importing_.pop_back();
 		}
 
 		virtual void visit(load_library_statement& lls)
@@ -427,6 +433,11 @@ namespace simpl
 				do_expand(cs, vm_);
 				break;
 			}
+			case op_type::increment:
+			{
+				do_increment(cs, vm_);
+				break;
+			}
 			default:
 				throw std::runtime_error("invalid operation.");
 			}
@@ -554,10 +565,31 @@ namespace simpl
 			}
 		}
 
+		void do_increment(nary_expression& exp, vm& vm)
+		{
+			if (std::holds_alternative<identifier>(exp.expressions()[0]->value()))
+			{
+				// pre
+				const auto& id = std::get<identifier>(exp.expressions()[0]->value());
+				auto& value = std::get<number>(vm_.load_var(id));
+				++value;
+				vm_.set_val(id, value_t{ value });
+				vm_.push_stack(value_t{ value });
+			}
+			else 
+			{
+				// post-increment; i=i++;
+				const auto& id = std::get<identifier>(exp.expressions()[1]->value());
+				auto value = std::get<number>(vm_.load_var(id));
+				vm_.push_stack(value_t{ value });
+				++value;
+				vm_.set_val(id, value_t{ value });
+			}
+		}
+
 		void do_assignment(nary_expression &exp, vm &vm)
 		{
-			exp.expressions()[0]->evaluate(*this);
-			
+			exp.expressions()[0]->evaluate(*this);			
 			const auto &id = std::get<identifier>(exp.expressions()[1]->value());
 			vm_.set_val(id, 0);
 		}
@@ -583,11 +615,13 @@ namespace simpl
 			vm_.push_stack(val);
 		}
 
+	private:
 		
 		
-	public:
+	private:
 		vm &vm_;
-		std::vector<std::string> import_ctx_;
+		std::vector<std::string> importing_;
+		std::vector<std::string> imported_;
 	};
 }
 

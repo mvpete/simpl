@@ -15,6 +15,7 @@ namespace simpl_test
 	private:
 		simpl::engine e;
 		std::function<void()> trap;
+		std::function<void(const simpl::value_t&)> check;
 
 	public:
 		simpl_engine_test()
@@ -23,6 +24,12 @@ namespace simpl_test
 			{
 				if(trap != nullptr)
 					trap();
+			});
+
+			e.machine().reg_fn("assert", [this](const simpl::value_t& v)
+			{
+				if (check != nullptr)
+					check(v);
 			});
 		}
 
@@ -135,6 +142,49 @@ namespace simpl_test
 			auto ast = simpl::parse("def foo() {} kaboom(&foo);");
 
 			simpl::evaluate(ast, e);
+		}
+
+		TEST_METHOD(TestPostIncrement)
+		{
+			bool called = false;
+			check = [&](const simpl::value_t& v)
+			{
+				called = true;
+				Assert::IsTrue(std::holds_alternative<simpl::number>(v));
+				Assert::AreEqual(1.00, std::get<simpl::number>(v));
+			};
+			auto ast = simpl::parse("let i =0; i++; assert(i);");
+			simpl::evaluate(ast, e);
+			Assert::IsTrue(called);
+		}
+
+		TEST_METHOD(TestPostIncrementReturnValue)
+		{
+			bool called = false;
+			check = [&](const simpl::value_t& v)
+			{
+				called = true;
+				Assert::IsTrue(std::holds_alternative<simpl::number>(v));
+				Assert::AreEqual(2.00, std::get<simpl::number>(v));
+				
+			};
+			auto ast = simpl::parse("let j=0; let i =2; j=i++; assert(j);");
+			simpl::evaluate(ast, e);
+			Assert::IsTrue(called);
+		}
+
+		TEST_METHOD(TestPreIncrement)
+		{
+			bool called = false;
+			check = [&](const simpl::value_t& v)
+			{
+				called = true;
+				Assert::IsTrue(std::holds_alternative<simpl::number>(v));
+				Assert::AreEqual(1.00, std::get<simpl::number>(v));
+			};
+			auto ast = simpl::parse("let i =0; ++i; assert(i);");
+			simpl::evaluate(ast, e);
+			Assert::IsTrue(called);
 		}
 
 	};

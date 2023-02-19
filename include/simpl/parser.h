@@ -298,6 +298,11 @@ namespace simpl
 				}
 				else if (std::holds_alternative<op_type>(val))
 				{
+					auto op = std::get<op_type>(val);
+					if (op == op_type::increment || op == op_type::decrement) 
+					{
+						ostack.push(std::make_unique<expression>(empty_t{}));
+					}
 					auto pr = get_precendence(std::get<op_type>(val));
 					if (!opstack.empty() && pr <= get_precendence(std::get<op_type>(opstack.top())))
 					{

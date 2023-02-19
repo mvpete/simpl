@@ -152,6 +152,34 @@ namespace simpl_test
 			// Blah. We need a visitor to test the expression here.
 		}
 
+		TEST_METHOD(TestParsePreIncrement)
+		{
+			auto ast = simpl::parse("++i;");
+			const auto expr = dynamic_cast<const simpl::expr_statement*>(ast[0].get());
+			Assert::IsNotNull(expr);
+		}
+
+		TEST_METHOD(TestParserNestedPreIncrement)
+		{
+			auto ast = simpl::parse("++foo.i;");
+			const auto expr = dynamic_cast<const simpl::expr_statement*>(ast[0].get());
+			Assert::IsNotNull(expr);
+		}
+
+		TEST_METHOD(TestParserPostIncrement)
+		{
+			auto ast = simpl::parse("i++;");
+			const auto expr = dynamic_cast<const simpl::expr_statement*>(ast[0].get());
+			Assert::IsNotNull(expr);
+		}
+
+		TEST_METHOD(TestParserNestedPostIncrement)
+		{
+			auto ast = simpl::parse("++foo.i;");
+			const auto expr = dynamic_cast<const simpl::expr_statement*>(ast[0].get());
+			Assert::IsNotNull(expr);
+		}
+
 		TEST_METHOD(TestParseIdentifierSinglePath)
 		{
 			auto ast = simpl::parse("p.x;");

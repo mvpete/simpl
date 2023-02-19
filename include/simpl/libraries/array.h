@@ -13,7 +13,6 @@ namespace simpl
 	using iterator_value_t = typename std::iterator_traits<Iterator>::value_type;
 
 
-
 	template <typename IteratorT>
 	std::vector<iterator_value_t<IteratorT>> subset(IteratorT begin, IteratorT end)
 	{
