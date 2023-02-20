@@ -1,5 +1,6 @@
 #include <string>
 #include <fstream>
+#include <chrono>
 
 #define SIMPL_DEFINES
 #include <simpl/simpl.h>
@@ -122,7 +123,10 @@ int main(int argc, const char **argv)
 			return -1;
 		}
 		std::string str((std::istreambuf_iterator<char>(fs)), std::istreambuf_iterator<char>());
+		std::chrono::time_point now = std::chrono::high_resolution_clock::now();
 		run_string(str);
+		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - now).count();
+		std::cout << "\r\n\r\nelapsed: " << elapsed << " ms.";
 	}
 	else
 	{
