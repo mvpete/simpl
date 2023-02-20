@@ -1,4 +1,6 @@
 @import io
+@import array
+@import string
     
 ### Comments ###
 # this is a comment
@@ -97,3 +99,45 @@ multi_method(foo...);
 multi_method(bar...);
 # prints "m(number,number)"
 multi_method(caz...);
+
+
+# A better example of multi-methods?
+
+object space_object { size=100; }
+object asteroid inherits space_object {}
+object spaceship inherits space_object {}
+
+def collide_with(a is asteroid, b is asteroid) {
+    println("a/a");
+}
+
+def collide_with(a is asteroid, b is spaceship) {
+    println("a/s");
+}
+
+def collide_with(a is spaceship, b is asteroid) {
+    println("s/a");
+}
+
+def collide_with(a is spaceship, b is spaceship) {
+    println("s/s");
+}
+
+def collide(a is space_object, b is space_object) {
+    if(a.size < 11) {
+        println("small boom.");
+    }
+    else {
+        collide_with(a,b);
+    }
+}
+
+collide(new asteroid{size=10}, new spaceship{});
+collide(new asteroid{}, new asteroid{});
+collide(new spaceship{}, new asteroid{});
+collide(new spaceship{}, new spaceship{});
+
+# or array explode
+
+let crafts = new [ new asteroid{}, new spaceship{} ];
+collide(crafts...);

@@ -1,4 +1,4 @@
-
+# Strings example
 @import io
 @import string
 
