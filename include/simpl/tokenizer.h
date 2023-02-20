@@ -73,8 +73,11 @@ namespace simpl
 		const CharT *begin;
 		const CharT *end;
 		token_types type;
-		token() :type(token_types::empty_token),begin(nullptr),end(nullptr){}
-		token(token_types type, const CharT *begin, const CharT *end) : type(type), begin(begin), end(end) {}
+		position pos;
+
+		token() :type(token_types::empty_token),begin(nullptr),end(nullptr), pos(0,0) {}
+		token(token_types type, const CharT *begin, const CharT *end, const position &p) 
+			: type(type), begin(begin), end(end), pos(p) {}
 
 		std::string to_string() const
 		{ 
@@ -142,55 +145,55 @@ namespace simpl
 				}
 				else if (c == ';')
 				{
-					next_ = token_t(token_types::eos, start, cur_++);
+					next_ = token_t(token_types::eos, start, cur_++, position_);
 					++position_.col;
 					return next_;
 				}
 				else if (c == '(')
 				{
-					next_ = token_t(token_types::lparen, start, cur_++);
+					next_ = token_t(token_types::lparen, start, cur_++, position_);
 					++position_.col;
 					return next_;
 				}
 				else if (c == ')')
 				{
-					next_ = token_t(token_types::rparen, start, cur_++);
+					next_ = token_t(token_types::rparen, start, cur_++, position_);
 					++position_.col;
 					return next_;
 				}
 				else if (c == '{')
 				{
-					next_ = token_t(token_types::lbrack, start, cur_++);
+					next_ = token_t(token_types::lbrack, start, cur_++, position_);
 					++position_.col;
 					return next_;
 				}
 				else if (c == '}')
 				{
-					next_ = token_t(token_types::rbrack, start, cur_++);
+					next_ = token_t(token_types::rbrack, start, cur_++, position_);
 					++position_.col;
 					return next_;
 				}
 				else if (c == '[')
 				{
-					next_ = token_t(token_types::sqlbrack, start, cur_++);
+					next_ = token_t(token_types::sqlbrack, start, cur_++, position_);
 					++position_.col;
 					return next_;
 				}
 				else if (c == ']')
 				{
-					next_ = token_t(token_types::sqrbrack, start, cur_++);
+					next_ = token_t(token_types::sqrbrack, start, cur_++, position_);
 					++position_.col;
 					return next_;
 				}
 				else if (c == ',')
 				{
-					next_ = token_t(token_types::comma, start, cur_++);
+					next_ = token_t(token_types::comma, start, cur_++, position_);
 					++position_.col;
 					return next_;
 				}
 				else if (c == '@')
 				{
-					next_ = token_t(token_types::directive, start, cur_++);
+					next_ = token_t(token_types::directive, start, cur_++, position_);
 					++position_.col;
 					return next_;
 				}
@@ -199,7 +202,7 @@ namespace simpl
 					throw token_error(position_, detail::format("invalid token '{0}'", c).c_str());
 				}
 			}
-			next_= token_t(token_types::eof, cur_, end_);
+			next_= token_t(token_types::eof, cur_, end_, position_);
 			return next_;
 		}
 

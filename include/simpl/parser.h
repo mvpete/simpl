@@ -448,7 +448,6 @@ namespace simpl
 			return std::make_unique<while_statement>(std::move(cond), std::move(statement));
 		}
 
-		// for(let i=0; i<10; i=i+1)
 		// for(expr;expr;expr)
 		statement_ptr parse_for_statement(token_t &t)
 		{
