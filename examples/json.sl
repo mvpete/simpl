@@ -5,4 +5,6 @@
 # @import json
 
 
-# let obj = json_parse("{ }");
+let obj = json_parse("{\"type\":\"truck\"}");
+
+println(json_stringify(obj));

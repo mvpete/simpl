@@ -233,7 +233,7 @@ namespace simpl
 				throw std::runtime_error("cyclical import detected.");
 			importing_.emplace_back(is.libname());
 			if (!vm_.load_library(is.libname()) &&
-				!load_from_directory(".", is.libname()))
+				!import_sl_from_directory(".", is.libname()))
 			{
 				throw std::runtime_error(detail::format("module '{0}' not found.", is.libname()));
 			}
@@ -243,6 +243,7 @@ namespace simpl
 
 		virtual void visit(load_library_statement& lls)
 		{
+			//TODO:
 		}
 
 		virtual void visit(expression &ex)
@@ -461,7 +462,7 @@ namespace simpl
 
 	private:
 
-		bool load_from_directory(const std::filesystem::path &p, const std::string &libname)
+		bool import_sl_from_directory(const std::filesystem::path &p, const std::string &libname)
 		{
 			for (const auto& i : std::filesystem::directory_iterator(p))
 			{

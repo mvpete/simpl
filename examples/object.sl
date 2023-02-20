@@ -24,7 +24,6 @@ object terrain
 
 object pavement inherits terrain
 {
-
 }
 
 object mud inherits terrain

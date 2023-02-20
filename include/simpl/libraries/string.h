@@ -1,8 +1,10 @@
 #ifndef __simpl_string_h_
 #define __simpl_string_h_
 
-#include <simpl/library.h>
+#include <simpl/cast.h>
 #include <simpl/value.h>
+#include <simpl/library.h>
+#include <simpl/detail/format.h>
 
 namespace simpl
 {
@@ -39,6 +41,16 @@ namespace simpl
 			});
 			vm.reg_fn("join", [](const array_t& arr, const std::string& delim)
 			{
+				std::stringstream ss;
+				bool init = true;
+				for (const auto& v : arr.values)
+				{
+					if (!init)
+						ss << delim;
+					ss << cast<std::string>(v);
+					init = false;
+				}
+				return ss.str();
 			});
 			vm.reg_fn("at", [](const std::string& s, number i)
 			{
@@ -56,6 +68,16 @@ namespace simpl
 			{
 				return detail::format("{0}{1}", s1, s2);
 			});
+			vm.reg_fn("format", [](const std::string& fmt, const array_t& arr)
+			{
+				return detail::format_any(fmt, [&arr](std::ostream& ss, size_t index)
+				{
+					if (index >= arr.values.size())
+						throw std::runtime_error("format index out of range");
+					ss << simpl::cast<std::string>(arr.values[index]);
+				});
+			});
+
 
 		}
 	};
