@@ -17,13 +17,15 @@ Examples
 ---
 
  ```
+     @import io
+    
     ### Comments ###
     # this is a comment
     
     ### Features ###
     
     ## Equations
-    1 + 3;
+    print(1 + 3);
 
     ## Variables
     
@@ -40,6 +42,8 @@ Examples
     println(hw);
     
     ## Loops
+
+    # while loops
     let i=10;
     println(i);
     while(i>0)
@@ -48,8 +52,11 @@ Examples
         i = i-1;
     }
     
-    # I don't have for loops yet
-    # for(let i=0; i<5; ++i); 
+    # for loops
+    for(let i=0; i<5; ++i)
+    {
+        println(i);
+    }
     
     ## Functions
     
@@ -74,43 +81,41 @@ Examples
     recursive(5);
 
     ## Arrays
-
-    let arr = new [];
     let arr = new ["foo", 1, new {}, 4*4];
+    println(arr);
 
     ## Structures
 
     let kh = new { name="king", suit="hearts" };
-    
-    ### Future Work ###
-    
-    ## Arrays   
-    # arr[0]
-    
-    ## Structures
-    # kh.name = "queen";
-    # println(kh.name);
+    println(kh);
+    kh.name = "queen";
+    println(kh.name);
 
     ## Multi-methods
 
-    #def multi_method(a [is string], b [is number]) {
+    def multi_method(a is string, b is string) {
+        println("m(string,string)");
+    }
+
+    def multi_method(a is string, b is number) {
         println("m(string,number)");
     }
 
-    #def multi_method(a is number, b is number) {
+    def multi_method(a is number, b is number) 
+    {
         println("m(number,number)");
     }
 
-    # let foo = [ "hello", "world" ];
-    # let bar = ["hello", 10];
+    let foo = new [ "hello", "world" ];
+    let bar = new ["hello", 10];
+    let caz = new [13, 42];
 
-    #multi_method(foo...);
-    # prints "m(string,number)"
-    #multi_method(bar...)
+    # prints "m(string,string)"
+    multi_method(foo...);
+    # prints "m(number,string)"
+    multi_method(bar...);
     # prints "m(number,number)"
-
-    
-
+    multi_method(caz...);
 
  ```
 

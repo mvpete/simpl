@@ -49,7 +49,7 @@ namespace simpl
             void track(const std::string &name, value_t *v)
             {
                 if (variables_.find(name) != variables_.end())
-                    throw std::runtime_error("already defined");
+                    throw std::runtime_error(detail::format("variable '{0}' already defined", name));
                 variables_[name] = v;
             }
             void set_value(const std::string &name, const value_t &value)

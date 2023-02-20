@@ -1,4 +1,5 @@
 ### Object Examples ###
+@import io
 
 object vehicle
 {
