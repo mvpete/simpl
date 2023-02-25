@@ -49,6 +49,7 @@ def foo(a,b)  {
     println(b);
     return "foo";
 }
+
 # I can call a function
 println(foo("test",5));
     
@@ -133,11 +134,11 @@ def collide(a is space_object, b is space_object) {
 }
 
 collide(new asteroid{size=10}, new spaceship{});
-collide(new asteroid{}, new asteroid{});
+collide(new asteroid{} , new asteroid{});
 collide(new spaceship{}, new asteroid{});
 collide(new spaceship{}, new spaceship{});
 
-# or array explode
 
+# or array explode
 let crafts = new [ new asteroid{}, new spaceship{} ];
 collide(crafts...);

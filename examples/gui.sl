@@ -23,4 +23,3 @@ on_click(btn, &do_foo);
 show(main);
 
 println("fin");
-

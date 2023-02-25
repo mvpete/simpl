@@ -20,13 +20,12 @@ def get_item() {
 
 
 let names = new [];
-let line = "y";
+let line = "yes";
 while(line=="yes" || line=="y") {
     line = get_item();
 }
 
-print(names);
-
+println(names);
 
 let foo = new [ "foo", 42, line ];
 
@@ -36,4 +35,6 @@ def call_me(text, num, bool) {
     println(bool);
 }
 
+call_me(foo...);
+++foo[1];
 call_me(foo...);

@@ -3,6 +3,7 @@
 
 #include <simpl/simpl.h>
 
+#include <array>
 #include <functional>
 #include <optional>
 
@@ -36,6 +37,7 @@ namespace simpl_test
 		TEST_METHOD_INITIALIZE(TestInit)
 		{
 			trap = nullptr;
+			check = nullptr;
 		}
 		
 		TEST_METHOD(TestObjectTypeRegistration)
@@ -213,6 +215,120 @@ namespace simpl_test
 			auto ast = simpl::parse("let i=0; --i; assert(i);");
 			simpl::evaluate(ast, e);
 			Assert::IsTrue(called);
+		}
+
+		TEST_METHOD(TestSingleFunctionCallNoArgs)
+		{
+			bool called = false;
+			trap = [&]()
+			{
+				called = true;
+				Assert::AreEqual((size_t)1, e.machine().stack().size());
+			};
+			auto ast = simpl::parse("dbg_break();");
+			simpl::evaluate(ast, e);
+			Assert::IsTrue(called);
+		}
+
+		TEST_METHOD(TestSingleFunctionCallWithArgs)
+		{
+			trap = [&]()
+			{
+				// 1 retval, 3 args, 1 retval
+				Assert::AreEqual((size_t)5, e.machine().stack().size());
+			};
+			auto ast = simpl::parse("def test(a, b, c) { dbg_break(); } test(1,2,3); ");
+			simpl::evaluate(ast, e);
+			
+			trap = [&]()
+			{
+				// check that the stack was cleaned up.
+				Assert::AreEqual((size_t)1, e.machine().stack().size());
+			};
+			ast = simpl::parse("dbg_break();");
+			simpl::evaluate(ast, e);
+		}
+
+		TEST_METHOD(TestMethodAssignmentThenExplode) 
+		{
+			e.machine().reg_fn("kaboom", [](const std::string& a, simpl::number b, const std::string& c)
+			{
+				Assert::AreEqual(std::string{ "foo" }, a);
+				Assert::AreEqual(simpl::number{ 42.00 }, b);
+				Assert::AreEqual(std::string{ "bar" }, c);
+			});
+
+			e.machine().reg_fn("get_foo", []()
+			{
+				return std::string{ "foo" };
+			});
+
+			auto ast = simpl::parse("let line = 0; def get_item() { line = get_foo(); } get_item(); let arr = new [ line, 42, \"bar\"]; kaboom(arr...);");
+			simpl::evaluate(ast, e);		
+		}
+
+		TEST_METHOD(TestSimpleLetStatement)
+		{
+			// Stack will be 0 +1 for the dbg_break() retval, 1 +1 for the dbg_break(); retval.
+			std::array<size_t, 2> sizes = { 1, 2 };
+			size_t i = 0;
+			trap = [&]()
+			{
+				Assert::AreEqual(sizes[i++], e.machine().stack().size());
+			};
+			run("dbg_break(); let foo=4; dbg_break();");
+		}
+
+		TEST_METHOD(TestScopedLetStatement)
+		{
+			std::array<size_t, 3> sizes = { 2, 3, 1 };
+			size_t i = 0;
+			trap = [&]()
+			{
+				Assert::AreEqual(sizes[i++], e.machine().stack().size());
+			};
+			run("def foo() { dbg_break(); let i=128; dbg_break(); let j=256; } foo(); dbg_break();");
+		}
+
+		TEST_METHOD(TestIncrementArrayItem)
+		{
+			check = [](const simpl::value_t& v)
+			{
+				Assert::IsTrue(std::holds_alternative<simpl::number>(v));
+				Assert::AreEqual((simpl::number)2.00, std::get<simpl::number>(v));
+			};
+
+			run("let arr = new [ \"item\", 1, new {}]; ++arr[1]; assert(arr[1]);");
+		}
+
+		TEST_METHOD(TestExpandCleansUp)
+		{
+			std::array<size_t, 3> sizes = { 2, 2 };
+			size_t i = 0;
+			trap = [&]()
+			{
+				Assert::AreEqual(sizes[i++], e.machine().stack().size());
+			};
+			run("let foo = new [1, 2, 3]; dbg_break(); foo...; dbg_break();");
+		}
+
+		TEST_METHOD(TestExpandMethodCallStackSize)
+		{
+			std::array<size_t, 3> sizes = { 2, 6, 2 };
+			size_t i = 0;
+			trap = [&]()
+			{
+				Assert::AreEqual(sizes[i++], e.machine().stack().size());
+			};
+			run("def bar(a,b,c) { dbg_break(); } let foo = new [1, 2, 3]; dbg_break(); bar(foo...); dbg_break();");
+		}
+
+
+private:
+		void run(const std::string& str)
+		{
+			auto ast = simpl::parse(str);
+			simpl::evaluate(ast, e);
 		}
 	};
 }

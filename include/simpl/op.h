@@ -144,6 +144,7 @@ namespace simpl
 			builtins::compare(begin, end, "&") ||
 			builtins::compare(begin, end, "<") ||
 			builtins::compare(begin, end, ">") ||
+			builtins::compare(begin, end, "!") ||
 			builtins::compare(begin, end, "=") ||
 			builtins::compare(begin, end, ".") ||
 			builtins::compare(begin, end, "..");

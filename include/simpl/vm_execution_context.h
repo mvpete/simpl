@@ -27,10 +27,6 @@ namespace simpl
 			{
 				vm_.exit_scope();
 			}
-			void reg_var(const std::string &name, size_t offset)
-			{
-				vm_.create_var(name, offset);
-			}
 		private:
 			vm &vm_;
 		};
@@ -95,9 +91,10 @@ namespace simpl
 	public:
 		virtual void visit(expr_statement &cs)
 		{
+			auto sz = vm_.stack().size();
 			if (cs.expr())
 				cs.expr()->evaluate(*this);
-			vm_.pop_stack(); // an expression leaves a value on the top of the stack.			
+			vm_.decrement_stack(vm_.stack().size() - sz); // an expression leaves values on the top of the stack.			
 		}
 
 		virtual void visit(object_definition_statement &os)
@@ -111,7 +108,11 @@ namespace simpl
 			{
 				cs.expr()->evaluate(*this);
 			}
-			vm_.create_var(cs.name());
+			else
+			{
+				vm_.push_stack(value_t{}); // empty value.
+			}
+			vm_.create_local_var(cs.name());
 		}
 
 		virtual void visit(if_statement &is)
@@ -158,7 +159,7 @@ namespace simpl
 				{
 					int offset = arity - 1;
 					for (; offset >= 0; --offset)
-						vm_.create_var(ids[ids.size() - (offset + 1)].name, offset);
+						vm_.track_stack_var(ids[ids.size() - (offset + 1)].name, offset);
 					stmt->evaluate(*this);
 				}
 			};

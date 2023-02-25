@@ -25,15 +25,18 @@ namespace simpl
         class var_scope
         {
         public:
-            var_scope() :vm_(nullptr) {}
+            var_scope() 
+                :vm_(nullptr), locals_(0) 
+            {
+            }
             var_scope(vm &vm)
-                :vm_(&vm)
+                :vm_(&vm), locals_(0)
             {
             
             }
             var_scope(const var_scope &) = delete;
             var_scope(var_scope &&rhs) noexcept
-                :vm_(nullptr)
+                :vm_(nullptr), locals_(0)
             {
                 std::swap(vm_, rhs.vm_);
                 std::swap(variables_, rhs.variables_);
@@ -43,21 +46,26 @@ namespace simpl
             {
                 std::swap(vm_, rhs.vm_);
                 std::swap(variables_, rhs.variables_);
+                std::swap(locals_, rhs.locals_);
                 return *this;
             }
 
-            void track(const std::string &name, value_t *v)
+            void track(const std::string &name, value_t *v, bool is_local = true)
             {
                 if (variables_.find(name) != variables_.end())
                     throw std::runtime_error(detail::format("variable '{0}' already defined", name));
                 variables_[name] = v;
+                if (is_local)
+                    ++locals_;
             }
+
             void set_value(const std::string &name, const value_t &value)
             {
                 if (variables_.find(name) == variables_.end())
                     throw std::runtime_error("undefined variable");
                 (*variables_[name]) = value;
             }
+
             void set_value(const identifier &id, const value_t &v)
             {
                 if (variables_.find(id.name) == variables_.end())
@@ -71,6 +79,7 @@ namespace simpl
                 *val = v;
                
             }
+
             value_t &get_value(const std::string &name)
             {
                 if (variables_.find(name) == variables_.end())
@@ -81,14 +90,21 @@ namespace simpl
                 }
                 return *variables_[name];
             }
+
             bool has_value(const std::string &name)
             {
                 return variables_.find(name) != variables_.end();
             }
 
+            size_t locals() const
+            {
+                return locals_;
+            }
+
         private:
             vm *vm_;
             std::map<std::string, value_t *> variables_;
+            size_t locals_ = 0;
         };
 
         struct activation_record
@@ -315,9 +331,14 @@ namespace simpl
             return types_.get_type(simpl_name);                 
         }
 
-        void create_var(const std::string &name, size_t offset = 0)
+        void create_local_var(const std::string &name, size_t offset = 0)
         {
             locals_.top().track(name, &stack_.offset(offset));
+        }
+
+        void track_stack_var(const std::string& name, size_t offset = 0)
+        {
+            locals_.top().track(name, &stack_.offset(offset), false);
         }
 
         void set_val(const std::string &name, size_t offset)
@@ -440,7 +461,10 @@ namespace simpl
         void exit_scope()
         {
             if (!locals_.empty())
+            {
+                stack_.pop(locals_.top().locals());
                 locals_.pop();
+            }
         }
 
     public:

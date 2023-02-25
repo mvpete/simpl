@@ -23,7 +23,6 @@ namespace simpl
             vm_.register_library(std::make_unique<file_lib>());
             vm_.register_library(std::make_unique<array_lib>());
             vm_.register_library(std::make_unique<string_lib>());
-
         }
 
         vm_execution_context &context()
