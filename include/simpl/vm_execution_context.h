@@ -91,10 +91,10 @@ namespace simpl
 	public:
 		virtual void visit(expr_statement &cs)
 		{
-			auto sz = vm_.stack().size();
+			auto sz = vm_.stack_size();
 			if (cs.expr())
 				cs.expr()->evaluate(*this);
-			vm_.decrement_stack(vm_.stack().size() - sz); // an expression leaves values on the top of the stack.			
+			vm_.decrement_stack(vm_.stack_size() - sz); // an expression leaves values on the top of the stack.			
 		}
 
 		virtual void visit(object_definition_statement &os)
@@ -104,6 +104,7 @@ namespace simpl
 
 		virtual void visit(let_statement &cs)
 		{
+			auto sz = vm_.stack_size();
 			if (cs.expr())
 			{
 				cs.expr()->evaluate(*this);
@@ -112,6 +113,9 @@ namespace simpl
 			{
 				vm_.push_stack(value_t{}); // empty value.
 			}
+			if (vm_.stack_size() - sz > 1)
+				throw std::runtime_error("invalid expression.");
+
 			vm_.create_local_var(cs.name());
 		}
 

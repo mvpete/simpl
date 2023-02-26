@@ -38,3 +38,4 @@ def call_me(text, num, bool) {
 call_me(foo...);
 ++foo[1];
 call_me(foo...);
+

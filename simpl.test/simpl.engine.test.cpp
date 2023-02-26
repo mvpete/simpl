@@ -324,6 +324,14 @@ namespace simpl_test
 		}
 
 
+		TEST_METHOD(TestLetExpand)
+		{
+			Assert::ExpectException<std::runtime_error>([&]()
+			{
+				run("let foo = new [1,2,3]; let j = foo...;");
+			});
+		}
+
 private:
 		void run(const std::string& str)
 		{
