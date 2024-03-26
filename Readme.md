@@ -2,8 +2,11 @@
 SIMPL - Simple Intuitive Micro Programming Language
 ===
 
-A simple language, with not much functionality. More of a tool for learning, than anything else.
-simpl has support for comments, variables, assignment, functions, and loops.
+SIMPL is an embedable micro scripting language allowing for easy targeting of C++
+applications. It is header only, uses modern C++, and boasts a flexible architecture 
+which allows for a fully customizable back-end. Direct C++ bindings let you work with
+your C++ objects directly in script, and typed bindings allow for type safety across
+the boundaries.
 
 Usage
 ---
@@ -11,7 +14,12 @@ Usage
 You can use SIMPL in your C++ application (requires C++17 or higher) and create bindings.
 1) Add SIMPL to your include path
 3) `#include <simpl/simpl.h>`
-12) Do some other stuff...
+12) Use like so:
+```
+   simpl::engine e;
+   auto ast = simpl::parse("println(\"hello world\")");
+   simpl::evaluate(ast, e);
+```
 
 Examples
 ---

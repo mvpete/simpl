@@ -14,9 +14,17 @@
 namespace simpl
 {
     using number = double;
+    using boolean = bool;
+    using string = std::string;
+
+
 	struct empty_t {};
 	struct blob_t;
 	struct array_t;
+
+    using blob = blob_t;
+    using array = array_t;
+    using empty = empty_t;
 
 	using blobref_t = std::shared_ptr<blob_t>;
 	inline blobref_t new_blob()
@@ -27,6 +35,8 @@ namespace simpl
 	using arrayref_t = std::shared_ptr<array_t>;
 
 	using value_t = std::variant<empty_t, bool, double, std::string, blobref_t, arrayref_t, objectref_t>;
+    using value = value_t;
+
 	struct blob_t { std::map<std::string, value_t> values; };
 	struct array_t 
     {

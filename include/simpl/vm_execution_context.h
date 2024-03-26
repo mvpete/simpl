@@ -74,13 +74,13 @@ namespace simpl
 		vm_execution_context(simpl::vm &vm)
 			:vm_(vm)
 		{
-			vm_.register_type<value_t>("any");
-			vm_.register_type<empty_t>("empty");
-			vm_.register_type<std::string>("string");
-			vm_.register_type<bool>("bool");
-			vm_.register_type<double>("number");
-			vm_.register_type<blob_t>("blob");
-			vm_.register_type<array_t>("array");
+			vm_.register_type<simpl::value>("any");
+			vm_.register_type<simpl::empty>("empty");
+			vm_.register_type<simpl::string>("string");
+			vm_.register_type<simpl::boolean>("bool");
+			vm_.register_type<simpl::number>("number");
+			vm_.register_type<simpl::blob>("blob");
+			vm_.register_type<simpl::array>("array");
 
 			vm_.reg_fn("is_empty", [](const value_t &v)
 			{

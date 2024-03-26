@@ -98,7 +98,6 @@ namespace simpl
 		{
 		}
 
-
 		template<typename IteratorT>
 		basic_tokenizer(IteratorT begin,  IteratorT end)
 			:begin_(begin), end_(end), cur_(begin),position_(1,1)
