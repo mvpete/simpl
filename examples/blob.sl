@@ -1,9 +1,9 @@
-####  Blob Example ####
+####  Blob Example                   ####
 #   Blobs are a special data type in simpl
 #   they are typeless objects. Or, blobs. 
 #   They function just like a map. That's
 #   because, well, they are.
-####               ####
+####                                 ####
 
 def deal() {
     print(take(deck,5));
