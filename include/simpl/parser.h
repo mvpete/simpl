@@ -79,8 +79,8 @@ namespace simpl
 
 		class change_scope
 		{
-			scopes prev_;
 			parser &parser_;
+			scopes prev_;
 		public:
 			change_scope(parser &p, scopes next)
 				:parser_(p), prev_(p.scope())
@@ -135,6 +135,8 @@ namespace simpl
 				return parse_return_statement(t);
 			case keywords::object_keyword:
 				return parse_object_statement(t);
+			default:
+				break;
 			}
 
 			if (t.type == token_types::directive)

@@ -70,9 +70,9 @@ namespace simpl
 	template<typename CharT>
 	struct token
 	{
+		token_types type;
 		const CharT *begin;
 		const CharT *end;
-		token_types type;
 		position pos;
 
 		token() :type(token_types::empty_token),begin(nullptr),end(nullptr), pos(0,0) {}

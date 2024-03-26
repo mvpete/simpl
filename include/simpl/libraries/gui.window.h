@@ -67,7 +67,6 @@ namespace simpl
 
 		void set_pos(number x, number y, number cx, number cy)
 		{
-			int xp = (int)x;
 			::SetWindowPos(hwnd_, nullptr, (int)x, (int)y, (int)cx, (int)cy, 0);
 		}
 

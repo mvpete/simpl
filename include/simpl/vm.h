@@ -250,10 +250,10 @@ namespace simpl
             constexpr auto sig = detail::get_signature<CallableT>();
             const auto id = detail::format("{0}({1})", name, sig.arguments_string(types_));
             const auto args = types_.translate_types(sig.arguments());
-            reg_fn(id, name, args, [this, sig, fn]()
+            reg_fn(id, name, args, [this, fn]()
             {
                 auto args = load_args(*this, deducer<typename detail::signature<CallableT>::types>{});
-                if constexpr(std::is_same_v<detail::signature<CallableT>::result_type, void>)
+                if constexpr(std::is_same_v<typename detail::signature<CallableT>::result_type, void>)
                 {
                     std::apply(fn, args);
                     push_stack(empty_t{});

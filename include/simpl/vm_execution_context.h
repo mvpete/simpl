@@ -153,7 +153,7 @@ namespace simpl
 		{
 			auto id = detail::format_name(vm_, ds.name(), ds.arguments());
 			auto arity = ds.arguments().size();
-			auto stmt = std::move(ds.release_statement());
+			auto stmt = ds.release_statement();
 			detail::fn_def fn
 			{
 				id,

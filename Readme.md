@@ -17,7 +17,7 @@ You can use SIMPL in your C++ application (requires C++17 or higher) and create 
 12) Use like so:
 ```
    simpl::engine e;
-   auto ast = simpl::parse("println(\"hello world\")");
+   auto ast = simpl::parse("@import io\r\n println(\"hello world\")");
    simpl::evaluate(ast, e);
 ```
 

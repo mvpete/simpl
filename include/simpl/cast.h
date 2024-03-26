@@ -160,7 +160,7 @@ To to(const From &from)\
         size_t count = 0;
         size_t size = from->values.size();
         ss << "{ ";
-        for (const auto i : from->values)
+        for (const auto &i : from->values)
         {
             ss << i.first << " : " << cast<std::string>(i.second);
             ++count;
