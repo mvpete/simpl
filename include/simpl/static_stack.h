@@ -36,7 +36,7 @@ namespace simpl
                 return top();
             }
 
-            T &push(T &&v)
+            T& push(T &&v)
             {
                 if (sptr_ >= Size)
                     throw std::runtime_error("stack overflow");

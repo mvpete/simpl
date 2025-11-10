@@ -1,17 +1,19 @@
 #ifndef __simpl_evaluate_h__
 #define __simpl_evaluate_h__
 
-#include <simpl/engine.h>
+#include <simpl/statement.h>
 
 namespace simpl
 {
-	inline void evaluate(statement_ptr statement, engine &e)
+	template <typename EngineT>
+	inline void evaluate(statement_ptr statement, EngineT &e)
 	{
 		if(statement)
 			statement->evaluate(e.context());
 	}
 
-	inline void evaluate(syntax_tree &ast, engine &e)
+	template <typename EngineT>
+	inline void evaluate(syntax_tree &ast, EngineT &e)
 	{
 		for (auto &stmt : ast)
 		{

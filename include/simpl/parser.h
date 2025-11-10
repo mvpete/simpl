@@ -1,6 +1,7 @@
 #ifndef __simpl_parser_h__
 #define __simpl_parser_h__
 
+#include <simpl/cast.h>
 #include <simpl/detail/format.h>
 #include <simpl/tokenizer.h>
 #include <simpl/statement.h>

@@ -27,6 +27,9 @@
     <ClCompile Include="simpl.tokenizer.test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="simpl.script.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">

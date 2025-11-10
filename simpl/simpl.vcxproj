@@ -168,6 +168,7 @@
     <ClInclude Include="..\include\simpl\op.h" />
     <ClInclude Include="..\include\simpl\operations.h" />
     <ClInclude Include="..\include\simpl\parser.h" />
+    <ClInclude Include="..\include\simpl\script.h" />
     <ClInclude Include="..\include\simpl\simpl.h" />
     <ClInclude Include="..\include\simpl\statement.h" />
     <ClInclude Include="..\include\simpl\static_stack.h" />

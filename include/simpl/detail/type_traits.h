@@ -2,6 +2,7 @@
 #define __simpl_type_traits_h__
 
 #include <optional>
+#include <vector>
 
 namespace simpl
 {
@@ -82,15 +83,13 @@ namespace detail
             v.push_back(t.translate_type(std::string(typeid(T).name())));
             to_vector<Ts...>::types(t,v);
         }
-    };
-           
+    };           
 
     template <typename...>
     struct is_one_of : std::false_type {};
 
     template <typename F, typename S, typename... T>
     struct is_one_of<F, S, T...> : std::conditional_t<std::is_same_v<F, S>, std::true_type, is_one_of<F, T...>> {};
-
 
     template<typename T>
     struct is_valid_arg_type : std::false_type {};
@@ -128,7 +127,6 @@ namespace detail
     {
         using type = std::tuple<typename std::decay_t<T>, typename std::decay_t<Args>...>;
     };
-
 
     template <typename Cb>
     void unpack_values(Cb &&cb) {}

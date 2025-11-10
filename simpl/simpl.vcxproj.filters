@@ -111,5 +111,8 @@
     <ClInclude Include="..\include\simpl\libraries\gui.h">
       <Filter>Header Files\libraries\gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\simpl\script.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

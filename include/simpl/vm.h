@@ -412,7 +412,7 @@ namespace simpl
                 if (!std::holds_alternative<arrayref_t>(val))
                     throw std::runtime_error("not an array");
 
-                auto array = std::get<arrayref_t>(val);
+                auto& array = std::get<arrayref_t>(val);
                 return array->values.at(std::get<size_t>(at));
             }
 
@@ -425,7 +425,7 @@ namespace simpl
                     throw std::runtime_error("not an array");
 
                 int idx = (int)cast<double>(load_var(name));
-                auto array = std::get<arrayref_t>(val);
+                auto& array = std::get<arrayref_t>(val);
                 return array->values.at(idx);
             }
 

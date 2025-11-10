@@ -69,7 +69,6 @@ namespace simpl_test
 			simpl::evaluate(ast, e);
 
 			Assert::IsTrue(called);
-
 		}
 
 		TEST_METHOD(TestArrayExplosionSimple)

@@ -5,6 +5,7 @@
 #include <simpl/tokenizer.h>
 #include <simpl/parser.h>
 #include <simpl/engine.h>
+#include <simpl/script.h>
 
 
 #endif // __simpl_h__
