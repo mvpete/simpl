@@ -14,10 +14,11 @@ Want to learn how SIMPL works from the inside? Check out our comprehensive lesso
 
 **[📚 Start Learning →](lessons/GETTING_STARTED.md)**
 
-We've created 11 hands-on lessons that take you from beginner to advanced:
+We've created 12 hands-on lessons that take you from beginner to advanced contributor:
 - **Lessons 0-4:** Language internals (tokenizer, parser, engine)
 - **Lessons 5-9:** Advanced features (objects, multiple dispatch, arrays, functions, libraries)
 - **Lesson 10:** Build complete applications
+- **Lesson 11:** Contribute back to SIMPL
 
 Each lesson includes theory, examples, and a hands-on coding task that contributes to the repository.
 

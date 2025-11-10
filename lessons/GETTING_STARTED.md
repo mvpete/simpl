@@ -85,6 +85,7 @@ The lessons are located in the `lessons/` directory:
 - **L8.md** - Functions and Closures
 - **L9.md** - Working with Libraries
 - **L10.md** - Building Complete Applications
+- **L11.md** - Contributing to SIMPL
 
 ### Recommended Learning Path
 
@@ -255,6 +256,7 @@ Create a checklist to track your progress:
 - [ ] Completed Lesson 8 - Functions and Closures
 - [ ] Completed Lesson 9 - Working with Libraries
 - [ ] Completed Lesson 10 - Building Complete Applications
+- [ ] Completed Lesson 11 - Contributing to SIMPL
 
 ## Next Steps
 
