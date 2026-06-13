@@ -511,9 +511,18 @@ namespace simpl
 			// Steps 3 & 5: split an environment variable on the platform path separator.
 			auto split_env = [&](const char* var)
 			{
+#ifdef _WIN32
+				char* env = nullptr;
+				size_t len = 0;
+				if (_dupenv_s(&env, &len, var) != 0 || env == nullptr)
+					return;
+				std::string s(env);
+				free(env);
+#else
 				const char* env = std::getenv(var);
 				if (!env) return;
 				std::string s(env);
+#endif
 #ifdef _WIN32
 				const char sep = ';';
 #else
