@@ -21,19 +21,26 @@ We've created 12 hands-on lessons that take you from beginner to advanced contri
 - **Lesson 11:** Contribute back to SIMPL
 
 Each lesson includes theory, examples, and a hands-on coding task that contributes to the repository.
+New contributors can also start with:
+- **[Beginner Issues](lessons/BEGINNER_ISSUES.md)**
+- **[Debugging Guide](lessons/DEBUGGING_GUIDE.md)**
+- **[GUI Status](lessons/GUI_STATUS.md)**
+- **[Contributing Guide](CONTRIBUTING.md)**
 
 Usage
 ---
 
 You can use SIMPL in your C++ application (requires C++17 or higher) and create bindings.
-1) Add SIMPL to your include path
-3) `#include <simpl/simpl.h>`
-12) Use like so:
+1) Add SIMPL to your include path  
+2) `#include <simpl/simpl.h>`  
+3) Use like so:
 ```
    simpl::engine e;
    auto ast = simpl::parse("@import io\r\n println(\"hello world\")");
    simpl::evaluate(ast, e);
 ```
+
+Built-in libraries include `io`, `file`, `array`, `string`, `gui`, and `http` (multi-dispatch `request(...)` plus `get`/`post` helpers that return a blob with `status` and `body`).
 
 Examples
 ---

@@ -47,6 +47,23 @@ namespace simpl
             {
             }
 
+            const fn_def *try_lookup(const call_def &cd)
+            {
+                std::vector<std::string> args = cd.arguments;
+                const fn_def *match = find_exact_match(cd.name, args);
+
+                if (match != nullptr)
+                    return match;
+
+                // find all candidate functions w/ first arg in-tree
+                auto candidates = find_candidate_functions(cd.name, args);
+
+                if (candidates.size() != 1)
+                    return nullptr;
+
+                return candidates[0];
+            }
+
             const fn_def *lookup(const call_def &cd)
             {
                 // 1. argument specific lookup.
@@ -57,7 +74,6 @@ namespace simpl
                 if (match != nullptr)
                     return match;
 
-                // find all candidate functions w/ first arg in-tree
                 auto candidates = find_candidate_functions(cd.name, args);
 
                 if (candidates.size() > 1)
@@ -67,6 +83,11 @@ namespace simpl
                     throw std::runtime_error(detail::format("no matching function found: '{0}'", cd.name));
 
                 return candidates[0];
+            }
+
+            bool has_match(const call_def &cd)
+            {
+                return try_lookup(cd) != nullptr;
             }
             void register_function(fn_def &&df)
             {

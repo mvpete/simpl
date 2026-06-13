@@ -7,9 +7,17 @@
 #include <simpl/statement.h>
 #include <simpl/vm.h>
 
+#include <cstdlib>
 #include <fstream>
 #include <functional>
 #include <filesystem>
+#include <sstream>
+
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <dlfcn.h>
+#endif
 
 namespace simpl
 {
@@ -227,7 +235,7 @@ namespace simpl
 			goto run_for_cond;
 		}
 
-		virtual void visit(import_statement& is)
+		virtual void visit(import_statement& is) override
 		{
 			auto done = std::find(imported_.begin(), imported_.end(), is.libname());
 			if (done != imported_.end())
@@ -237,18 +245,34 @@ namespace simpl
 			if (ctx != importing_.end())
 				throw std::runtime_error("cyclical import detected.");
 			importing_.emplace_back(is.libname());
-			if (!vm_.load_library(is.libname()) &&
-				!import_sl_from_directory(".", is.libname()))
+
+			std::filesystem::path p(is.libname());
+			auto ext = p.extension().string();
+
+			bool loaded = false;
+			if (ext.empty())
 			{
-				throw std::runtime_error(detail::format("module '{0}' not found.", is.libname()));
+				// No extension: look up a pre-registered built-in library by name.
+				loaded = vm_.load_library(is.libname());
 			}
+			else if (ext == ".sl")
+			{
+				loaded = import_sl(is.libname());
+			}
+			else if (ext == ".dll" || ext == ".so" || ext == ".dylib")
+			{
+				loaded = import_native(is.libname());
+			}
+			else
+			{
+				throw std::runtime_error(detail::format("unknown module extension '{0}'.", ext));
+			}
+
+			if (!loaded)
+				throw std::runtime_error(detail::format("module '{0}' not found.", is.libname()));
+
 			imported_.emplace_back(is.libname());
 			importing_.pop_back();
-		}
-
-		virtual void visit(load_library_statement& lls)
-		{
-			//TODO:
 		}
 
 		virtual void visit(expression &ex)
@@ -467,16 +491,92 @@ namespace simpl
 
 	private:
 
-		bool import_sl_from_directory(const std::filesystem::path &p, const std::string &libname)
+		// Returns the directories to search, in the 5-step order:
+		//   1. Current working directory
+		//   2. Directory of the currently executing script (if any)
+		//   3. Directories from the SIMPL_PATH environment variable
+		//   4. Directory of the simpl executable
+		//   5. Directories from the PATH environment variable
+		std::vector<std::filesystem::path> make_search_path() const
 		{
-			for (const auto& i : std::filesystem::directory_iterator(p))
+			std::vector<std::filesystem::path> paths;
+
+			// Step 1: current working directory.
+			paths.push_back(std::filesystem::current_path());
+
+			// Step 2: directory of the currently executing script.
+			if (!script_dirs_.empty())
+				paths.push_back(script_dirs_.back());
+
+			// Steps 3 & 5: split an environment variable on the platform path separator.
+			auto split_env = [&](const char* var)
 			{
-				const auto& path = i.path();
-				if (path.extension() != ".sl" || path.stem() != libname)
+				const char* env = std::getenv(var);
+				if (!env) return;
+				std::string s(env);
+#ifdef _WIN32
+				const char sep = ';';
+#else
+				const char sep = ':';
+#endif
+				std::stringstream ss(s);
+				std::string dir;
+				while (std::getline(ss, dir, sep))
+					if (!dir.empty())
+						paths.push_back(dir);
+			};
+
+			// Step 3: SIMPL_PATH environment variable.
+			split_env("SIMPL_PATH");
+
+			// Step 4: directory of the simpl executable.
+			auto exe_dir = get_executable_directory();
+			if (!exe_dir.empty())
+				paths.push_back(exe_dir);
+
+			// Step 5: PATH environment variable.
+			split_env("PATH");
+
+			return paths;
+		}
+
+		static std::filesystem::path get_executable_directory()
+		{
+#ifdef _WIN32
+			std::vector<char> buf(MAX_PATH);
+			DWORD len = GetModuleFileNameA(NULL, buf.data(), static_cast<DWORD>(buf.size()));
+			while (len == static_cast<DWORD>(buf.size()) && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+			{
+				buf.resize(buf.size() * 2);
+				len = GetModuleFileNameA(NULL, buf.data(), static_cast<DWORD>(buf.size()));
+			}
+			if (len > 0)
+				return std::filesystem::path(std::string(buf.data(), len)).parent_path();
+#elif defined(__linux__)
+			std::error_code ec;
+			auto p = std::filesystem::read_symlink("/proc/self/exe", ec);
+			if (!ec)
+				return p.parent_path();
+#elif defined(__APPLE__)
+			// TODO: implement using _NSGetExecutablePath
+#endif
+			return {};
+		}
+
+		// Search for a .sl file using the 5-step path and evaluate it.
+		bool import_sl(const std::string& filename)
+		{
+			for (const auto& dir : make_search_path())
+			{
+				auto full = dir / filename;
+				if (!std::filesystem::exists(full))
 					continue;
-				std::ifstream t(path);
+				std::ifstream t(full);
+				if (!t.good())
+					continue;
 				std::stringstream buffer;
 				buffer << t.rdbuf();
+				script_dirs_.push_back(std::filesystem::absolute(full).parent_path());
 				try
 				{
 					auto ast = simpl::parse(buffer.str());
@@ -484,13 +584,61 @@ namespace simpl
 				}
 				catch (const token_error& te)
 				{
-					throw std::runtime_error(detail::format("{0}: error: {1}", std::filesystem::absolute(path), te.what()));
+					script_dirs_.pop_back();
+					throw std::runtime_error(detail::format("{0}: error: {1}", std::filesystem::absolute(full).string(), te.what()));
 				}
 				catch (const parse_error& pe)
 				{
-					throw std::runtime_error(detail::format("{0}: error: {1}", std::filesystem::absolute(path), pe.what()));
+					script_dirs_.pop_back();
+					throw std::runtime_error(detail::format("{0}: error: {1}", std::filesystem::absolute(full).string(), pe.what()));
 				}
-				return true;;
+				catch (...)
+				{
+					script_dirs_.pop_back();
+					throw;
+				}
+				script_dirs_.pop_back();
+				return true;
+			}
+			return false;
+		}
+
+		// Native library entry point convention:
+		//   extern "C" void simpl_load(simpl::vm* vm);
+		bool import_native(const std::string& filename)
+		{
+			for (const auto& dir : make_search_path())
+			{
+				auto full = std::filesystem::absolute(dir / filename);
+				if (!std::filesystem::exists(full))
+					continue;
+				auto full_str = full.string();
+#ifdef _WIN32
+				HMODULE h = LoadLibraryA(full_str.c_str());
+				if (!h)
+				{
+					DWORD err = GetLastError();
+					char msg[256] = {};
+					FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+						NULL, err, 0, msg, sizeof(msg), NULL);
+					throw std::runtime_error(detail::format("failed to load native library '{0}': {1}", full_str, msg));
+				}
+				using load_fn_t = void(*)(vm*);
+				auto fn = reinterpret_cast<load_fn_t>(GetProcAddress(h, "simpl_load"));
+				if (!fn)
+					throw std::runtime_error(detail::format("native library '{0}' does not export 'simpl_load'.", full_str));
+				fn(&vm_);
+#else
+				void* h = dlopen(full_str.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+				if (!h)
+					throw std::runtime_error(detail::format("failed to load native library '{0}': {1}", full_str, dlerror()));
+				using load_fn_t = void(*)(vm*);
+				auto fn = reinterpret_cast<load_fn_t>(dlsym(h, "simpl_load"));
+				if (!fn)
+					throw std::runtime_error(detail::format("native library '{0}' does not export 'simpl_load'.", full_str));
+				fn(&vm_);
+#endif
+				return true;
 			}
 			return false;
 		}
@@ -642,12 +790,10 @@ namespace simpl
 		}
 
 	private:
-		
-		
-	private:
 		vm &vm_;
 		std::vector<std::string> importing_;
 		std::vector<std::string> imported_;
+		std::vector<std::filesystem::path> script_dirs_;
 	};
 }
 

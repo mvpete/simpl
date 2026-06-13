@@ -485,22 +485,25 @@ namespace simpl
 				auto libtkn = tokenizer_.next();
 				if (libtkn.type != token_types::identifier_token)
 					throw parse_error(tokenizer_.pos(), detail::format("import expected an identifier: {0}", libtkn.to_string()));
-				
-				return std::make_unique<import_statement>(libtkn.to_string());
-			}
-			else if (builtins::compare(directive.begin, directive.end, "loadlib"))
-			{
-				auto pathtkn = tokenizer_.next();
-				if (pathtkn.type != token_types::literal)
-					throw parse_error(tokenizer_.pos(), detail::format("expected a path, got: {0}", pathtkn.to_string()));
 
-				return std::make_unique<load_library_statement>(pathtkn.to_string());
+				std::string libname = libtkn.to_string();
 
+				// Allow `@import name.ext` — consume the optional `.ext` suffix.
+				auto peek = tokenizer_.peek();
+				if (peek.type == token_types::op && builtins::compare(peek.begin, peek.end, "."))
+				{
+					tokenizer_.next(); // consume '.'
+					auto exttkn = tokenizer_.next();
+					if (exttkn.type != token_types::identifier_token)
+						throw parse_error(tokenizer_.pos(), detail::format("import expected an extension after '.': {0}", exttkn.to_string()));
+					libname += '.';
+					libname += exttkn.to_string();
+				}
+
+				return std::make_unique<import_statement>(libname);
 			}
 			else
 				throw parse_error(tokenizer_.pos(), detail::format("invalid directive: {0}", directive.to_string()));
-
-
 		}
 
 		/*
