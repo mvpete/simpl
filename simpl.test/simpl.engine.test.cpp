@@ -195,6 +195,14 @@ namespace simpl_test
 				"close(main);");
 		}
 
+		TEST_METHOD(TestHttpImportRejectsInvalidUrl)
+		{
+			Assert::ExpectException<std::runtime_error>([&]()
+			{
+				run("@import http get(\"not-a-url\");");
+			});
+		}
+
 		TEST_METHOD(TestPostIncrement)
 		{
 			bool called = false;

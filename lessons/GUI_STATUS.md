@@ -23,6 +23,17 @@ The current GUI library is Win32-based and supports:
 
 ## Previously Partial Areas and Current Gaps
 
+## Missing Controls Checklist (Working TODO)
+
+- [ ] `checkbox`
+  - Validation status: not covered by tests yet.
+- [ ] `list`
+  - Validation status: not covered by tests yet.
+- [ ] `combo`
+  - Validation status: not covered by tests yet.
+- [ ] `multiline edit`
+  - Validation status: not covered by tests yet.
+
 ## Stability
 
 - Fixed: 64-bit unsafe window subclass pointer usage has been replaced with `SetWindowLongPtrA`/`GetWindowLongPtrA`.

@@ -40,6 +40,8 @@ You can use SIMPL in your C++ application (requires C++17 or higher) and create 
    simpl::evaluate(ast, e);
 ```
 
+Built-in libraries include `io`, `file`, `array`, `string`, `gui`, and `http` (minimal `get`/`post` helpers that return a blob with `status` and `body`).
+
 Examples
 ---
 

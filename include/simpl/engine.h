@@ -8,6 +8,7 @@
 #include <simpl/libraries/file.h>
 #include <simpl/libraries/array.h>
 #include <simpl/libraries/gui.h>
+#include <simpl/libraries/http.h>
 #include <simpl/libraries/string.h>
 
 namespace simpl
@@ -23,6 +24,7 @@ namespace simpl
             vm_.register_library(std::make_unique<file_lib>());
             vm_.register_library(std::make_unique<array_lib>());
             vm_.register_library(std::make_unique<string_lib>());
+            vm_.register_library(std::make_unique<http_lib>());
         }
 
         vm_execution_context &context()

@@ -114,6 +114,9 @@
     <ClInclude Include="..\include\simpl\libraries\gui.h">
       <Filter>Header Files\libraries\gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\simpl\libraries\http.h">
+      <Filter>Header Files\libraries</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\simpl\script.h">
       <Filter>Header Files</Filter>
     </ClInclude>
