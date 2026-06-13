@@ -213,11 +213,20 @@ namespace simpl_test
 			Assert::AreEqual(std::string{ "gui" }, is->libname());
 		}
 
-		TEST_METHOD(TestParseLoadLibDirectiveStatement)
+		TEST_METHOD(TestParseImportSlExtensionStatement)
 		{
-			auto ast = simpl::parse("@loadlib \"path/to/lib.dll\"");
-			const auto lls = dynamic_cast<const simpl::load_library_statement*>(ast[0].get());
-			Assert::IsNotNull(lls);
+			auto ast = simpl::parse("@import mylib.sl");
+			const auto is = dynamic_cast<const simpl::import_statement*>(ast[0].get());
+			Assert::IsNotNull(is);
+			Assert::AreEqual(std::string{ "mylib.sl" }, is->libname());
+		}
+
+		TEST_METHOD(TestParseImportDllDirectiveStatement)
+		{
+			auto ast = simpl::parse("@import mylib.dll");
+			const auto is = dynamic_cast<const simpl::import_statement*>(ast[0].get());
+			Assert::IsNotNull(is);
+			Assert::AreEqual(std::string{ "mylib.dll" }, is->libname());
 		}
 
 		TEST_METHOD(TestParseEqualLiteralValue)

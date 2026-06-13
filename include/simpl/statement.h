@@ -25,7 +25,6 @@ namespace simpl
 	class block_statement;
 	class object_definition_statement;
 	class import_statement;
-	class load_library_statement;
 
 	class statement_visitor
 	{
@@ -41,7 +40,6 @@ namespace simpl
 		virtual void visit(block_statement &bs) = 0;
 		virtual void visit(object_definition_statement &os) = 0;
 		virtual void visit(import_statement& is) = 0;
-		virtual void visit(load_library_statement& lls) = 0;
 	};
 
 	struct statement
@@ -357,27 +355,6 @@ namespace simpl
 
 	};
 
-	class load_library_statement : public statement
-	{
-	public:
-		load_library_statement(const std::string& path)
-			:path_(path)
-		{
-		}
-
-		virtual void evaluate(statement_visitor& v) override
-		{
-			v.visit(*this);
-		}
-
-		const std::string& path() const
-		{
-			return path_;
-		}
-
-	private:
-		std::string path_;
-	};
 }
 
 #endif // __simpl_statement_h__
