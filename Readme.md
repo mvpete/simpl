@@ -24,6 +24,7 @@ Each lesson includes theory, examples, and a hands-on coding task that contribut
 New contributors can also start with:
 - **[Beginner Issues](lessons/BEGINNER_ISSUES.md)**
 - **[Debugging Guide](lessons/DEBUGGING_GUIDE.md)**
+- **[GUI Status](lessons/GUI_STATUS.md)**
 - **[Contributing Guide](CONTRIBUTING.md)**
 
 Usage

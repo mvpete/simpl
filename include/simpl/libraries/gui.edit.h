@@ -1,28 +1,26 @@
-#ifndef __simpl_gui_text_h__
-#define __simpl_gui_text_h__
+#ifndef __simpl_gui_edit_h__
+#define __simpl_gui_edit_h__
 
 #include <simpl/detail/types.h>
 #include <simpl/detail/type_traits.h>
 #include <simpl/libraries/gui.window.h>
 
-#include <string>
 #include <map>
-
-#include <windowsx.h>
+#include <string>
 
 namespace simpl
 {
-	class text : public window
+	class edit : public window
 	{
 	public:
-		text(window &parent, const std::string &title, number x, number y, number width, number height)
+		edit(window& parent, const std::string& initial_value, number x, number y, number width, number height)
 			:window(parent.machine()), down_(false)
 		{
 			hwnd_ = ::CreateWindowExA(
 				0,
-				"STATIC",
-				title.c_str(),
-				WS_CHILD | WS_VISIBLE,
+				"EDIT",
+				initial_value.c_str(),
+				WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL,
 				static_cast<int>(x),
 				static_cast<int>(y),
 				static_cast<int>(width),
@@ -33,13 +31,13 @@ namespace simpl
 				this);
 
 			::SetWindowLongPtrA(hwnd_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-			og_wproc_ = reinterpret_cast<WNDPROC>(::SetWindowLongPtrA(hwnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&text::wnd_proc)));
-
+			og_wproc_ = reinterpret_cast<WNDPROC>(::SetWindowLongPtrA(hwnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&edit::wnd_proc)));
 		}
 
 	public:
-		enum class actions { on_click_action, on_focus_action, on_blur_action };
-		void set_action_method(actions a, const std::string &method)
+		enum class actions { on_click_action, on_focus_action, on_blur_action, on_change_action };
+
+		void set_action_method(actions a, const std::string& method)
 		{
 			action_map_[a] = method;
 		}
@@ -57,9 +55,12 @@ namespace simpl
 			invoke(actions::on_click_action);
 		}
 
+		void on_change()
+		{
+			invoke(actions::on_change_action);
+		}
 
 	private:
-
 		static LRESULT CALLBACK wnd_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			auto self = get_self(hwnd);
@@ -81,7 +82,6 @@ namespace simpl
 				{
 					self->on_click();
 				}
-
 				self->down_ = false;
 				break;
 			}
@@ -95,46 +95,51 @@ namespace simpl
 				self->invoke(actions::on_blur_action);
 				break;
 			}
-
+			case WM_CHAR:
+			case WM_CUT:
+			case WM_PASTE:
+			case WM_CLEAR:
+			case WM_SETTEXT:
+			{
+				self->on_change();
+				break;
 			}
+			}
+
 			return ::CallWindowProcA(self->og_wproc_, hwnd, uMsg, wParam, lParam);
 		}
 
-		static text *get_self(HWND hwnd)
+		static edit* get_self(HWND hwnd)
 		{
-			return reinterpret_cast<text *>(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+			return reinterpret_cast<edit*>(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
 		}
 
 		WNDPROC og_wproc_;
 		bool down_;
-
 		std::map<actions, std::string> action_map_;
-
 	};
 
-	// This is so we can use the compile time type. i.e. binding
-	// C++ functions into the runtime.
 	template<>
-	struct detail::is_valid_arg_type<text> : std::true_type {};
+	struct detail::is_valid_arg_type<edit> : std::true_type {};
 
 	template<>
-	struct detail::simple_type_info<text>
+	struct detail::simple_type_info<edit>
 	{
-		static const char *name() noexcept
+		static const char* name() noexcept
 		{
-			return "text";
+			return "edit";
 		};
 
-		static bool is_convertible(const std::string &t) noexcept
+		static bool is_convertible(const std::string& t) noexcept
 		{
 			return t == "window";
 		}
 
-		static const char *inherits() noexcept
+		static const char* inherits() noexcept
 		{
 			return "window";
 		}
 	};
 }
 
-#endif // __simpl_gui_text_h__
+#endif // __simpl_gui_edit_h__

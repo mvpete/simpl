@@ -145,6 +145,56 @@ namespace simpl_test
 			simpl::evaluate(ast, e);
 		}
 
+		TEST_METHOD(TestGuiImportAndLifecycleFunctions)
+		{
+			size_t calls = 0;
+			check = [&](const simpl::value_t& v)
+			{
+				++calls;
+				Assert::IsTrue(std::holds_alternative<std::string>(v));
+				const auto value = std::get<std::string>(v);
+				if (calls == 1)
+				{
+					Assert::AreEqual(std::string{ "seed" }, value);
+				}
+				else if (calls == 2)
+				{
+					Assert::AreEqual(std::string{ "updated" }, value);
+				}
+			};
+
+			run("@import gui "
+				"let main = create_wnd(\"test\", 0, 0, 200, 120); "
+				"let input = create_edit(main, \"seed\", 5, 5, 100, 24); "
+				"assert(get_text(input)); "
+				"set_text(input, \"updated\"); "
+				"assert(get_text(input)); "
+				"close(main);");
+
+			Assert::AreEqual(size_t{ 2 }, calls);
+		}
+
+		TEST_METHOD(TestGuiEventCallbackRegistrationPaths)
+		{
+			run("@import gui "
+				"let main = create_wnd(\"events\", 0, 0, 200, 120); "
+				"let b = create_btn(main, \"B\", 5, 5, 40, 20); "
+				"let t = create_text(main, \"T\", 50, 5, 40, 20); "
+				"let e = create_edit(main, \"\", 5, 30, 120, 24); "
+				"def cb() { } "
+				"on_click(b, &cb); "
+				"on_click(t, &cb); "
+				"on_click(e, &cb); "
+				"on_focus(b, &cb); "
+				"on_focus(t, &cb); "
+				"on_focus(e, &cb); "
+				"on_blur(b, &cb); "
+				"on_blur(t, &cb); "
+				"on_blur(e, &cb); "
+				"on_change(e, &cb); "
+				"close(main);");
+		}
+
 		TEST_METHOD(TestPostIncrement)
 		{
 			bool called = false;

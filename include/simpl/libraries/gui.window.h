@@ -6,6 +6,7 @@
 #include <simpl/vm.h>
 
 #include <string>
+#include <vector>
 #include <Windows.h>
 
 namespace simpl
@@ -49,6 +50,15 @@ namespace simpl
 			::ShowWindow(hwnd_, SW_SHOW);
 		}
 
+		void close()
+		{
+			if (hwnd_ != nullptr && ::IsWindow(hwnd_))
+			{
+				::DestroyWindow(hwnd_);
+				hwnd_ = nullptr;
+			}
+		}
+
 		HWND handle()
 		{
 			return hwnd_;
@@ -65,6 +75,19 @@ namespace simpl
 			::SendMessage(hwnd_, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(text.c_str()));
 		}
 
+		std::string get_text() const
+		{
+			const auto len = ::GetWindowTextLengthA(hwnd_);
+			if (len <= 0)
+			{
+				return {};
+			}
+
+			std::vector<char> buffer(static_cast<size_t>(len) + 1);
+			::GetWindowTextA(hwnd_, buffer.data(), len + 1);
+			return std::string{ buffer.data() };
+		}
+
 		void set_pos(number x, number y, number cx, number cy)
 		{
 			::SetWindowPos(hwnd_, nullptr, (int)x, (int)y, (int)cx, (int)cy, 0);
@@ -76,6 +99,35 @@ namespace simpl
 			::GetWindowRect(hwnd_, &r);
 			MapWindowPoints(HWND_DESKTOP, GetParent(hwnd_), (LPPOINT)&r, 2);
 			return rect{ r.left, r.top, r.right-r.left, r.bottom-r.top };
+		}
+
+		static bool poll_one()
+		{
+			MSG msg = {};
+			const auto has_message = ::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE);
+			if (has_message == 0)
+			{
+				return false;
+			}
+
+			if (msg.message == WM_QUIT)
+			{
+				return false;
+			}
+
+			::TranslateMessage(&msg);
+			::DispatchMessage(&msg);
+			return true;
+		}
+
+		static void run_loop()
+		{
+			MSG msg = {};
+			while (::GetMessage(&msg, nullptr, 0, 0) > 0)
+			{
+				::TranslateMessage(&msg);
+				::DispatchMessage(&msg);
+			}
 		}
 
 	protected:
@@ -92,8 +144,10 @@ namespace simpl
 			switch (uMsg)
 			{
 			case WM_DESTROY:
+			{
 				PostQuitMessage(0);
 				return 0;
+			}
 
 			case WM_PAINT:
 			{
@@ -135,4 +189,3 @@ namespace simpl
 }
 
 #endif // __simpl_gui_window_h__
-

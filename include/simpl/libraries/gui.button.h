@@ -6,6 +6,7 @@
 #include <simpl/libraries/gui.window.h>
 
 #include <string>
+#include <map>
 
 #include <windowsx.h>
 
@@ -31,13 +32,13 @@ namespace simpl
 				nullptr,
 				this);
 
-			::SetWindowLong(hwnd_, GWL_USERDATA, reinterpret_cast<long>(this));
-			og_wproc_ = reinterpret_cast<WNDPROC>(::SetWindowLong(hwnd_, GWL_WNDPROC, reinterpret_cast<long>(&button::wnd_proc)));
+			::SetWindowLongPtrA(hwnd_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+			og_wproc_ = reinterpret_cast<WNDPROC>(::SetWindowLongPtrA(hwnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&button::wnd_proc)));
 
 		}
 
 	public:
-		enum class actions { on_click_action };
+		enum class actions { on_click_action, on_focus_action, on_blur_action };
 
 		void set_action_method(actions a, const std::string &method)
 		{
@@ -45,10 +46,16 @@ namespace simpl
 		}
 
 	private:
+		void invoke(actions action)
+		{
+			const auto found = action_map_.find(action);
+			if (found != action_map_.end())
+				machine().invoke(found->second);
+		}
+
 		void on_click()
 		{
-			if(action_map_.find(actions::on_click_action) != action_map_.end())
-				machine().invoke(action_map_.at(actions::on_click_action));
+			invoke(actions::on_click_action);
 		}
 
 
@@ -57,6 +64,10 @@ namespace simpl
 		static LRESULT CALLBACK wnd_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			auto self = get_self(hwnd);
+			if (self == nullptr)
+			{
+				return ::DefWindowProcA(hwnd, uMsg, wParam, lParam);
+			}
 
 			switch (uMsg)
 			{
@@ -75,15 +86,24 @@ namespace simpl
 				self->down_ = false;
 				break;
 			}
-			return 0;
+			case WM_SETFOCUS:
+			{
+				self->invoke(actions::on_focus_action);
+				break;
+			}
+			case WM_KILLFOCUS:
+			{
+				self->invoke(actions::on_blur_action);
+				break;
+			}
 
 			}
-			return ::CallWindowProc(self->og_wproc_, hwnd, uMsg, wParam, lParam);
+			return ::CallWindowProcA(self->og_wproc_, hwnd, uMsg, wParam, lParam);
 		}
 
 		static button *get_self(HWND hwnd)
 		{
-			return reinterpret_cast<button *>(::GetWindowLong(hwnd, GWL_USERDATA));
+			return reinterpret_cast<button *>(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
 		}
 
 		WNDPROC og_wproc_;
