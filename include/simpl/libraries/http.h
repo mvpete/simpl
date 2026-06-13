@@ -22,6 +22,38 @@ namespace simpl
 {
 	namespace detail
 	{
+		inline std::string default_content_type(const std::string& method, const std::string& body)
+		{
+			if (!body.empty() && method == "POST")
+			{
+				return "application/json";
+			}
+
+			return {};
+		}
+
+		inline std::string get_http_string(const blob_t& request, const std::string& key)
+		{
+			const auto found = request.values.find(key);
+			if (found == request.values.end())
+			{
+				return {};
+			}
+
+			return cast<std::string>(found->second);
+		}
+
+		inline std::string require_http_string(const blob_t& request, const std::string& key)
+		{
+			const auto found = request.values.find(key);
+			if (found == request.values.end())
+			{
+				throw std::runtime_error("http request missing '" + key + "'");
+			}
+
+			return cast<std::string>(found->second);
+		}
+
 #ifdef _WIN32
 		class winhttp_handle final
 		{
@@ -272,6 +304,39 @@ namespace simpl
 			throw std::runtime_error("http library is only supported on Windows");
 #endif
 		}
+
+		inline blobref_t request_http(const std::string& url)
+		{
+			return request_http("GET", url, std::string{}, std::string{});
+		}
+
+		inline blobref_t request_http(const std::string& method, const std::string& url)
+		{
+			return request_http(method, url, std::string{}, std::string{});
+		}
+
+		inline blobref_t request_http(const std::string& method, const std::string& url, const std::string& body)
+		{
+			return request_http(method, url, body, default_content_type(method, body));
+		}
+
+		inline blobref_t request_http(const blob_t& request)
+		{
+			const auto body = get_http_string(request, "body");
+			auto method = get_http_string(request, "method");
+			if (method.empty())
+			{
+				method = body.empty() ? "GET" : "POST";
+			}
+
+			auto content_type = get_http_string(request, "content_type");
+			if (content_type.empty())
+			{
+				content_type = default_content_type(method, body);
+			}
+
+			return request_http(method, require_http_string(request, "url"), body, content_type);
+		}
 	}
 
 	class http_lib final : public library
@@ -284,14 +349,39 @@ namespace simpl
 
 		void load(vm& vm) override
 		{
+			vm.reg_fn("request", [](const std::string& url)
+			{
+				return detail::request_http(url);
+			});
+
+			vm.reg_fn("request", [](const std::string& method, const std::string& url)
+			{
+				return detail::request_http(method, url);
+			});
+
+			vm.reg_fn("request", [](const std::string& method, const std::string& url, const std::string& body)
+			{
+				return detail::request_http(method, url, body);
+			});
+
+			vm.reg_fn("request", [](const std::string& method, const std::string& url, const std::string& body, const std::string& content_type)
+			{
+				return detail::request_http(method, url, body, content_type);
+			});
+
+			vm.reg_fn("request", [](const blob_t& request)
+			{
+				return detail::request_http(request);
+			});
+
 			vm.reg_fn("get", [](const std::string& url)
 			{
-				return detail::request_http("GET", url, std::string{}, std::string{});
+				return detail::request_http(url);
 			});
 
 			vm.reg_fn("post", [](const std::string& url, const std::string& body)
 			{
-				return detail::request_http("POST", url, body, "application/json");
+				return detail::request_http("POST", url, body);
 			});
 
 			vm.reg_fn("post", [](const std::string& url, const std::string& body, const std::string& content_type)

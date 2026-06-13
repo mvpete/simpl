@@ -176,6 +176,13 @@ namespace simpl
             }
         }
 
+        bool can_invoke(const std::string& method)
+        {
+            detail::call_def cd;
+            cd.name = method;
+            return functions_.has_match(cd);
+        }
+
         template<typename ...Args>
         void invoke(const std::string &method, Args &&...args)
         {
@@ -190,6 +197,27 @@ namespace simpl
             }, args...);
 
             call(cd);
+            decrement_stack(sizeof...(Args));
+        }
+
+        bool can_invoke_dynamic(const std::string& method, std::initializer_list<value_t> args)
+        {
+            auto cd = make_dynamic_call(method, args);
+            return functions_.has_match(cd);
+        }
+
+        void invoke_dynamic(const std::string& method, std::initializer_list<value_t> args)
+        {
+            auto cd = make_dynamic_call(method, args);
+
+            stack_.push(value_t{}); // retval
+            for (const auto& arg : args)
+            {
+                stack_.push(arg);
+            }
+
+            call(cd);
+            decrement_stack(args.size());
         }
 
         void push_stack(const value_t &v)
@@ -519,7 +547,18 @@ namespace simpl
 
     private:
 
-        detail::type_table types_;
+        detail::        detail::call_def make_dynamic_call(const std::string& method, std::initializer_list<value_t> args)
+        {
+            detail::call_def cd;
+            cd.name = method;
+            for (const auto& arg : args)
+            {
+                cd.arguments.push_back(detail::get_type_string(arg));
+            }
+            return cd;
+        }
+
+        type_table types_;
         detail::dispatch_table functions_;
         stack_t stack_;
         locals_t locals_;

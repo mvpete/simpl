@@ -13,6 +13,13 @@
 
 namespace simpl
 {
+	template<typename WidgetT, typename ...Args>
+	objectref_t make_gui_ref(Args&&...args)
+	{
+		auto widget = make_ref<WidgetT>(std::forward<Args>(args)...);
+		reinterpret_cast<WidgetT*>(widget->value())->bind_self(widget);
+		return widget;
+	}
 
 	class gui_lib final : public library
 	{
@@ -35,20 +42,20 @@ namespace simpl
 
 			vm.reg_fn("create_wnd", [&vm](const std::string &name, number x, number y, number width, number height)
 			{
-				return make_ref<window>(vm, name, x,y,width,height);
+				return make_gui_ref<window>(vm, name, x,y,width,height);
 			});
 
 			vm.reg_fn("create_btn", [](window &w, const std::string &name, number x, number y, number width, number height)
 			{
-				return make_ref<button>(w, name, x, y, width, height);
+				return make_gui_ref<button>(w, name, x, y, width, height);
 			});
 			vm.reg_fn("create_text", [](window &w, const std::string &name, number x, number y, number width, number height)
 			{
-				return make_ref<text>(w, name, x, y, width, height);
+				return make_gui_ref<text>(w, name, x, y, width, height);
 			});
 			vm.reg_fn("create_edit", [](window &w, const std::string &value, number x, number y, number width, number height)
 			{
-				return make_ref<edit>(w, value, x, y, width, height);
+				return make_gui_ref<edit>(w, value, x, y, width, height);
 			});
 
 			vm.reg_fn("show", [](window &w)

@@ -47,7 +47,7 @@ namespace simpl
 		{
 			const auto found = action_map_.find(action);
 			if (found != action_map_.end())
-				machine().invoke(found->second);
+				invoke_bound_method(found->second);
 		}
 
 		void on_click()

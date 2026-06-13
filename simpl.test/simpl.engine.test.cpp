@@ -182,6 +182,9 @@ namespace simpl_test
 				"let t = create_text(main, \"T\", 50, 5, 40, 20); "
 				"let e = create_edit(main, \"\", 5, 30, 120, 24); "
 				"def cb() { } "
+				"def cb(source is button) { } "
+				"def cb(source is text) { } "
+				"def cb(source is edit) { } "
 				"on_click(b, &cb); "
 				"on_click(t, &cb); "
 				"on_click(e, &cb); "
@@ -200,6 +203,22 @@ namespace simpl_test
 			Assert::ExpectException<std::runtime_error>([&]()
 			{
 				run("@import http get(\"not-a-url\");");
+			});
+		}
+
+		TEST_METHOD(TestHttpRequestRejectsInvalidUrl)
+		{
+			Assert::ExpectException<std::runtime_error>([&]()
+			{
+				run("@import http request(\"not-a-url\");");
+			});
+		}
+
+		TEST_METHOD(TestHttpRequestBlobRejectsInvalidUrl)
+		{
+			Assert::ExpectException<std::runtime_error>([&]()
+			{
+				run("@import http request(new { url=\"not-a-url\" });");
 			});
 		}
 

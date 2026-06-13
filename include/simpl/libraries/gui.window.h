@@ -69,6 +69,11 @@ namespace simpl
 			return vm_;
 		}
 
+		void bind_self(const objectref_t& self)
+		{
+			self_ = self;
+		}
+
 		void set_text(const value_t &value)
 		{
 			const auto text = cast<std::string>(value);
@@ -134,9 +139,33 @@ namespace simpl
 		window(vm &vm)
 			:hwnd_(0), vm_(vm) {}
 
+		void invoke_bound_method(const std::string& method)
+		{
+			if (self_ != nullptr && vm_.can_invoke_dynamic(method, { value_t{ self_ } }))
+			{
+				vm_.invoke_dynamic(method, { value_t{ self_ } });
+				return;
+			}
+
+			if (vm_.can_invoke(method))
+			{
+				vm_.invoke(method);
+				return;
+			}
+
+			if (self_ != nullptr)
+			{
+				vm_.invoke_dynamic(method, { value_t{ self_ } });
+				return;
+			}
+
+			vm_.invoke(method);
+		}
+
 
 		HWND hwnd_;
 		vm &vm_;
+		objectref_t self_;
 
 	public:
 		static LRESULT CALLBACK wnd_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

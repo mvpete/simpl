@@ -15,19 +15,19 @@ def sync_output()
     set_text(text, content);
 }
 
-def on_copy()
+def on_ui_event(source is button)
 {
     sync_output();
     clicks = clicks + 1;
 }
 
-def on_input_change()
+def on_ui_event(source is edit)
 {
     sync_output();
 }
 
-on_click(btn, &on_copy);
-on_change(input, &on_input_change);
+on_click(btn, &on_ui_event);
+on_change(input, &on_ui_event);
 
 ## This blocks until the window exits.
 show(main);
