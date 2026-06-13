@@ -547,7 +547,7 @@ namespace simpl
 
     private:
 
-        detail::        detail::call_def make_dynamic_call(const std::string& method, std::initializer_list<value_t> args)
+        detail::call_def make_dynamic_call(const std::string& method, std::initializer_list<value_t> args)
         {
             detail::call_def cd;
             cd.name = method;
