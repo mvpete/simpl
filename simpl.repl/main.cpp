@@ -1,11 +1,35 @@
 #include <string>
 #include <fstream>
 #include <chrono>
+#include <iostream>
+#include <sstream>
 
 #define SIMPL_DEFINES
 #include <simpl/simpl.h>
 
 struct exit_ {};
+
+namespace
+{
+	void print_help()
+	{
+		std::cout << "\r\nSIMPL REPL commands:\r\n"
+			<< "  :help      Show this help\r\n"
+			<< "  :examples  Show quick SIMPL examples\r\n"
+			<< "  :quit      Exit the REPL\r\n"
+			<< "You can also call exit(); from SIMPL code.\r\n\r\n";
+	}
+
+	void print_examples()
+	{
+		std::cout << "\r\nExamples:\r\n"
+			<< "  @import io\r\n"
+			<< "  println(\"hello world\");\r\n"
+			<< "  let i = 0;\r\n"
+			<< "  i++;\r\n"
+			<< "  println(i);\r\n\r\n";
+	}
+}
 
 template <typename InStream>
 int run_interpreter(InStream &s)
@@ -19,7 +43,7 @@ int run_interpreter(InStream &s)
 			throw exit_{};
 		});
 
-		std::stringstream ss;
+		std::string script_buffer;
 		while (s.good())
 		{
 			try
@@ -29,10 +53,28 @@ int run_interpreter(InStream &s)
 				std::getline(s, line);
 				if (line.empty())
 					continue;
-				ss.clear();
-				ss << line;
-				line = ss.str();
-				simpl::parser parser(line);
+
+				if (line == ":help")
+				{
+					print_help();
+					continue;
+				}
+				if (line == ":examples")
+				{
+					print_examples();
+					continue;
+				}
+				if (line == ":quit")
+				{
+					throw exit_{};
+				}
+
+				if (!script_buffer.empty())
+				{
+					script_buffer += "\n";
+				}
+				script_buffer += line;
+				simpl::parser parser(script_buffer);
 				
 				auto stmt = parser.next();
 				if (stmt == nullptr) 
@@ -43,7 +85,7 @@ int run_interpreter(InStream &s)
 				else 
 				{
 					evaluate(std::move(stmt), e);
-					ss.str("");
+					script_buffer.clear();
 					prompt = ">";
 					std::cout << std::endl;
 				}
@@ -52,23 +94,23 @@ int run_interpreter(InStream &s)
 			catch (const simpl::token_error &t)
 			{
 				std::cout << "\r\n";
-				std::cout << "failed to parse - " << t.what() << std::endl;
-				ss.str("");
-				ss.clear();
+				std::cout << "failed to tokenize input '" << script_buffer << "' - " << t.what() << std::endl;
+				script_buffer.clear();
+				prompt = ">";
 			}
 			catch (const simpl::parse_error &p)
 			{
 				std::cout << "\r\n";
-				std::cout << "failed to parse - " << p.what() << std::endl;
-				ss.str("");
-				ss.clear();
+				std::cout << "failed to parse input '" << script_buffer << "' - " << p.what() << std::endl;
+				script_buffer.clear();
+				prompt = ">";
 			}
 			catch (const std::exception &e)
 			{
 				std::cout << "\r\n";
 				std::cout << e.what() << std::endl;
-				ss.str("");
-				ss.clear();
+				script_buffer.clear();
+				prompt = ">";
 			}
 		}
 

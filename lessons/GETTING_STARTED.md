@@ -237,6 +237,8 @@ Run it to verify everything is set up correctly.
 - **GitHub Issues:** [https://github.com/mvpete/simpl/issues](https://github.com/mvpete/simpl/issues)
 - **Original Repo:** Check the main README for more info
 - **Lessons Directory:** Read the lesson files for detailed instructions
+- **Debugging Guide:** [DEBUGGING_GUIDE.md](DEBUGGING_GUIDE.md)
+- **Beginner Tasks:** [BEGINNER_ISSUES.md](BEGINNER_ISSUES.md)
 
 ## Progress Tracking
 
