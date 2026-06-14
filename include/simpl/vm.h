@@ -558,7 +558,7 @@ namespace simpl
             return cd;
         }
 
-        type_table types_;
+        detail::type_table types_;
         detail::dispatch_table functions_;
         stack_t stack_;
         locals_t locals_;
