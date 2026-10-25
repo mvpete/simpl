@@ -98,6 +98,10 @@ namespace simpl_test
 			{
 				run("@import \"" + module_path.string() + "\" as math\n"
 					"assert(math.answer());");
+				Assert::ExpectException<std::runtime_error>([&]()
+				{
+					run("math.helper();");
+				});
 			}
 			catch (...)
 			{

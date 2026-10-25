@@ -843,19 +843,16 @@ namespace simpl
 
 			if (path.size() == 1 && std::holds_alternative<std::string>(path.front()))
 			{
-				const auto alias = std::get<std::string>(path.front());
+				const auto alias = exp.identifier().name;
+				const auto exported_name = std::get<std::string>(path.front());
 				auto importer = module_aliases_.find(current_module_);
-				if (importer != module_aliases_.end())
-				{
-					auto imported = importer->second.find(alias);
-					if (imported != importer->second.end())
-					{
-						auto exports = module_exports_.find(imported->second);
-						if (exports == module_exports_.end() || exports->second.find(function_name) == exports->second.end())
-							throw std::runtime_error(detail::format("module '{0}' does not export function '{1}'", alias, function_name));
-						function_name = imported->second + function_name;
-					}
-				}
+				if (importer == module_aliases_.end() || importer->second.find(alias) == importer->second.end())
+					throw std::runtime_error(detail::format("unknown module alias '{0}'", alias));
+				const auto& module_key = importer->second.at(alias);
+				auto exports = module_exports_.find(module_key);
+				if (exports == module_exports_.end() || exports->second.find(exported_name) == exports->second.end())
+					throw std::runtime_error(detail::format("module '{0}' does not export function '{1}'", alias, exported_name));
+				function_name = module_key + exported_name;
 			}
 
 			detail::call_def cd{ function_name, args };
