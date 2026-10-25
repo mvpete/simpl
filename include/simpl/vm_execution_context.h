@@ -11,6 +11,8 @@
 #include <fstream>
 #include <functional>
 #include <filesystem>
+#include <map>
+#include <set>
 #include <sstream>
 
 #ifdef _WIN32
@@ -78,6 +80,42 @@ namespace simpl
 
 	class vm_execution_context : public statement_visitor, public expression_visitor
 	{
+		class module_context_guard
+		{
+		public:
+			module_context_guard(std::string& current, const std::string& next)
+				: current_(current), previous_(current)
+			{
+				current_ = next;
+			}
+
+			~module_context_guard()
+			{
+				current_ = previous_;
+			}
+
+		private:
+			std::string& current_;
+			std::string previous_;
+		};
+
+		class script_dir_guard
+		{
+		public:
+			explicit script_dir_guard(std::vector<std::filesystem::path>& dirs)
+				: dirs_(dirs)
+			{
+			}
+
+			~script_dir_guard()
+			{
+				dirs_.pop_back();
+			}
+
+		private:
+			std::vector<std::filesystem::path>& dirs_;
+		};
+
 	public:
 		vm_execution_context(simpl::vm &vm)
 			:vm_(vm)
@@ -159,19 +197,29 @@ namespace simpl
 
 		virtual void visit(def_statement &ds)
 		{
-			auto id = detail::format_name(vm_, ds.name(), ds.arguments());
+			if (ds.is_exported() && current_module_.empty())
+				throw std::runtime_error("exported functions must be declared in an aliased script module");
+
+			const auto function_name = current_module_.empty()
+				? ds.name()
+				: current_module_ + ds.name();
+			auto id = detail::format_name(vm_, function_name, ds.arguments());
 			auto arity = ds.arguments().size();
 			auto stmt = ds.release_statement();
+			const auto defining_module = current_module_;
+			if (!defining_module.empty() && ds.is_exported())
+				module_exports_[defining_module].insert(ds.name());
 			detail::fn_def fn
 			{
 				id,
-				ds.name(),
+				function_name,
 				detail::to_arg_types(vm_, ds.arguments()),
-				[this, arity, ids = ds.arguments(), stmt = std::shared_ptr<statement>(stmt.release())]()
+				[this, arity, defining_module, ids = ds.arguments(), stmt = std::shared_ptr<statement>(stmt.release())]()
 				{
 					int offset = arity - 1;
 					for (; offset >= 0; --offset)
 						vm_.track_stack_var(ids[ids.size() - (offset + 1)].name, offset);
+					module_context_guard module_context(current_module_, defining_module);
 					stmt->evaluate(*this);
 				}
 			};
@@ -237,6 +285,12 @@ namespace simpl
 
 		virtual void visit(import_statement& is) override
 		{
+			if (is.alias().has_value())
+			{
+				import_script_module(is.libname(), is.alias().value());
+				return;
+			}
+
 			auto done = std::find(imported_.begin(), imported_.end(), is.libname());
 			if (done != imported_.end())
 				return; // already imported.
@@ -612,6 +666,83 @@ namespace simpl
 			return false;
 		}
 
+		void import_script_module(const std::string& filename, const std::string& alias)
+		{
+			if (std::filesystem::path(filename).extension() != ".sl")
+				throw std::runtime_error("aliased imports must reference a .sl script module");
+
+			std::filesystem::path full;
+			bool found = false;
+			for (const auto& dir : make_search_path())
+			{
+				auto candidate = std::filesystem::absolute(dir / filename).lexically_normal();
+				if (std::filesystem::is_regular_file(candidate))
+				{
+					full = std::filesystem::weakly_canonical(candidate);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				throw std::runtime_error(detail::format("module '{0}' not found.", filename));
+
+			const auto path_key = full.string();
+			std::string module_key;
+			if (loading_module_paths_.find(path_key) != loading_module_paths_.end())
+				throw std::runtime_error("cyclical import detected.");
+
+			auto cached = module_paths_.find(path_key);
+			if (cached != module_paths_.end())
+			{
+				module_key = cached->second;
+			}
+			else
+			{
+				module_key = "$module" + std::to_string(next_module_id_++) + "::";
+				loading_module_paths_.insert(path_key);
+				module_paths_[path_key] = module_key;
+				module_exports_[module_key];
+
+				try
+				{
+					std::ifstream input(full);
+					if (!input.good())
+						throw std::runtime_error(detail::format("cannot read module '{0}'.", path_key));
+					std::stringstream buffer;
+					buffer << input.rdbuf();
+					auto ast = simpl::parse(buffer.str());
+
+					for (const auto& statement : ast)
+					{
+						if (dynamic_cast<def_statement*>(statement.get()) == nullptr &&
+							dynamic_cast<import_statement*>(statement.get()) == nullptr)
+							throw std::runtime_error("script modules may contain only function definitions and imports at top level");
+					}
+
+					script_dirs_.push_back(full.parent_path());
+					script_dir_guard script_dir(script_dirs_);
+					module_context_guard module_context(current_module_, module_key);
+					evaluate(ast);
+					loading_module_paths_.erase(path_key);
+				}
+				catch (...)
+				{
+					vm_.unregister_functions(module_key);
+					module_aliases_.erase(module_key);
+					module_exports_.erase(module_key);
+					module_paths_.erase(path_key);
+					loading_module_paths_.erase(path_key);
+					throw;
+				}
+			}
+
+			auto& aliases = module_aliases_[current_module_];
+			auto existing = aliases.find(alias);
+			if (existing != aliases.end() && existing->second != module_key)
+				throw std::runtime_error(detail::format("module alias '{0}' is already in use", alias));
+			aliases[alias] = module_key;
+		}
+
 		// Native library entry point convention:
 		//   extern "C" void simpl_load(simpl::vm* vm);
 		bool import_native(const std::string& filename)
@@ -706,7 +837,32 @@ namespace simpl
 			for (const auto &expr : exp.expressions())
 				expr->evaluate(*this);			
 			size_t arity = vm_.stack_size() - s1;
-			detail::call_def cd{ exp.identifier().name, make_arg_list(vm, arity) };
+			auto args = make_arg_list(vm, arity);
+			std::string function_name = exp.identifier().name;
+			const auto& path = exp.identifier().path;
+
+			if (path.size() == 1 && std::holds_alternative<std::string>(path.front()))
+			{
+				const auto alias = exp.identifier().name;
+				const auto exported_name = std::get<std::string>(path.front());
+				auto importer = module_aliases_.find(current_module_);
+				if (importer == module_aliases_.end() || importer->second.find(alias) == importer->second.end())
+					throw std::runtime_error(detail::format("unknown module alias '{0}'", alias));
+				const auto& module_key = importer->second.at(alias);
+				auto exports = module_exports_.find(module_key);
+				if (exports == module_exports_.end() || exports->second.find(exported_name) == exports->second.end())
+					throw std::runtime_error(detail::format("module '{0}' does not export function '{1}'", alias, exported_name));
+				function_name = module_key + exported_name;
+			}
+
+			detail::call_def cd{ function_name, args };
+			if (current_module_.size() > 0 && function_name == exp.identifier().name)
+			{
+				auto private_call = cd;
+				private_call.name = current_module_ + function_name;
+				if (vm_.can_invoke(private_call))
+					cd = std::move(private_call);
+			}
 			vm_.call(cd);
 			vm_.decrement_stack(arity);
 		}
@@ -803,6 +959,12 @@ namespace simpl
 		std::vector<std::string> importing_;
 		std::vector<std::string> imported_;
 		std::vector<std::filesystem::path> script_dirs_;
+		std::string current_module_;
+		std::map<std::string, std::map<std::string, std::string>> module_aliases_;
+		std::map<std::string, std::set<std::string>> module_exports_;
+		std::map<std::string, std::string> module_paths_;
+		std::set<std::string> loading_module_paths_;
+		size_t next_module_id_ = 0;
 	};
 }
 

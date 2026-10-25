@@ -118,6 +118,14 @@ namespace simpl
 			if (t.type == token_types::eof)
 				return nullptr;
 
+			if (t.type == token_types::identifier_token && t.to_string() == "export")
+			{
+				auto definition = tokenizer_.next();
+				if (definition.type != token_types::identifier_token || definition.to_string() != "def")
+					throw parse_error(tokenizer_.pos(), "export must precede a function definition");
+				return parse_def_statement(definition, true);
+			}
+
 			// the first identifier, has to bea keyword
 			auto kw = to_keyword(t);
 			switch (kw)
@@ -483,14 +491,14 @@ namespace simpl
 			if (builtins::compare(directive.begin, directive.end, "import"))
 			{
 				auto libtkn = tokenizer_.next();
-				if (libtkn.type != token_types::identifier_token)
+				if (libtkn.type != token_types::identifier_token && libtkn.type != token_types::literal)
 					throw parse_error(tokenizer_.pos(), detail::format("import expected an identifier: {0}", libtkn.to_string()));
 
 				std::string libname = libtkn.to_string();
 
 				// Allow `@import name.ext` — consume the optional `.ext` suffix.
 				auto peek = tokenizer_.peek();
-				if (peek.type == token_types::op && builtins::compare(peek.begin, peek.end, "."))
+				if (libtkn.type == token_types::identifier_token && peek.type == token_types::op && builtins::compare(peek.begin, peek.end, "."))
 				{
 					tokenizer_.next(); // consume '.'
 					auto exttkn = tokenizer_.next();
@@ -500,7 +508,18 @@ namespace simpl
 					libname += exttkn.to_string();
 				}
 
-				return std::make_unique<import_statement>(libname);
+				std::optional<std::string> alias;
+				peek = tokenizer_.peek();
+				if (peek.type == token_types::identifier_token && peek.to_string() == "as")
+				{
+					tokenizer_.next();
+					auto alias_token = tokenizer_.next();
+					if (alias_token.type != token_types::identifier_token)
+						throw parse_error(tokenizer_.pos(), "import alias must be an identifier");
+					alias = alias_token.to_string();
+				}
+
+				return std::make_unique<import_statement>(libname, alias);
 			}
 			else
 				throw parse_error(tokenizer_.pos(), detail::format("invalid directive: {0}", directive.to_string()));
@@ -561,7 +580,7 @@ namespace simpl
 			return members;
 		}
 
-		statement_ptr parse_def_statement(const token_t &t)
+		statement_ptr parse_def_statement(const token_t &t, bool exported = false)
 		{
 			if (scope_ != scopes::main)
 				throw parse_error(tokenizer_.pos(), "cannot define a function here");
@@ -579,7 +598,7 @@ namespace simpl
 
 			if (block == nullptr) return nullptr;
 
-			return std::make_unique<def_statement>(identifier.to_string(), std::move(id_list), std::move(block));
+			return std::make_unique<def_statement>(identifier.to_string(), std::move(id_list), std::move(block), exported);
 		}
 
 		std::vector<argument> parse_argument_list()

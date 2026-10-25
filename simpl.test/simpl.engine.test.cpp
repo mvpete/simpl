@@ -4,6 +4,9 @@
 #include <simpl/simpl.h>
 
 #include <array>
+#include <chrono>
+#include <filesystem>
+#include <fstream>
 #include <functional>
 #include <optional>
 
@@ -69,6 +72,43 @@ namespace simpl_test
 			simpl::evaluate(ast, e);
 
 			Assert::IsTrue(called);
+		}
+
+		TEST_METHOD(TestNamespacedModuleExportsAndHostBindings)
+		{
+			const auto module_path = std::filesystem::temp_directory_path() /
+				("simpl_module_" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + ".sl");
+			{
+				std::ofstream module(module_path);
+				module << "def helper() { return 2; }\n"
+					<< "export def answer() { return host_value() + helper(); }\n";
+			}
+
+			e.machine().reg_fn("host_value", []() -> simpl::number
+			{
+				return 40;
+			});
+			check = [](const simpl::value_t& value)
+			{
+				Assert::IsTrue(std::holds_alternative<simpl::number>(value));
+				Assert::AreEqual(42.0, std::get<simpl::number>(value));
+			};
+
+			try
+			{
+				run("@import \"" + module_path.string() + "\" as math\n"
+					"assert(math.answer());");
+				Assert::ExpectException<std::runtime_error>([&]()
+				{
+					run("math.helper();");
+				});
+			}
+			catch (...)
+			{
+				std::filesystem::remove(module_path);
+				throw;
+			}
+			std::filesystem::remove(module_path);
 		}
 
 		TEST_METHOD(TestArrayExplosionSimple)
