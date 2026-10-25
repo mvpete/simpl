@@ -183,6 +183,16 @@ namespace simpl
             return functions_.has_match(cd);
         }
 
+        bool can_invoke(const detail::call_def& call)
+        {
+            return functions_.has_match(call);
+        }
+
+        void unregister_functions(const std::string& prefix)
+        {
+            functions_.unregister_functions(prefix);
+        }
+
         template<typename ...Args>
         void invoke(const std::string &method, Args &&...args)
         {

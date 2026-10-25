@@ -171,8 +171,8 @@ namespace simpl
 	{
 
 	public:
-		def_statement(const std::string &name, std::vector<argument> &&id_list, statement_ptr statement)
-			:name_(name), arguments_(std::move(id_list)), statement_(std::move(statement))
+		def_statement(const std::string &name, std::vector<argument> &&id_list, statement_ptr statement, bool exported = false)
+			:name_(name), arguments_(std::move(id_list)), statement_(std::move(statement)), exported_(exported)
 		{
 		}
 
@@ -191,6 +191,11 @@ namespace simpl
 			return arguments_;
 		}
 
+		bool is_exported() const
+		{
+			return exported_;
+		}
+
 		statement_ptr release_statement()
 		{
 			return std::move(statement_);
@@ -200,6 +205,7 @@ namespace simpl
 		std::string name_;
 		std::vector<argument> arguments_;
 		statement_ptr statement_;
+		bool exported_;
 	};
 
 	class while_statement : public statement
@@ -335,8 +341,8 @@ namespace simpl
 	{
 	public:
 
-		import_statement(const std::string& libname)
-			:libname_(libname)
+		import_statement(const std::string& libname, const std::optional<std::string>& alias = std::nullopt)
+			:libname_(libname), alias_(alias)
 		{
 		}
 
@@ -350,8 +356,14 @@ namespace simpl
 			return libname_;
 		}
 
+		const std::optional<std::string>& alias() const
+		{
+			return alias_;
+		}
+
 	private:
 		std::string libname_;
+		std::optional<std::string> alias_;
 
 	};
 

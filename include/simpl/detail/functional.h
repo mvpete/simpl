@@ -100,6 +100,17 @@ namespace simpl
 
             }
 
+            void unregister_functions(const std::string& prefix)
+            {
+                for (auto it = functions_.begin(); it != functions_.end();)
+                {
+                    if (it->second.name.compare(0, prefix.size(), prefix) == 0)
+                        it = functions_.erase(it);
+                    else
+                        ++it;
+                }
+            }
+
         private:
 
             std::vector<const fn_def *> find_candidate_functions(const std::string &name, const std::vector<std::string> &args_t)

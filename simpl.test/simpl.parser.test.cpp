@@ -221,6 +221,24 @@ namespace simpl_test
 			Assert::AreEqual(std::string{ "mylib.sl" }, is->libname());
 		}
 
+		TEST_METHOD(TestParseAliasedScriptImport)
+		{
+			auto ast = simpl::parse("@import \"modules/math.sl\" as math");
+			const auto is = dynamic_cast<const simpl::import_statement*>(ast[0].get());
+			Assert::IsNotNull(is);
+			Assert::AreEqual(std::string{ "modules/math.sl" }, is->libname());
+			Assert::IsTrue(is->alias().has_value());
+			Assert::AreEqual(std::string{ "math" }, is->alias().value());
+		}
+
+		TEST_METHOD(TestParseExportedFunction)
+		{
+			auto ast = simpl::parse("export def answer() { return 42; }");
+			const auto definition = dynamic_cast<const simpl::def_statement*>(ast[0].get());
+			Assert::IsNotNull(definition);
+			Assert::IsTrue(definition->is_exported());
+		}
+
 		TEST_METHOD(TestParseImportDllDirectiveStatement)
 		{
 			auto ast = simpl::parse("@import mylib.dll");
